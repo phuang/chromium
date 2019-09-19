@@ -32,7 +32,8 @@ class VIZ_VULKAN_CONTEXT_PROVIDER_EXPORT VulkanInProcessContextProvider
   // VulkanContextProvider implementation
   gpu::VulkanImplementation* GetVulkanImplementation() override;
   gpu::VulkanDeviceQueue* GetDeviceQueue() override;
-  GrContext* GetGrContext() override;
+  GrContext* GetGrContext(size_t index) override;
+  size_t GetGrContextCount() const override;
   GrVkSecondaryCBDrawContext* GetGrSecondaryCBDrawContext() override;
   void EnqueueSecondaryCBSemaphores(
       std::vector<VkSemaphore> semaphores) override;
@@ -46,7 +47,7 @@ class VIZ_VULKAN_CONTEXT_PROVIDER_EXPORT VulkanInProcessContextProvider
   bool Initialize();
 
 #if BUILDFLAG(ENABLE_VULKAN)
-  sk_sp<GrContext> gr_context_;
+  std::vector<sk_sp<GrContext>> gr_contexts_;
   gpu::VulkanImplementation* vulkan_implementation_;
   std::unique_ptr<gpu::VulkanDeviceQueue> device_queue_;
 #endif

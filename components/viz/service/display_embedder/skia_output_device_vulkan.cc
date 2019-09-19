@@ -26,6 +26,7 @@ SkiaOutputDeviceVulkan::SkiaOutputDeviceVulkan(
     : SkiaOutputDevice(true /*need_swap_semaphore */,
                        did_swap_buffer_complete_callback),
       context_provider_(context_provider),
+      gr_context_(context_provider_->GetGrContext(0)),
       surface_handle_(surface_handle) {
   capabilities_.flipped_output_surface = true;
   capabilities_.supports_post_sub_buffer = false;
@@ -35,7 +36,7 @@ SkiaOutputDeviceVulkan::SkiaOutputDeviceVulkan(
 SkiaOutputDeviceVulkan::~SkiaOutputDeviceVulkan() {
   DCHECK(!scoped_write_);
   if (vulkan_surface_) {
-    auto* fence_helper = context_provider_->GetDeviceQueue()->GetFenceHelper();
+    auto* fence_helper = context_provider_->GetDeviceQueue()->GetFenceHelper(0);
     fence_helper->EnqueueVulkanObjectCleanupForSubmittedWork(
         std::move(vulkan_surface_));
   }
@@ -113,9 +114,8 @@ SkSurface* SkiaOutputDeviceVulkan::BeginPaint() {
                              ? kBGRA_8888_SkColorType
                              : kRGBA_8888_SkColorType;
     sk_surface = SkSurface::MakeFromBackendRenderTarget(
-        context_provider_->GetGrContext(), render_target,
-        kTopLeft_GrSurfaceOrigin, sk_color_type, sk_color_space_,
-        &surface_props);
+        gr_context_, render_target, kTopLeft_GrSurfaceOrigin, sk_color_type,
+        sk_color_space_, &surface_props);
     DCHECK(sk_surface);
   } else {
     auto backend = sk_surface->getBackendRenderTarget(

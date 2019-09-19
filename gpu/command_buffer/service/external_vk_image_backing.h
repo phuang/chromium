@@ -35,6 +35,7 @@ class ExternalVkImageBacking final : public SharedImageBacking {
       const gfx::ColorSpace& color_space,
       uint32_t usage,
       base::span<const uint8_t> pixel_data,
+      bool is_thread_safe,
       bool using_gmb = false);
 
   static std::unique_ptr<ExternalVkImageBacking> CreateFromGMB(
@@ -129,7 +130,8 @@ class ExternalVkImageBacking final : public SharedImageBacking {
                          VulkanCommandPool* command_pool,
                          const GrVkYcbcrConversionInfo& ycbcr_info,
                          base::Optional<WGPUTextureFormat> wgpu_format,
-                         base::Optional<uint32_t> memory_type_index);
+                         base::Optional<uint32_t> memory_type_index,
+                         bool is_thread_safe);
 
 #ifdef OS_LINUX
   // Extract file descriptor from image

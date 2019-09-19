@@ -46,7 +46,7 @@ class SkiaOutputDeviceVulkan final : public SkiaOutputDevice {
   void CreateSkSurface();
 
   VulkanContextProvider* const context_provider_;
-
+  GrContext* const gr_context_;
   const gpu::SurfaceHandle surface_handle_;
   std::unique_ptr<gpu::VulkanSurface> vulkan_surface_;
 

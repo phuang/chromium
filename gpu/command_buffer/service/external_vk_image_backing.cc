@@ -100,7 +100,8 @@ VkResult CreateVkImage(SharedContextState* context_state,
                          ->GetExternalImageHandleType(),
   };
 
-  auto usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  auto usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+               VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
   if (is_transfer_dst)
     usage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 
@@ -198,6 +199,7 @@ std::unique_ptr<ExternalVkImageBacking> ExternalVkImageBacking::Create(
     const gfx::ColorSpace& color_space,
     uint32_t usage,
     base::span<const uint8_t> pixel_data,
+    bool is_thread_safe,
     bool using_gmb) {
   VkDevice device =
       context_state->vk_context_provider()->GetDeviceQueue()->GetVulkanDevice();
@@ -265,7 +267,7 @@ std::unique_ptr<ExternalVkImageBacking> ExternalVkImageBacking::Create(
   auto backing = base::WrapUnique(new ExternalVkImageBacking(
       mailbox, format, size, color_space, usage, context_state, image, memory,
       requirements.size, vk_format, command_pool, GrVkYcbcrConversionInfo(),
-      GetWGPUFormat(format), mem_alloc_info.memoryTypeIndex));
+      GetWGPUFormat(format), mem_alloc_info.memoryTypeIndex, is_thread_safe));
 
   if (!pixel_data.empty()) {
     backing->WritePixels(
@@ -330,7 +332,8 @@ std::unique_ptr<ExternalVkImageBacking> ExternalVkImageBacking::CreateFromGMB(
     return base::WrapUnique(new ExternalVkImageBacking(
         mailbox, resource_format, size, color_space, usage, context_state,
         vk_image, vk_device_memory, memory_size, vk_image_info.format,
-        command_pool, gr_ycbcr_info, GetWGPUFormat(resource_format), {}));
+        command_pool, gr_ycbcr_info, GetWGPUFormat(resource_format), {},
+        false /* is_thread_safe */));
   }
 
   if (gfx::NumberOfPlanesForLinearBufferFormat(buffer_format) != 1) {
@@ -432,14 +435,15 @@ ExternalVkImageBacking::ExternalVkImageBacking(
     VulkanCommandPool* command_pool,
     const GrVkYcbcrConversionInfo& ycbcr_info,
     base::Optional<WGPUTextureFormat> wgpu_format,
-    base::Optional<uint32_t> memory_type_index)
+    base::Optional<uint32_t> memory_type_index,
+    bool is_thread_safe)
     : SharedImageBacking(mailbox,
                          format,
                          size,
                          color_space,
                          usage,
                          memory_size,
-                         false /* is_thread_safe */),
+                         is_thread_safe),
       context_state_(context_state),
       backend_texture_(size.width(),
                        size.height(),
@@ -461,6 +465,7 @@ bool ExternalVkImageBacking::BeginAccess(
     bool readonly,
     std::vector<SemaphoreHandle>* semaphore_handles,
     bool is_gl) {
+  AutoLock auto_lock(this);
   if (readonly && !reads_in_progress_) {
     UpdateContent(kInVkImage);
     if (texture_)
@@ -472,6 +477,7 @@ bool ExternalVkImageBacking::BeginAccess(
 void ExternalVkImageBacking::EndAccess(bool readonly,
                                        SemaphoreHandle semaphore_handle,
                                        bool is_gl) {
+  AutoLock auto_lock(this);
   EndAccessInternal(readonly, std::move(semaphore_handle));
   if (!readonly) {
     if (use_separate_gl_texture()) {
@@ -483,14 +489,17 @@ void ExternalVkImageBacking::EndAccess(bool readonly,
 }
 
 bool ExternalVkImageBacking::IsCleared() const {
+  AutoLock auto_lock(this);
   return is_cleared_;
 }
 
 void ExternalVkImageBacking::SetCleared() {
+  AutoLock auto_lock(this);
   is_cleared_ = true;
 }
 
 void ExternalVkImageBacking::Update(std::unique_ptr<gfx::GpuFence> in_fence) {
+  AutoLock auto_lock(this);
   DCHECK(!in_fence);
   latest_content_ = kInSharedMemory;
   SetCleared();

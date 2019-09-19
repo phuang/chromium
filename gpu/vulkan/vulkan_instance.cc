@@ -24,7 +24,7 @@ VulkanErrorCallback(VkDebugReportFlagsEXT flags,
                     const char* pMessage,
                     void* pUserData) {
   LOG(ERROR) << pMessage;
-  return VK_TRUE;
+  return VK_FALSE;
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL
@@ -37,7 +37,7 @@ VulkanWarningCallback(VkDebugReportFlagsEXT flags,
                       const char* pMessage,
                       void* pUserData) {
   LOG(WARNING) << pMessage;
-  return VK_TRUE;
+  return VK_FALSE;
 }
 
 VulkanInstance::VulkanInstance() {}

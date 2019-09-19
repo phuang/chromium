@@ -23,7 +23,7 @@ VulkanDeviceQueue::VulkanDeviceQueue(VkInstance vk_instance,
 VulkanDeviceQueue::~VulkanDeviceQueue() {
   DCHECK_EQ(static_cast<VkPhysicalDevice>(VK_NULL_HANDLE), vk_physical_device_);
   DCHECK_EQ(static_cast<VkDevice>(VK_NULL_HANDLE), vk_device_);
-  DCHECK_EQ(static_cast<VkQueue>(VK_NULL_HANDLE), vk_queue_);
+  DCHECK(vk_queues_.empty());
 }
 
 bool VulkanDeviceQueue::Initialize(
@@ -35,7 +35,7 @@ bool VulkanDeviceQueue::Initialize(
   DCHECK_EQ(static_cast<VkPhysicalDevice>(VK_NULL_HANDLE), vk_physical_device_);
   DCHECK_EQ(static_cast<VkDevice>(VK_NULL_HANDLE), owned_vk_device_);
   DCHECK_EQ(static_cast<VkDevice>(VK_NULL_HANDLE), vk_device_);
-  DCHECK_EQ(static_cast<VkQueue>(VK_NULL_HANDLE), vk_queue_);
+  DCHECK(vk_queues_.empty());
   DCHECK(!enforce_protected_memory_ || allow_protected_memory);
 
   if (VK_NULL_HANDLE == vk_instance_)
@@ -80,12 +80,14 @@ bool VulkanDeviceQueue::Initialize(
   vk_physical_device_properties_ = physical_device_info.properties;
   vk_queue_index_ = queue_index;
 
-  float queue_priority = 0.0f;
+  constexpr size_t kQueueCount = 2;
+  float queue_priority[kQueueCount] = {};
+  queue_priority[0] = 1.0;
   VkDeviceQueueCreateInfo queue_create_info = {};
   queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
   queue_create_info.queueFamilyIndex = queue_index;
-  queue_create_info.queueCount = 1;
-  queue_create_info.pQueuePriorities = &queue_priority;
+  queue_create_info.queueCount = kQueueCount;
+  queue_create_info.pQueuePriorities = queue_priority;
   queue_create_info.flags =
       allow_protected_memory ? VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT : 0;
 
@@ -171,18 +173,23 @@ bool VulkanDeviceQueue::Initialize(
 
   vk_device_ = owned_vk_device_;
 
-  if (allow_protected_memory) {
-    VkDeviceQueueInfo2 queue_info2 = {};
-    queue_info2.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2;
-    queue_info2.flags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
-    queue_info2.queueFamilyIndex = queue_index;
-    queue_info2.queueIndex = 0;
-    vkGetDeviceQueue2(vk_device_, &queue_info2, &vk_queue_);
-  } else {
-    vkGetDeviceQueue(vk_device_, queue_index, 0, &vk_queue_);
+  vk_queues_.resize(kQueueCount, VK_NULL_HANDLE);
+  for (size_t i = 0; i < kQueueCount; ++i) {
+    VkQueue& vk_queue = vk_queues_[i];
+    if (allow_protected_memory) {
+      VkDeviceQueueInfo2 queue_info2 = {};
+      queue_info2.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_INFO_2;
+      queue_info2.flags = VK_DEVICE_QUEUE_CREATE_PROTECTED_BIT;
+      queue_info2.queueFamilyIndex = queue_index;
+      queue_info2.queueIndex = i;
+      vkGetDeviceQueue2(vk_device_, &queue_info2, &vk_queue);
+    } else {
+      vkGetDeviceQueue(vk_device_, queue_index, i, &vk_queue);
+    }
+    // TODO(penghuang): I think we should have one fence helper to service all
+    // all GPU work threads.
+    cleanup_helpers_.emplace_back(std::make_unique<VulkanFenceHelper>(this, i));
   }
-
-  cleanup_helper_ = std::make_unique<VulkanFenceHelper>(this);
 
   allow_protected_memory_ = allow_protected_memory;
 
@@ -198,30 +205,31 @@ bool VulkanDeviceQueue::InitializeForWebView(
   DCHECK_EQ(static_cast<VkPhysicalDevice>(VK_NULL_HANDLE), vk_physical_device_);
   DCHECK_EQ(static_cast<VkDevice>(VK_NULL_HANDLE), owned_vk_device_);
   DCHECK_EQ(static_cast<VkDevice>(VK_NULL_HANDLE), vk_device_);
-  DCHECK_EQ(static_cast<VkQueue>(VK_NULL_HANDLE), vk_queue_);
+  DCHECK(vk_queues_.empty());
 
   vk_physical_device_ = vk_physical_device;
   vk_device_ = vk_device;
-  vk_queue_ = vk_queue;
+  vk_queues_ = {vk_queue};
   vk_queue_index_ = vk_queue_index;
   enabled_extensions_ = std::move(enabled_extensions);
 
-  cleanup_helper_ = std::make_unique<VulkanFenceHelper>(this);
+  cleanup_helpers_.emplace_back(std::make_unique<VulkanFenceHelper>(this));
   return true;
 }
 
 void VulkanDeviceQueue::Destroy() {
-  if (cleanup_helper_) {
-    cleanup_helper_->Destroy();
-    cleanup_helper_.reset();
+  for (auto& helper : cleanup_helpers_) {
+    helper->Destroy();
+    helper.reset();
   }
+  cleanup_helpers_.clear();
 
   if (VK_NULL_HANDLE != owned_vk_device_) {
     vkDestroyDevice(owned_vk_device_, nullptr);
     owned_vk_device_ = VK_NULL_HANDLE;
   }
   vk_device_ = VK_NULL_HANDLE;
-  vk_queue_ = VK_NULL_HANDLE;
+  vk_queues_.clear();
   vk_queue_index_ = 0;
   vk_physical_device_ = VK_NULL_HANDLE;
 }

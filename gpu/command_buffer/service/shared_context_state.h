@@ -45,7 +45,7 @@ struct ContextState;
 class GPU_GLES2_EXPORT SharedContextState
     : public base::trace_event::MemoryDumpProvider,
       public gpu::GLContextVirtualDelegate,
-      public base::RefCounted<SharedContextState>,
+      public base::RefCountedThreadSafe<SharedContextState>,
       public GrContextOptions::ShaderErrorHandler {
  public:
   // TODO: Refactor code to have seperate constructor for GL and Vulkan and not
@@ -99,7 +99,10 @@ class GPU_GLES2_EXPORT SharedContextState
     return metal_context_provider_;
   }
   gl::ProgressReporter* progress_reporter() const { return progress_reporter_; }
-  GrContext* gr_context() { return gr_context_; }
+  GrContext* gr_context(size_t index = 1) const {
+    DCHECK_LT(index, gr_contexts_.size());
+    return gr_contexts_[index];
+  }
   // Handles Skia-reported shader compilation errors.
   void compileError(const char* shader, const char* errors) override;
   gles2::FeatureInfo* feature_info() { return feature_info_.get(); }
@@ -140,7 +143,7 @@ class GPU_GLES2_EXPORT SharedContextState
   void RemoveContextLostObserver(ContextLostObserver* obs);
 
  private:
-  friend class base::RefCounted<SharedContextState>;
+  friend class base::RefCountedThreadSafe<SharedContextState>;
 
   ~SharedContextState() override;
 
@@ -170,7 +173,7 @@ class GPU_GLES2_EXPORT SharedContextState
   GrContextType gr_context_type_ = GrContextType::kGL;
   viz::VulkanContextProvider* const vk_context_provider_;
   viz::MetalContextProvider* const metal_context_provider_;
-  GrContext* gr_context_ = nullptr;
+  std::vector<GrContext*> gr_contexts_;
 
   scoped_refptr<gl::GLShareGroup> share_group_;
   scoped_refptr<gl::GLContext> context_;

@@ -5,6 +5,7 @@
 #include "gpu/vulkan/vulkan_fence_helper.h"
 
 #include "base/bind.h"
+#include "base/threading/thread_task_runner_handle.h"
 #include "gpu/vulkan/vulkan_device_queue.h"
 #include "gpu/vulkan/vulkan_function_pointers.h"
 
@@ -18,8 +19,9 @@ VulkanFenceHelper::FenceHandle::FenceHandle(const FenceHandle& other) = default;
 VulkanFenceHelper::FenceHandle& VulkanFenceHelper::FenceHandle::operator=(
     const FenceHandle& other) = default;
 
-VulkanFenceHelper::VulkanFenceHelper(VulkanDeviceQueue* device_queue)
-    : device_queue_(device_queue) {}
+VulkanFenceHelper::VulkanFenceHelper(VulkanDeviceQueue* device_queue,
+                                     int queue_index)
+    : device_queue_(device_queue), queue_index_(queue_index) {}
 
 VulkanFenceHelper::~VulkanFenceHelper() {
   DCHECK(tasks_pending_fence_.empty());
@@ -71,7 +73,18 @@ bool VulkanFenceHelper::HasPassed(FenceHandle handle) {
   return current_generation_ >= handle.generation_id_;
 }
 
-void VulkanFenceHelper::EnqueueCleanupTaskForSubmittedWork(CleanupTask task) {
+void VulkanFenceHelper::EnqueueCleanupTaskForSubmittedWork(CleanupTask task,
+                                                           bool thread_safe) {
+  if (!thread_safe) {
+    task = base::BindOnce(
+        [](CleanupTask task, scoped_refptr<base::SingleThreadTaskRunner> runner,
+           VulkanDeviceQueue* device_queue, bool device_lost) {
+          runner->PostTask(
+              FROM_HERE,
+              base::BindOnce(std::move(task), device_queue, device_lost));
+        },
+        std::move(task), std::move(base::ThreadTaskRunnerHandle::Get()));
+  }
   tasks_pending_fence_.emplace_back(std::move(task));
 }
 
@@ -132,7 +145,8 @@ VulkanFenceHelper::FenceHandle VulkanFenceHelper::GenerateCleanupFence() {
     PerformImmediateCleanup();
     return FenceHandle();
   }
-  result = vkQueueSubmit(device_queue_->GetVulkanQueue(), 0, nullptr, fence);
+  result = vkQueueSubmit(device_queue_->GetVulkanQueue(queue_index_), 0,
+                         nullptr, fence);
   if (result != VK_SUCCESS) {
     vkDestroyFence(device_queue_->GetVulkanDevice(), fence, nullptr);
     PerformImmediateCleanup();
@@ -235,7 +249,7 @@ void VulkanFenceHelper::PerformImmediateCleanup() {
   // Even if exclusively using callbacks, the callbacks use WeakPtr and will
   // not keep this class alive, so it's important to wait / run all cleanup
   // immediately.
-  VkResult result = vkQueueWaitIdle(device_queue_->GetVulkanQueue());
+  VkResult result = vkDeviceWaitIdle(device_queue_->GetVulkanDevice());
   // Wait can only fail for three reasons - device loss, host OOM, device OOM.
   // If we hit an OOM, treat this as a crash. There isn't a great way to
   // recover from this.

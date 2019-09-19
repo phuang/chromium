@@ -133,6 +133,8 @@ class GPU_GLES2_EXPORT SharedImageBacking {
   // Used by subclasses in Destroy.
   bool have_context() const;
 
+  bool is_thread_safe() const { return !!lock_; }
+
   void AssertLockedIfNecessary() const;
 
   class GPU_GLES2_EXPORT AutoLock {

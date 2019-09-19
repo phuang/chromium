@@ -981,7 +981,7 @@ DisplayResourceProvider::LockSetForExternalUse::LockResource(
 
 void DisplayResourceProvider::LockSetForExternalUse::UnlockResources(
     const gpu::SyncToken& sync_token) {
-  DCHECK(sync_token.verified_flush());
+  DCHECK(sync_token.verified_flush() || !sync_token.HasData());
   for (const auto& pair : resources_) {
     auto id = pair.first;
     auto* resource = pair.second;

@@ -71,10 +71,13 @@ class VULKAN_EXPORT VulkanDeviceQueue {
     return vk_device_;
   }
 
-  VkQueue GetVulkanQueue() const {
-    DCHECK_NE(static_cast<VkQueue>(VK_NULL_HANDLE), vk_queue_);
-    return vk_queue_;
+  VkQueue GetVulkanQueue(size_t index = 0) const {
+    DCHECK(!vk_queues_.empty());
+    DCHECK_LT(index, vk_queues_.size());
+    return vk_queues_[index];
   }
+
+  size_t GetVulkanQueueCount() const { return vk_queues_.size(); }
 
   VkInstance GetVulkanInstance() const { return vk_instance_; }
 
@@ -82,7 +85,10 @@ class VULKAN_EXPORT VulkanDeviceQueue {
 
   std::unique_ptr<gpu::VulkanCommandPool> CreateCommandPool();
 
-  VulkanFenceHelper* GetFenceHelper() const { return cleanup_helper_.get(); }
+  VulkanFenceHelper* GetFenceHelper(size_t index = 0) const {
+    DCHECK_LT(index, cleanup_helpers_.size());
+    return cleanup_helpers_[index].get();
+  }
 
   const VkPhysicalDeviceFeatures2& enabled_device_features_2() const {
     return enabled_device_features_2_;
@@ -100,10 +106,10 @@ class VULKAN_EXPORT VulkanDeviceQueue {
   VkPhysicalDeviceProperties vk_physical_device_properties_;
   VkDevice owned_vk_device_ = VK_NULL_HANDLE;
   VkDevice vk_device_ = VK_NULL_HANDLE;
-  VkQueue vk_queue_ = VK_NULL_HANDLE;
+  std::vector<VkQueue> vk_queues_;
   uint32_t vk_queue_index_ = 0;
   const VkInstance vk_instance_;
-  std::unique_ptr<VulkanFenceHelper> cleanup_helper_;
+  std::vector<std::unique_ptr<VulkanFenceHelper>> cleanup_helpers_;
   VkPhysicalDeviceFeatures2 enabled_device_features_2_;
 
   const bool enforce_protected_memory_;

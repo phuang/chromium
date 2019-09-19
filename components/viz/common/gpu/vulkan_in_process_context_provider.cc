@@ -68,7 +68,6 @@ bool VulkanInProcessContextProvider::Initialize() {
   backend_context.fInstance = device_queue_->GetVulkanInstance();
   backend_context.fPhysicalDevice = device_queue_->GetVulkanPhysicalDevice();
   backend_context.fDevice = device_queue_->GetVulkanDevice();
-  backend_context.fQueue = device_queue_->GetVulkanQueue();
   backend_context.fGraphicsQueueIndex = device_queue_->GetVulkanQueueIndex();
   backend_context.fMaxAPIVersion = vulkan_implementation_->GetVulkanInstance()
                                        ->vulkan_info()
@@ -97,10 +96,14 @@ bool VulkanInProcessContextProvider::Initialize() {
   backend_context.fProtectedContext =
       vulkan_implementation_->enforce_protected_memory() ? GrProtected::kYes
                                                          : GrProtected::kNo;
-
-  gr_context_ = GrContext::MakeVulkan(backend_context);
-
-  return gr_context_ != nullptr;
+  gr_contexts_.resize(device_queue_->GetVulkanQueueCount());
+  for (size_t i = 0; i < device_queue_->GetVulkanQueueCount(); ++i) {
+    backend_context.fQueue = device_queue_->GetVulkanQueue(i);
+    gr_contexts_[i] = GrContext::MakeVulkan(backend_context);
+    if (!gr_contexts_[i])
+      return false;
+  }
+  return true;
 }
 
 void VulkanInProcessContextProvider::Destroy() {
@@ -111,11 +114,14 @@ void VulkanInProcessContextProvider::Destroy() {
     fence_helper->Destroy();
   }
 
-  if (gr_context_) {
-    // releaseResourcesAndAbandonContext() will wait on GPU to finish all works,
-    // execute pending flush done callbacks and release all resources.
-    gr_context_->releaseResourcesAndAbandonContext();
-    gr_context_.reset();
+  auto gr_contexts = std::move(gr_contexts_);
+  for (auto& gr_context : gr_contexts) {
+    if (gr_context) {
+      // releaseResourcesAndAbandonContext() will wait on GPU to finish all
+      // works, execute pending flush done callbacks and release all resources.
+      gr_context->releaseResourcesAndAbandonContext();
+      gr_context.reset();
+    }
   }
 
   if (device_queue_) {
@@ -133,8 +139,13 @@ gpu::VulkanDeviceQueue* VulkanInProcessContextProvider::GetDeviceQueue() {
   return device_queue_.get();
 }
 
-GrContext* VulkanInProcessContextProvider::GetGrContext() {
-  return gr_context_.get();
+GrContext* VulkanInProcessContextProvider::GetGrContext(size_t index) {
+  DCHECK_LT(index, gr_contexts_.size());
+  return gr_contexts_[index].get();
+}
+
+size_t VulkanInProcessContextProvider::GetGrContextCount() const {
+  return gr_contexts_.size();
 }
 
 GrVkSecondaryCBDrawContext*

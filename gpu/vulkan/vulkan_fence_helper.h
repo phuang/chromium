@@ -20,7 +20,8 @@ class VulkanDeviceQueue;
 
 class VULKAN_EXPORT VulkanFenceHelper {
  public:
-  explicit VulkanFenceHelper(VulkanDeviceQueue* device_queue);
+  explicit VulkanFenceHelper(VulkanDeviceQueue* device_queue,
+                             int queue_index = 0);
   ~VulkanFenceHelper();
 
   // Destroy the fence helper.
@@ -98,7 +99,8 @@ class VULKAN_EXPORT VulkanFenceHelper {
   // Submits a cleanup task for already submitted work.  ProcessCleanupTasks
   // must be called periodically to ensure these run. Cleanup tasks will be
   // executed in order they are enqueued.
-  void EnqueueCleanupTaskForSubmittedWork(CleanupTask task);
+  void EnqueueCleanupTaskForSubmittedWork(CleanupTask task,
+                                          bool is_thread_safe = false);
   // Processes CleanupTasks for which a fence has passed.
   void ProcessCleanupTasks();
   // Helpers for common types:
@@ -117,6 +119,7 @@ class VULKAN_EXPORT VulkanFenceHelper {
   void PerformImmediateCleanup();
 
   VulkanDeviceQueue* const device_queue_;
+  const int queue_index_;
 
   std::vector<CleanupTask> tasks_pending_fence_;
   uint64_t next_generation_ = 1;

@@ -303,10 +303,14 @@ void GpuServiceImpl::InitializeWithHost(
   }
 
   if (!shared_image_manager) {
-    // The shared image will be only used on GPU main thread, so it doesn't need
-    // to be thread safe.
+#if BUILDFLAG(ENABLE_VULKAN)
+    bool thread_safe = vulkan_context_provider_ &&
+                       vulkan_context_provider_->GetGrContextCount();
+#else
+    constexpr bool thread_safe = false;
+#endif
     owned_shared_image_manager_ =
-        std::make_unique<gpu::SharedImageManager>(false /* thread_safe */);
+        std::make_unique<gpu::SharedImageManager>(thread_safe);
     shared_image_manager = owned_shared_image_manager_.get();
   }
 
@@ -357,7 +361,7 @@ void GpuServiceImpl::DisableGpuCompositing() {
 }
 
 scoped_refptr<gpu::SharedContextState> GpuServiceImpl::GetContextState() {
-  DCHECK(main_runner_->BelongsToCurrentThread());
+  // DCHECK(main_runner_->BelongsToCurrentThread());
   gpu::ContextResult result;
   return gpu_channel_manager_->GetSharedContextState(&result);
 }

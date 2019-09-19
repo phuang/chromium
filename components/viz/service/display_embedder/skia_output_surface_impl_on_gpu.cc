@@ -16,6 +16,7 @@
 #include "components/viz/common/features.h"
 #include "components/viz/common/frame_sinks/copy_output_request.h"
 #include "components/viz/common/frame_sinks/copy_output_util.h"
+#include "components/viz/common/gpu/vulkan_context_provider.h"
 #include "components/viz/common/resources/resource_format_utils.h"
 #include "components/viz/common/skia_helper.h"
 #include "components/viz/service/display/dc_layer_overlay.h"
@@ -627,7 +628,8 @@ SkiaOutputSurfaceImplOnGpu::SkiaOutputSurfaceImplOnGpu(
       gpu_preferences_(dependency_->GetGpuPreferences()),
       copier_active_url_(GURL("chrome://gpu/SkiaRendererGLRendererCopier")) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
-  dependency_->RegisterDisplayContext(this);
+  // TODO
+  // dependency_->RegisterDisplayContext(this);
 }
 
 SkiaOutputSurfaceImplOnGpu::~SkiaOutputSurfaceImplOnGpu() {
@@ -716,13 +718,13 @@ bool SkiaOutputSurfaceImplOnGpu::FinishPaintCurrentFrame(
   scoped_output_device_paint_.emplace(output_device_.get());
   DCHECK(output_sk_surface());
 
-  dependency_->ScheduleGrContextCleanup();
+  // dependency_->ScheduleGrContextCleanup();
 
   PullTextureUpdates(std::move(sync_tokens));
 
   {
     base::Optional<gpu::raster::GrShaderCache::ScopedCacheUse> cache_use;
-    if (dependency_->GetGrShaderCache()) {
+    if (dependency_->GetGrShaderCache() && false) {
       cache_use.emplace(dependency_->GetGrShaderCache(),
                         gpu::kInProcessCommandBufferClientId);
     }
@@ -769,7 +771,7 @@ bool SkiaOutputSurfaceImplOnGpu::FinishPaintCurrentFrame(
     };
 
     gpu::AddVulkanCleanupTaskForSkiaFlush(vulkan_context_provider_,
-                                          &flush_info);
+                                          1 /* index */, &flush_info);
     if (on_finished)
       gpu::AddCleanupTaskForSkiaFlush(std::move(on_finished), &flush_info);
 
@@ -788,7 +790,8 @@ bool SkiaOutputSurfaceImplOnGpu::FinishPaintCurrentFrame(
       scoped_output_device_paint_->set_semaphore(std::move(semaphore));
     }
   }
-  ReleaseFenceSyncAndPushTextureUpdates(sync_fence_release);
+  if (sync_fence_release)
+    ReleaseFenceSyncAndPushTextureUpdates(sync_fence_release);
   return true;
 }
 
@@ -888,7 +891,7 @@ void SkiaOutputSurfaceImplOnGpu::FinishPaintRenderPass(
   }
   {
     base::Optional<gpu::raster::GrShaderCache::ScopedCacheUse> cache_use;
-    if (dependency_->GetGrShaderCache()) {
+    if (dependency_->GetGrShaderCache() && false) {
       cache_use.emplace(dependency_->GetGrShaderCache(),
                         gpu::kInProcessCommandBufferClientId);
     }
@@ -910,7 +913,7 @@ void SkiaOutputSurfaceImplOnGpu::FinishPaintRenderPass(
             scoped_promise_image_access.end_semaphores().data(),
     };
 
-    gpu::AddVulkanCleanupTaskForSkiaFlush(vulkan_context_provider_,
+    gpu::AddVulkanCleanupTaskForSkiaFlush(vulkan_context_provider_, 0,
                                           &flush_info);
     auto result = offscreen.surface()->flush(
         SkSurface::BackendSurfaceAccess::kNoAccess, flush_info);
@@ -922,7 +925,8 @@ void SkiaOutputSurfaceImplOnGpu::FinishPaintRenderPass(
       return;
     }
   }
-  ReleaseFenceSyncAndPushTextureUpdates(sync_fence_release);
+  if (sync_fence_release)
+    ReleaseFenceSyncAndPushTextureUpdates(sync_fence_release);
 }
 
 void SkiaOutputSurfaceImplOnGpu::RemoveRenderPassResource(
@@ -1013,7 +1017,7 @@ void SkiaOutputSurfaceImplOnGpu::CopyOutput(
   bool need_discard_alpha = from_fbo0 && (output_device_->is_emulated_rgbx());
   if (need_discard_alpha) {
     base::Optional<gpu::raster::GrShaderCache::ScopedCacheUse> cache_use;
-    if (dependency_->GetGrShaderCache()) {
+    if (dependency_->GetGrShaderCache() && false) {
       cache_use.emplace(dependency_->GetGrShaderCache(),
                         gpu::kInProcessCommandBufferClientId);
     }
@@ -1060,7 +1064,7 @@ void SkiaOutputSurfaceImplOnGpu::CopyOutput(
   if (request->result_format() ==
       CopyOutputRequest::ResultFormat::I420_PLANES) {
     base::Optional<gpu::raster::GrShaderCache::ScopedCacheUse> cache_use;
-    if (dependency_->GetGrShaderCache()) {
+    if (dependency_->GetGrShaderCache() && false) {
       cache_use.emplace(dependency_->GetGrShaderCache(),
                         gpu::kInProcessCommandBufferClientId);
     }
@@ -1284,6 +1288,7 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForGL() {
     return false;
   }
 
+  gr_context_ = context_state_->gr_context(0);
   auto* context = context_state_->real_context();
   auto* current_gl = context->GetCurrentGL();
   api_ = current_gl->Api;
@@ -1326,6 +1331,7 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForGL() {
     } else {
       gl_surface_ = nullptr;
       context_state_ = nullptr;
+      gr_context_ = nullptr;
       LOG(FATAL) << "Failed to make current during initialization.";
       return false;
     }
@@ -1337,6 +1343,7 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForGL() {
 bool SkiaOutputSurfaceImplOnGpu::InitializeForVulkan() {
   context_state_ = dependency_->GetSharedContextState();
   DCHECK(context_state_);
+  gr_context_ = dependency_->GetVulkanContextProvider()->GetGrContext(0);
 #if BUILDFLAG(ENABLE_VULKAN)
   if (dependency_->IsOffscreen()) {
     output_device_ = std::make_unique<SkiaOutputDeviceOffscreen>(

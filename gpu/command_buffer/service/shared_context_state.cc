@@ -65,17 +65,20 @@ SharedContextState::SharedContextState(
       &max_resource_cache_bytes_, &glyph_cache_max_texture_bytes_);
   if (GrContextIsVulkan()) {
 #if BUILDFLAG(ENABLE_VULKAN)
-    gr_context_ = vk_context_provider_->GetGrContext();
+    gr_contexts_.reserve(vk_context_provider_->GetGrContextCount());
+    for (size_t i = 0; i < vk_context_provider_->GetGrContextCount(); ++i)
+      gr_contexts_.push_back(vk_context_provider_->GetGrContext(i));
 #endif
     use_virtualized_gl_contexts_ = false;
-    DCHECK(gr_context_);
+    DCHECK(gr_context());
   }
   if (GrContextIsMetal()) {
 #if defined(OS_MACOSX)
-    gr_context_ = metal_context_provider_->GetGrContext();
+    DCHECK(gr_contexts_.empty());
+    gr_contexts_.push_back(metal_context_provider_->GetGrContext());
 #endif
     use_virtualized_gl_contexts_ = false;
-    DCHECK(gr_context_);
+    DCHECK(gr_context());
   }
 
   if (base::ThreadTaskRunnerHandle::IsSet()) {
@@ -169,14 +172,15 @@ void SharedContextState::InitializeGrContext(
     // rolls are in.
     options.fInternalMultisampleCount = 0;
     owned_gr_context_ = GrContext::MakeGL(std::move(interface), options);
-    gr_context_ = owned_gr_context_.get();
+    gr_contexts_.push_back(owned_gr_context_.get());
   }
 
-  if (!gr_context_) {
+  if (gr_contexts_.empty()) {
     LOG(ERROR) << "OOP raster support disabled: GrContext creation "
                   "failed.";
   } else {
-    gr_context_->setResourceCacheLimit(max_resource_cache_bytes_);
+    for (auto* gr_context : gr_contexts_)
+      gr_context->setResourceCacheLimit(max_resource_cache_bytes_);
   }
   transfer_cache_ = std::make_unique<ServiceTransferCache>();
 }
@@ -285,14 +289,15 @@ bool SharedContextState::MakeCurrent(gl::GLSurface* surface, bool needs_gl) {
 
 void SharedContextState::MarkContextLost() {
   DCHECK(GrContextIsGL());
+  DCHECK_EQ(gr_contexts_.size(), 1u);
   if (!context_lost_) {
     scoped_refptr<SharedContextState> prevent_last_ref_drop = this;
     context_lost_ = true;
     // context_state_ could be nullptr for some unittests.
     if (context_state_)
       context_state_->MarkContextLost();
-    if (gr_context_)
-      gr_context_->abandonContext();
+    if (gr_context())
+      gr_context()->abandonContext();
     std::move(context_lost_callback_).Run();
     for (auto& observer : context_lost_observers_)
       observer.OnContextLost();
@@ -310,14 +315,16 @@ bool SharedContextState::IsCurrent(gl::GLSurface* surface) {
 bool SharedContextState::OnMemoryDump(
     const base::trace_event::MemoryDumpArgs& args,
     base::trace_event::ProcessMemoryDump* pmd) {
-  if (!gr_context_)
+  if (gr_contexts_.empty())
     return true;
 
-  if (args.level_of_detail ==
-      base::trace_event::MemoryDumpLevelOfDetail::BACKGROUND) {
-    raster::DumpBackgroundGrMemoryStatistics(gr_context_, pmd);
-  } else {
-    raster::DumpGrMemoryStatistics(gr_context_, pmd, base::nullopt);
+  for (auto* gr_context : gr_contexts_) {
+    if (args.level_of_detail ==
+        base::trace_event::MemoryDumpLevelOfDetail::BACKGROUND) {
+      raster::DumpBackgroundGrMemoryStatistics(gr_context, pmd);
+    } else {
+      raster::DumpGrMemoryStatistics(gr_context, pmd, base::nullopt);
+    }
   }
 
   return true;
@@ -333,7 +340,7 @@ void SharedContextState::RemoveContextLostObserver(ContextLostObserver* obs) {
 
 void SharedContextState::PurgeMemory(
     base::MemoryPressureListener::MemoryPressureLevel memory_pressure_level) {
-  if (!gr_context_) {
+  if (gr_contexts_.empty()) {
     DCHECK(!transfer_cache_);
     return;
   }
@@ -348,14 +355,16 @@ void SharedContextState::PurgeMemory(
       return;
     case base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_MODERATE:
       // With moderate pressure, clear any unlocked resources.
-      gr_context_->purgeUnlockedResources(true /* scratchResourcesOnly */);
+      for (auto* gr_context : gr_contexts_)
+        gr_context->purgeUnlockedResources(true /* scratchResourcesOnly */);
       scratch_deserialization_buffer_.resize(
           kInitialScratchDeserializationBufferSize);
       scratch_deserialization_buffer_.shrink_to_fit();
       break;
     case base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_CRITICAL:
       // With critical pressure, purge as much as possible.
-      gr_context_->freeGpuResources();
+      for (auto* gr_context : gr_contexts_)
+        gr_context->freeGpuResources();
       scratch_deserialization_buffer_.resize(0u);
       scratch_deserialization_buffer_.shrink_to_fit();
       break;
@@ -368,8 +377,8 @@ void SharedContextState::PessimisticallyResetGrContext() const {
   // Calling GrContext::resetContext() is very cheap, so we do it
   // pessimistically. We could dirty less state if skia state setting
   // performance becomes an issue.
-  if (gr_context_ && GrContextIsGL())
-    gr_context_->resetContext();
+  if (gr_contexts_.size() && GrContextIsGL())
+    gr_context()->resetContext();
 }
 
 bool SharedContextState::initialized() const {

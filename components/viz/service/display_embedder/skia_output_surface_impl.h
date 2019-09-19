@@ -197,6 +197,7 @@ class VIZ_SERVICE_EXPORT SkiaOutputSurfaceImpl : public SkiaOutputSurface {
   uint64_t sync_fence_release_ = 0;
   std::unique_ptr<SkiaOutputSurfaceDependency> dependency_;
   const bool is_using_vulkan_;
+  const bool has_dedicated_gr_context_;
   UpdateVSyncParametersCallback update_vsync_parameters_callback_;
   GpuVSyncCallback gpu_vsync_callback_;
   bool is_displayed_as_overlay_ = false;

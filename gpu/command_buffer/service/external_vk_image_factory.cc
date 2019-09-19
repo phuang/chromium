@@ -41,10 +41,9 @@ std::unique_ptr<SharedImageBacking> ExternalVkImageFactory::CreateSharedImage(
     const gfx::ColorSpace& color_space,
     uint32_t usage,
     bool is_thread_safe) {
-  DCHECK(!is_thread_safe);
-  return ExternalVkImageBacking::Create(context_state_, command_pool_.get(),
-                                        mailbox, format, size, color_space,
-                                        usage, base::span<const uint8_t>());
+  return ExternalVkImageBacking::Create(
+      context_state_, command_pool_.get(), mailbox, format, size, color_space,
+      usage, base::span<const uint8_t>(), is_thread_safe);
 }
 
 std::unique_ptr<SharedImageBacking> ExternalVkImageFactory::CreateSharedImage(
@@ -54,9 +53,9 @@ std::unique_ptr<SharedImageBacking> ExternalVkImageFactory::CreateSharedImage(
     const gfx::ColorSpace& color_space,
     uint32_t usage,
     base::span<const uint8_t> pixel_data) {
-  return ExternalVkImageBacking::Create(context_state_, command_pool_.get(),
-                                        mailbox, format, size, color_space,
-                                        usage, pixel_data);
+  return ExternalVkImageBacking::Create(
+      context_state_, command_pool_.get(), mailbox, format, size, color_space,
+      usage, pixel_data, false /* thread_safe */);
 }
 
 std::unique_ptr<SharedImageBacking> ExternalVkImageFactory::CreateSharedImage(

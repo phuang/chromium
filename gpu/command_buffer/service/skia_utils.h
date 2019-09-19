@@ -61,6 +61,7 @@ GPU_GLES2_EXPORT void AddCleanupTaskForSkiaFlush(base::OnceClosure task,
 // Is a no-op if |context_provider| is null.
 GPU_GLES2_EXPORT void AddVulkanCleanupTaskForSkiaFlush(
     viz::VulkanContextProvider* context_provider,
+    uint queue_index,
     GrFlushInfo* flush_info);
 
 GPU_GLES2_EXPORT void DeleteGrBackendTexture(

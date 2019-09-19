@@ -49,7 +49,7 @@ bool VulkanSwapChain::Initialize(
   DCHECK(!use_protected_memory || device_queue->allow_protected_memory());
   use_protected_memory_ = use_protected_memory;
   device_queue_ = device_queue;
-  device_queue_->GetFenceHelper()->ProcessCleanupTasks();
+  device_queue_->GetFenceHelper(0 /* index */)->ProcessCleanupTasks();
   return InitializeSwapChain(surface, surface_format, image_size,
                              min_image_count, pre_transform,
                              use_protected_memory, std::move(old_swap_chain)) &&
@@ -68,8 +68,8 @@ gfx::SwapResult VulkanSwapChain::PresentBuffer() {
 
   VkResult result = VK_SUCCESS;
   VkDevice device = device_queue_->GetVulkanDevice();
-  VkQueue queue = device_queue_->GetVulkanQueue();
-  auto* fence_helper = device_queue_->GetFenceHelper();
+  VkQueue queue = device_queue_->GetVulkanQueue(0 /* index */);
+  auto* fence_helper = device_queue_->GetFenceHelper(0 /* index */);
 
   auto& current_image_data = images_[*acquired_image_];
   if (current_image_data.layout != VK_IMAGE_LAYOUT_PRESENT_SRC_KHR) {
@@ -155,7 +155,7 @@ bool VulkanSwapChain::InitializeSwapChain(
                                 &new_swap_chain);
 
   if (old_swap_chain) {
-    auto* fence_helper = device_queue_->GetFenceHelper();
+    auto* fence_helper = device_queue_->GetFenceHelper(0 /* index */);
     fence_helper->EnqueueVulkanObjectCleanupForSubmittedWork(
         std::move(old_swap_chain));
   }

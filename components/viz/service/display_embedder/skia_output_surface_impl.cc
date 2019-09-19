@@ -17,6 +17,7 @@
 #include "components/viz/common/frame_sinks/begin_frame_source.h"
 #include "components/viz/common/frame_sinks/copy_output_request.h"
 #include "components/viz/common/frame_sinks/copy_output_util.h"
+#include "components/viz/common/gpu/vulkan_context_provider.h"
 #include "components/viz/common/resources/resource_format_utils.h"
 #include "components/viz/service/display/dc_layer_overlay.h"
 #include "components/viz/service/display/output_surface_client.h"
@@ -133,6 +134,9 @@ SkiaOutputSurfaceImpl::SkiaOutputSurfaceImpl(
     : SkiaOutputSurface(GetOutputSurfaceType(deps.get())),
       dependency_(std::move(deps)),
       is_using_vulkan_(dependency_->IsUsingVulkan()),
+      has_dedicated_gr_context_(
+          is_using_vulkan_ &&
+          dependency_->GetVulkanContextProvider()->GetGrContextCount()),
       renderer_settings_(renderer_settings) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
 }
@@ -490,10 +494,15 @@ gpu::SyncToken SkiaOutputSurfaceImpl::SubmitPaint(
 
   bool painting_render_pass = current_paint_->render_pass_id() != 0;
 
-  gpu::SyncToken sync_token(
-      gpu::CommandBufferNamespace::VIZ_SKIA_OUTPUT_SURFACE,
-      impl_on_gpu_->command_buffer_id(), ++sync_fence_release_);
-  sync_token.SetVerifyFlush();
+  base::Optional<gpu::SyncToken> sync_token;
+  if (!has_dedicated_gr_context_) {
+    sync_token.emplace(gpu::CommandBufferNamespace::VIZ_SKIA_OUTPUT_SURFACE,
+                       impl_on_gpu_->command_buffer_id(),
+                       ++sync_fence_release_);
+    sync_token->SetVerifyFlush();
+  } else {
+    sync_token.emplace();
+  }
 
   auto ddl = current_paint_->recorder()->detach();
   DCHECK(ddl);
@@ -534,7 +543,7 @@ gpu::SyncToken SkiaOutputSurfaceImpl::SubmitPaint(
   }
   images_in_current_paint_.clear();
   current_paint_.reset();
-  return sync_token;
+  return *sync_token;
 }
 
 sk_sp<SkImage> SkiaOutputSurfaceImpl::MakePromiseSkImageFromRenderPass(
@@ -804,8 +813,34 @@ void SkiaOutputSurfaceImpl::ScheduleGpuTask(
         std::move(callback).Run();
       },
       std::move(callback));
-  task_sequence_->ScheduleTask(std::move(wrapped_closure),
-                               std::move(sync_tokens));
+  if (!has_dedicated_gr_context_) {
+    task_sequence_->ScheduleTask(std::move(wrapped_closure),
+                                 std::move(sync_tokens));
+    return;
+  }
+#if 1
+  if (!sync_tokens.empty()) {
+    base::WaitableEvent event;
+    task_sequence_->ScheduleTask(
+        base::BindOnce(&base::WaitableEvent::Signal, base::Unretained(&event)),
+        std::move(sync_tokens));
+    event.Wait();
+  }
+  std::move(wrapped_closure).Run();
+#else
+  if (sync_tokens.empty()) {
+    std::move(wrapped_closure).Run();
+    return;
+  }
+  task_sequence_->ScheduleTask(
+      base::BindOnce(
+          [](SkiaOutputSurfaceDependency* dependency,
+             base::OnceClosure callback) {
+            dependency->PostTaskToClientThread(std::move(callback));
+          },
+          dependency_.get(), std::move(wrapped_closure)),
+      std::move(sync_tokens));
+#endif
 }
 
 GrBackendFormat SkiaOutputSurfaceImpl::GetGrBackendFormatForTexture(

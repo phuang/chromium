@@ -55,6 +55,15 @@ class GPU_GLES2_EXPORT WrappedSkImageFactory
       gfx::GpuMemoryBufferType memory_buffer_type) override;
 
  private:
+  std::unique_ptr<SharedImageBacking> CreateSharedImage(
+      const Mailbox& mailbox,
+      viz::ResourceFormat format,
+      const gfx::Size& size,
+      const gfx::ColorSpace& color_space,
+      uint32_t usage,
+      base::span<const uint8_t> pixel_data,
+      bool is_thread_safe);
+
   SharedContextState* const context_state_;
 
   DISALLOW_COPY_AND_ASSIGN(WrappedSkImageFactory);

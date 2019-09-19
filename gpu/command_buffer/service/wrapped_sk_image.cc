@@ -21,6 +21,7 @@
 #include "third_party/skia/include/core/SkPromiseImageTexture.h"
 #include "third_party/skia/include/core/SkSurface.h"
 #include "third_party/skia/include/core/SkSurfaceProps.h"
+#include "third_party/skia/include/gpu/GrBackendSemaphore.h"
 #include "third_party/skia/include/gpu/GrBackendSurface.h"
 #include "third_party/skia/include/gpu/GrTypes.h"
 #include "ui/gl/gl_context.h"
@@ -77,24 +78,37 @@ class WrappedSkImage : public SharedImageBacking {
     pmd->AddOwnershipEdge(client_guid, service_guid, importance);
   }
 
-  SkColorType GetSkColorType() {
-    return viz::ResourceFormatToClosestSkColorType(
-        /*gpu_compositing=*/true, format());
+  sk_sp<SkSurface> BeginWriteAccess(
+      int final_msaa_count,
+      const SkSurfaceProps& surface_props,
+      std::vector<GrBackendSemaphore>* begin_semaphores,
+      std::vector<GrBackendSemaphore>* end_semaphores) {
+    AutoLock auto_lock(this);
+    auto surface = GetSkSurface(final_msaa_count, surface_props);
+    write_surface_ = surface.get();
+    return surface;
   }
 
-  sk_sp<SkSurface> GetSkSurface(int final_msaa_count,
-                                const SkSurfaceProps& surface_props) {
-    if (context_state_->context_lost())
-      return nullptr;
-    DCHECK(context_state_->IsCurrent(nullptr));
-
-    return SkSurface::MakeFromBackendTexture(
-        context_state_->gr_context(), image_->getBackendTexture(false),
-        kTopLeft_GrSurfaceOrigin, final_msaa_count, GetSkColorType(),
-        color_space().ToSkColorSpace(), &surface_props);
+  void EndWriteAccess(sk_sp<SkSurface> surface) {
+    AutoLock auto_lock(this);
+    DCHECK_EQ(surface.get(), write_surface_);
+    DCHECK(surface->unique());
+    write_surface_ = nullptr;
   }
 
-  sk_sp<SkPromiseImageTexture> promise_texture() { return promise_texture_; }
+  sk_sp<SkPromiseImageTexture> BeginReadAccess(
+      std::vector<GrBackendSemaphore>* begin_semaphores,
+      std::vector<GrBackendSemaphore>* end_semaphores) {
+    AutoLock auto_lock(this);
+    DCHECK(!write_surface_);
+    return promise_texture_;
+  }
+
+  void EndReadAccess() {
+    AutoLock auto_lock(this);
+    DCHECK(!write_surface_);
+    // TODO(ericrk): Handle begin/end correctness checks.
+  }
 
  protected:
   std::unique_ptr<SharedImageRepresentationSkia> ProduceSkia(
@@ -111,14 +125,15 @@ class WrappedSkImage : public SharedImageBacking {
                  const gfx::ColorSpace& color_space,
                  uint32_t usage,
                  size_t estimated_size,
-                 SharedContextState* context_state)
+                 SharedContextState* context_state,
+                 bool is_thread_safe)
       : SharedImageBacking(mailbox,
                            format,
                            size,
                            color_space,
                            usage,
                            estimated_size,
-                           false /* is_thread_safe */),
+                           is_thread_safe),
         context_state_(context_state) {
     DCHECK(!!context_state_);
   }
@@ -177,7 +192,7 @@ class WrappedSkImage : public SharedImageBacking {
           size().width(), size().height(), GetSkColorType(), GrMipMapped::kNo,
           GrRenderable::kYes, is_protected);
 #endif
-      image_ = SkImage::MakeFromAdoptedTexture(
+      image_ = SkImage::MakeFromTexture(
           context_state_->gr_context(), backend_texture,
           GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin, info.colorType(),
           info.alphaType(), color_space().ToSkColorSpace());
@@ -209,6 +224,23 @@ class WrappedSkImage : public SharedImageBacking {
     return true;
   }
 
+  SkColorType GetSkColorType() {
+    return viz::ResourceFormatToClosestSkColorType(
+        /*gpu_compositing=*/true, format());
+  }
+
+  sk_sp<SkSurface> GetSkSurface(int final_msaa_count,
+                                const SkSurfaceProps& surface_props) {
+    if (context_state_->context_lost())
+      return nullptr;
+    DCHECK(context_state_->IsCurrent(nullptr));
+
+    return SkSurface::MakeFromBackendTexture(
+        context_state_->gr_context(), image_->getBackendTexture(false),
+        kTopLeft_GrSurfaceOrigin, final_msaa_count, GetSkColorType(),
+        color_space().ToSkColorSpace(), &surface_props);
+  }
+
   SharedContextState* const context_state_;
 
   sk_sp<SkPromiseImageTexture> promise_texture_;
@@ -217,6 +249,11 @@ class WrappedSkImage : public SharedImageBacking {
   bool cleared_ = false;
 
   uint64_t tracing_id_ = 0;
+
+  SkSurface* write_surface_ = nullptr;
+
+  GrBackendSemaphore read_semaphore_;
+  GrBackendSemaphore write_semaphore_;
 
   DISALLOW_COPY_AND_ASSIGN(WrappedSkImage);
 };
@@ -228,43 +265,34 @@ class WrappedSkImageRepresentation : public SharedImageRepresentationSkia {
                                MemoryTypeTracker* tracker)
       : SharedImageRepresentationSkia(manager, backing, tracker) {}
 
-  ~WrappedSkImageRepresentation() override { DCHECK(!write_surface_); }
+  ~WrappedSkImageRepresentation() override = default;
 
   sk_sp<SkSurface> BeginWriteAccess(
       int final_msaa_count,
       const SkSurfaceProps& surface_props,
       std::vector<GrBackendSemaphore>* begin_semaphores,
       std::vector<GrBackendSemaphore>* end_semaphores) override {
-    auto surface =
-        wrapped_sk_image()->GetSkSurface(final_msaa_count, surface_props);
-    write_surface_ = surface.get();
-    return surface;
+    return wrapped_sk_image()->BeginWriteAccess(
+        final_msaa_count, surface_props, begin_semaphores, end_semaphores);
   }
 
   void EndWriteAccess(sk_sp<SkSurface> surface) override {
-    DCHECK_EQ(surface.get(), write_surface_);
-    DCHECK(surface->unique());
-    write_surface_ = nullptr;
+    return wrapped_sk_image()->EndWriteAccess(std::move(surface));
   }
 
   sk_sp<SkPromiseImageTexture> BeginReadAccess(
       std::vector<GrBackendSemaphore>* begin_semaphores,
       std::vector<GrBackendSemaphore>* end_semaphores) override {
-    DCHECK(!write_surface_);
-    return wrapped_sk_image()->promise_texture();
+    return wrapped_sk_image()->BeginReadAccess(begin_semaphores,
+                                               end_semaphores);
   }
 
-  void EndReadAccess() override {
-    DCHECK(!write_surface_);
-    // TODO(ericrk): Handle begin/end correctness checks.
-  }
+  void EndReadAccess() override { return wrapped_sk_image()->EndReadAccess(); }
 
  private:
   WrappedSkImage* wrapped_sk_image() {
     return static_cast<WrappedSkImage*>(backing());
   }
-
-  SkSurface* write_surface_ = nullptr;
 };
 
 }  // namespace
@@ -281,9 +309,8 @@ std::unique_ptr<SharedImageBacking> WrappedSkImageFactory::CreateSharedImage(
     const gfx::ColorSpace& color_space,
     uint32_t usage,
     bool is_thread_safe) {
-  DCHECK(!is_thread_safe);
   return CreateSharedImage(mailbox, format, size, color_space, usage,
-                           base::span<uint8_t>());
+                           base::span<uint8_t>(), is_thread_safe);
 }
 
 std::unique_ptr<SharedImageBacking> WrappedSkImageFactory::CreateSharedImage(
@@ -293,17 +320,8 @@ std::unique_ptr<SharedImageBacking> WrappedSkImageFactory::CreateSharedImage(
     const gfx::ColorSpace& color_space,
     uint32_t usage,
     base::span<const uint8_t> data) {
-  auto info = SkImageInfo::Make(size.width(), size.height(),
-                                ResourceFormatToClosestSkColorType(
-                                    /*gpu_compositing=*/true, format),
-                                kOpaque_SkAlphaType);
-  size_t estimated_size = info.computeMinByteSize();
-  std::unique_ptr<WrappedSkImage> texture(
-      new WrappedSkImage(mailbox, format, size, color_space, usage,
-                         estimated_size, context_state_));
-  if (!texture->Initialize(info, data))
-    return nullptr;
-  return texture;
+  return CreateSharedImage(mailbox, format, size, color_space, usage, data,
+                           false /* is_thread_safe */);
 }
 
 std::unique_ptr<SharedImageBacking> WrappedSkImageFactory::CreateSharedImage(
@@ -322,6 +340,27 @@ std::unique_ptr<SharedImageBacking> WrappedSkImageFactory::CreateSharedImage(
 bool WrappedSkImageFactory::CanImportGpuMemoryBuffer(
     gfx::GpuMemoryBufferType memory_buffer_type) {
   return false;
+}
+
+std::unique_ptr<SharedImageBacking> WrappedSkImageFactory::CreateSharedImage(
+    const Mailbox& mailbox,
+    viz::ResourceFormat format,
+    const gfx::Size& size,
+    const gfx::ColorSpace& color_space,
+    uint32_t usage,
+    base::span<const uint8_t> data,
+    bool is_thread_safe) {
+  auto info = SkImageInfo::Make(size.width(), size.height(),
+                                ResourceFormatToClosestSkColorType(
+                                    /*gpu_compositing=*/true, format),
+                                kOpaque_SkAlphaType);
+  size_t estimated_size = info.computeMinByteSize();
+  std::unique_ptr<WrappedSkImage> texture(
+      new WrappedSkImage(mailbox, format, size, color_space, usage,
+                         estimated_size, context_state_, is_thread_safe));
+  if (!texture->Initialize(info, data))
+    return nullptr;
+  return texture;
 }
 
 std::unique_ptr<SharedImageRepresentationSkia> WrappedSkImage::ProduceSkia(

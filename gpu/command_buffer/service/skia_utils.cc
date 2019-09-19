@@ -97,11 +97,12 @@ void AddCleanupTaskForSkiaFlush(base::OnceClosure task,
 
 void AddVulkanCleanupTaskForSkiaFlush(
     viz::VulkanContextProvider* context_provider,
+    uint queue_index,
     GrFlushInfo* flush_info) {
 #if BUILDFLAG(ENABLE_VULKAN)
   if (context_provider) {
     auto task = context_provider->GetDeviceQueue()
-                    ->GetFenceHelper()
+                    ->GetFenceHelper(queue_index)
                     ->CreateExternalCallback();
     if (task)
       AddCleanupTaskForSkiaFlush(std::move(task), flush_info);

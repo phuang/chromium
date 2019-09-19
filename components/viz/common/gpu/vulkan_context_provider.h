@@ -28,7 +28,8 @@ class VIZ_VULKAN_CONTEXT_PROVIDER_EXPORT VulkanContextProvider
  public:
   virtual gpu::VulkanImplementation* GetVulkanImplementation() = 0;
   virtual gpu::VulkanDeviceQueue* GetDeviceQueue() = 0;
-  virtual GrContext* GetGrContext() = 0;
+  virtual GrContext* GetGrContext(size_t index) = 0;
+  virtual size_t GetGrContextCount() const = 0;
 
   // Get the current SecondaryCBDrawContext for the default render target.
   virtual GrVkSecondaryCBDrawContext* GetGrSecondaryCBDrawContext() = 0;

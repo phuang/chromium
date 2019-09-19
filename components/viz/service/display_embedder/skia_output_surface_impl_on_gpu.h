@@ -210,7 +210,7 @@ class SkiaOutputSurfaceImplOnGpu : public gpu::ImageTransportSurfaceDelegate,
 
   void ReleaseFenceSyncAndPushTextureUpdates(uint64_t sync_fence_release);
 
-  GrContext* gr_context() { return context_state_->gr_context(); }
+  GrContext* gr_context() { return gr_context_; }
   gpu::DecoderContext* decoder();
 
   void ScheduleDelayedWork();
@@ -251,6 +251,7 @@ class SkiaOutputSurfaceImplOnGpu : public gpu::ImageTransportSurfaceDelegate,
   gfx::ColorSpace color_space_;
   scoped_refptr<gl::GLSurface> gl_surface_;
   scoped_refptr<gpu::SharedContextState> context_state_;
+  GrContext* gr_context_ = nullptr;
   const gl::GLVersionInfo* gl_version_info_ = nullptr;
   size_t max_resource_cache_bytes_ = 0u;
 
