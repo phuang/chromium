@@ -332,6 +332,7 @@ void SharedImageFactory::RegisterSharedImageBackingFactoryForTesting(
 bool SharedImageFactory::IsSharedBetweenThreads(uint32_t usage) {
   // If |shared_image_manager_| is thread safe, it means the display is running
   // on a separate thread (which uses a separate GL context or VkDeviceQueue).
+  return false;
   return shared_image_manager_->is_thread_safe() &&
          (usage & SHARED_IMAGE_USAGE_DISPLAY);
 }
