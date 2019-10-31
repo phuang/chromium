@@ -55,6 +55,7 @@ class WrappedSkImage : public SharedImageBacking {
   void Destroy() override {
     promise_texture_.reset();
     image_.reset();
+    DeleteGrBackendTexture(context_state_, &backend_texture_);
   }
 
   bool IsCleared() const override { return cleared_; }
@@ -184,16 +185,16 @@ class WrappedSkImage : public SharedImageBacking {
       // We don't do this on release builds because there is a slight overhead.
 
 #if DCHECK_IS_ON()
-      auto backend_texture = context_state_->gr_context()->createBackendTexture(
+      backend_texture_ = context_state_->gr_context()->createBackendTexture(
           size().width(), size().height(), GetSkColorType(), SkColors::kBlue,
           GrMipMapped::kNo, GrRenderable::kYes, is_protected);
 #else
-      auto backend_texture = context_state_->gr_context()->createBackendTexture(
+      backend_texture_ = context_state_->gr_context()->createBackendTexture(
           size().width(), size().height(), GetSkColorType(), GrMipMapped::kNo,
           GrRenderable::kYes, is_protected);
 #endif
       image_ = SkImage::MakeFromTexture(
-          context_state_->gr_context(), backend_texture,
+          context_state_->gr_context(), backend_texture_,
           GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin, info.colorType(),
           info.alphaType(), color_space().ToSkColorSpace());
     }
@@ -245,6 +246,7 @@ class WrappedSkImage : public SharedImageBacking {
 
   sk_sp<SkPromiseImageTexture> promise_texture_;
   sk_sp<SkImage> image_;
+  GrBackendTexture backend_texture_;
 
   bool cleared_ = false;
 
