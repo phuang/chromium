@@ -12,6 +12,7 @@
 #include "gpu/vulkan/vulkan_fence_helper.h"
 #include "gpu/vulkan/vulkan_function_pointers.h"
 #include "gpu/vulkan/vulkan_info.h"
+#include "base/command_line.h"
 
 namespace gpu {
 
@@ -80,8 +81,13 @@ bool VulkanDeviceQueue::Initialize(
   vk_physical_device_properties_ = physical_device_info.properties;
   vk_queue_index_ = queue_index;
 
-  constexpr size_t kQueueCount = 2;
-  float queue_priority[kQueueCount] = {};
+  bool two = base::CommandLine::ForCurrentProcess()->HasSwitch("use-two-vulkan-queues");
+
+  const size_t kQueueCount = two ? 2 : 1;
+
+  LOG(ERROR) << "Initializing " << kQueueCount << " vulkan queues";
+
+  float queue_priority[2] = {};
   queue_priority[0] = 1.0;
   VkDeviceQueueCreateInfo queue_create_info = {};
   queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
