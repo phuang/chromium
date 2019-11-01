@@ -502,7 +502,7 @@ void ExternalVkImageBacking::Update(std::unique_ptr<gfx::GpuFence> in_fence) {
   AutoLock auto_lock(this);
   DCHECK(!in_fence);
   latest_content_ = kInSharedMemory;
-  SetCleared();
+  is_cleared_ = true;
 }
 
 void ExternalVkImageBacking::Destroy() {
@@ -843,16 +843,21 @@ bool ExternalVkImageBacking::WritePixels(size_t data_size,
 
   if (!need_sychronization()) {
     DCHECK(handles.empty());
-    command_buffer->Submit(0, nullptr, 0, nullptr);
-    EndAccessInternal(false /* readonly */, SemaphoreHandle());
 
     auto* fence_helper = context_state_->vk_context_provider()
                              ->GetDeviceQueue()
-                             ->GetFenceHelper();
+                             ->GetFenceHelper(1);
+
+    // Workaround for fence. Submit() will EnqueueFence() for command buffer
+    // So it must happen after EnqueueVulkanObjectCleanupForSubmittedWork
+    VulkanCommandBuffer* command_buffer_ptr = command_buffer.get();
     fence_helper->EnqueueVulkanObjectCleanupForSubmittedWork(
         std::move(command_buffer));
     fence_helper->EnqueueBufferCleanupForSubmittedWork(stage_buffer,
                                                        stage_memory);
+
+    command_buffer_ptr->Submit(1, 0, nullptr, 0, nullptr);
+    EndAccessInternal(false /* readonly */, SemaphoreHandle());
 
     return true;
   }
@@ -867,7 +872,7 @@ bool ExternalVkImageBacking::WritePixels(size_t data_size,
 
   VkSemaphore end_access_semaphore =
       vulkan_implementation()->CreateExternalSemaphore(device());
-  command_buffer->Submit(begin_access_semaphores.size(),
+  command_buffer->Submit(1, begin_access_semaphores.size(),
                          begin_access_semaphores.data(), 1,
                          &end_access_semaphore);
 
@@ -877,7 +882,7 @@ bool ExternalVkImageBacking::WritePixels(size_t data_size,
                     std::move(end_access_semphore_handle));
 
   auto* fence_helper =
-      context_state_->vk_context_provider()->GetDeviceQueue()->GetFenceHelper();
+      context_state_->vk_context_provider()->GetDeviceQueue()->GetFenceHelper(1);
   fence_helper->EnqueueVulkanObjectCleanupForSubmittedWork(
       std::move(command_buffer));
   begin_access_semaphores.emplace_back(end_access_semaphore);

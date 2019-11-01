@@ -122,7 +122,7 @@ void VulkanDemo::CreateSkSurface() {
     GrBackendRenderTarget render_target(size.width(), size.height(), 0, 0,
                                         vk_image_info);
     sk_surface = SkSurface::MakeFromBackendRenderTarget(
-        vulkan_context_provider_->GetGrContext(), render_target,
+        vulkan_context_provider_->GetGrContext(0), render_target,
         kTopLeft_GrSurfaceOrigin, kBGRA_8888_SkColorType, nullptr,
         &surface_props);
   } else {

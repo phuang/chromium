@@ -357,6 +357,13 @@ class RasterDecoderImpl final : public RasterDecoder,
   void ReportProgress() override;
 
  private:
+  void AddVulkanCleanupTaskForSkiaFlush(
+    viz::VulkanContextProvider* context_provider,
+    GrFlushInfo* flush_info) {
+    ::gpu::AddVulkanCleanupTaskForSkiaFlush(context_provider, context_provider->GetGrContextCount() - 1, flush_info);
+  }
+
+
   gles2::ContextState* state() const {
     if (use_passthrough_) {
       NOTREACHED();
@@ -805,7 +812,7 @@ void RasterDecoderImpl::Destroy(bool have_context) {
           .fSignalSemaphores = end_semaphores_.data(),
       };
       AddVulkanCleanupTaskForSkiaFlush(
-          shared_context_state_->vk_context_provider(), 0, &flush_info);
+          shared_context_state_->vk_context_provider(), &flush_info);
       auto result = sk_surface_->flush(
           SkSurface::BackendSurfaceAccess::kPresent, flush_info);
       DCHECK(result == GrSemaphoresSubmitted::kYes || end_semaphores_.empty());
@@ -2142,8 +2149,8 @@ void RasterDecoderImpl::DoCopySubTextureINTERNALSkia(
       .fNumSemaphores = end_semaphores.size(),
       .fSignalSemaphores = end_semaphores.data(),
   };
-  gpu::AddVulkanCleanupTaskForSkiaFlush(
-      shared_context_state_->vk_context_provider(), 0, &flush_info);
+  AddVulkanCleanupTaskForSkiaFlush(
+      shared_context_state_->vk_context_provider(), &flush_info);
   dest_scoped_access.surface()->flush(
       SkSurface::BackendSurfaceAccess::kNoAccess, flush_info);
 }
@@ -2444,7 +2451,7 @@ void RasterDecoderImpl::DoEndRasterCHROMIUM() {
         .fSignalSemaphores = end_semaphores_.data(),
     };
     AddVulkanCleanupTaskForSkiaFlush(
-        shared_context_state_->vk_context_provider(), 0, &flush_info);
+        shared_context_state_->vk_context_provider(), &flush_info);
     auto result = sk_surface_->flush(SkSurface::BackendSurfaceAccess::kPresent,
                                      flush_info);
     DCHECK(result == GrSemaphoresSubmitted::kYes || end_semaphores_.empty());

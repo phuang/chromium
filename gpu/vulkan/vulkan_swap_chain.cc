@@ -86,7 +86,7 @@ gfx::SwapResult VulkanSwapChain::PresentBuffer() {
     VkSemaphore vk_semaphore = CreateSemaphore(device);
     // Submit our command_buffer for the current buffer. It sets the image
     // layout for presenting.
-    if (!current_image_data.command_buffer->Submit(1, &end_write_semaphore_, 1,
+    if (!current_image_data.command_buffer->Submit(0, 1, &end_write_semaphore_, 1,
                                                    &vk_semaphore)) {
       vkDestroySemaphore(device, vk_semaphore, nullptr /* pAllocator */);
       return gfx::SwapResult::SWAP_FAILED;

@@ -136,7 +136,7 @@ SkiaOutputSurfaceImpl::SkiaOutputSurfaceImpl(
       is_using_vulkan_(dependency_->IsUsingVulkan()),
       has_dedicated_gr_context_(
           is_using_vulkan_ &&
-          dependency_->GetVulkanContextProvider()->GetGrContextCount()),
+          dependency_->GetVulkanContextProvider()->GetGrContextCount() > 1),
       renderer_settings_(renderer_settings) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
 }
@@ -717,6 +717,9 @@ void SkiaOutputSurfaceImpl::InitializeOnGpuThread(base::WaitableEvent* event,
       std::move(did_swap_buffer_complete_callback),
       std::move(buffer_presented_callback), std::move(context_lost_callback),
       std::move(gpu_vsync_callback));
+
+  LOG(ERROR) << "Initializing";
+
   if (!impl_on_gpu_) {
     *result = false;
   } else {

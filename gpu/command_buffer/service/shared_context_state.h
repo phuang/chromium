@@ -99,10 +99,14 @@ class GPU_GLES2_EXPORT SharedContextState
     return metal_context_provider_;
   }
   gl::ProgressReporter* progress_reporter() const { return progress_reporter_; }
-  GrContext* gr_context(size_t index = 1) const {
+  GrContext* gr_context(size_t index) const {
     DCHECK_LT(index, gr_contexts_.size());
     return gr_contexts_[index];
   }
+  GrContext* gr_context() const {
+    return gr_contexts_.back();
+  }
+
   // Handles Skia-reported shader compilation errors.
   void compileError(const char* shader, const char* errors) override;
   gles2::FeatureInfo* feature_info() { return feature_info_.get(); }

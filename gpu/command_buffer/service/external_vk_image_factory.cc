@@ -29,7 +29,7 @@ ExternalVkImageFactory::~ExternalVkImageFactory() {
   if (command_pool_) {
     context_state_->vk_context_provider()
         ->GetDeviceQueue()
-        ->GetFenceHelper()
+        ->GetFenceHelper(1)
         ->EnqueueVulkanObjectCleanupForSubmittedWork(std::move(command_pool_));
   }
 }

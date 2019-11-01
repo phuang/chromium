@@ -305,7 +305,7 @@ void GpuServiceImpl::InitializeWithHost(
   if (!shared_image_manager) {
 #if BUILDFLAG(ENABLE_VULKAN)
     bool thread_safe = vulkan_context_provider_ &&
-                       vulkan_context_provider_->GetGrContextCount();
+                       vulkan_context_provider_->GetGrContextCount() > 1;
 #else
     constexpr bool thread_safe = false;
 #endif

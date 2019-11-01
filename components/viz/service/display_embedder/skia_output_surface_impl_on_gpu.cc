@@ -635,7 +635,7 @@ SkiaOutputSurfaceImplOnGpu::SkiaOutputSurfaceImplOnGpu(
 SkiaOutputSurfaceImplOnGpu::~SkiaOutputSurfaceImplOnGpu() {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
 
-  dependency_->UnregisterDisplayContext(this);
+  //dependency_->UnregisterDisplayContext(this);
 
   // |context_provider_| and clients want either the context to be lost or made
   // current on destruction.
@@ -770,8 +770,8 @@ bool SkiaOutputSurfaceImplOnGpu::FinishPaintCurrentFrame(
             scoped_promise_image_access.end_semaphores().data(),
     };
 
-    gpu::AddVulkanCleanupTaskForSkiaFlush(vulkan_context_provider_,
-                                          1 /* index */, &flush_info);
+    gpu::AddVulkanCleanupTaskForSkiaFlush(vulkan_context_provider_, 0,
+                                          &flush_info);
     if (on_finished)
       gpu::AddCleanupTaskForSkiaFlush(std::move(on_finished), &flush_info);
 

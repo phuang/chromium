@@ -129,7 +129,7 @@ bool VulkanCommandBuffer::Initialize() {
 void VulkanCommandBuffer::Destroy() {
   VkDevice device = device_queue_->GetVulkanDevice();
   if (submission_fence_.is_valid()) {
-    DCHECK(device_queue_->GetFenceHelper()->HasPassed(submission_fence_));
+    DCHECK(device_queue_->GetFenceHelper(queue_index_)->HasPassed(submission_fence_));
     submission_fence_ = VulkanFenceHelper::FenceHandle();
   }
 
@@ -139,11 +139,13 @@ void VulkanCommandBuffer::Destroy() {
   }
 }
 
-bool VulkanCommandBuffer::Submit(uint32_t num_wait_semaphores,
+bool VulkanCommandBuffer::Submit(int queue_index,
+                                  uint32_t num_wait_semaphores,
                                  VkSemaphore* wait_semaphores,
                                  uint32_t num_signal_semaphores,
                                  VkSemaphore* signal_semaphores) {
   DCHECK(primary_);
+  queue_index_ = queue_index;
 
   std::vector<VkPipelineStageFlags> wait_dst_stage_mask(
       num_wait_semaphores, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT);
@@ -167,21 +169,23 @@ bool VulkanCommandBuffer::Submit(uint32_t num_wait_semaphores,
   VkResult result = VK_SUCCESS;
 
   VkFence fence;
-  result = device_queue_->GetFenceHelper()->GetFence(&fence);
+  result = device_queue_->GetFenceHelper(queue_index)->GetFence(&fence);
   if (VK_SUCCESS != result) {
     DLOG(ERROR) << "Failed to create fence: " << result;
     return false;
   }
 
   result =
-      vkQueueSubmit(device_queue_->GetVulkanQueue(), 1, &submit_info, fence);
+      vkQueueSubmit(device_queue_->GetVulkanQueue(queue_index), 1, &submit_info, fence);
 
   if (VK_SUCCESS != result) {
     vkDestroyFence(device_queue_->GetVulkanDevice(), fence, nullptr);
     submission_fence_ = VulkanFenceHelper::FenceHandle();
   } else {
-    submission_fence_ = device_queue_->GetFenceHelper()->EnqueueFence(fence);
+    submission_fence_ = device_queue_->GetFenceHelper(queue_index)->EnqueueFence(fence);
   }
+
+  device_queue_->GetFenceHelper(queue_index)->ProcessCleanupTasks();
 
   PostExecution();
   if (VK_SUCCESS != result) {
@@ -209,14 +213,14 @@ void VulkanCommandBuffer::Wait(uint64_t timeout) {
   if (!submission_fence_.is_valid())
     return;
 
-  device_queue_->GetFenceHelper()->Wait(submission_fence_, timeout);
+  device_queue_->GetFenceHelper(queue_index_)->Wait(submission_fence_, timeout);
 }
 
 bool VulkanCommandBuffer::SubmissionFinished() {
   if (!submission_fence_.is_valid())
     return true;
 
-  return device_queue_->GetFenceHelper()->HasPassed(submission_fence_);
+  return device_queue_->GetFenceHelper(queue_index_)->HasPassed(submission_fence_);
 }
 
 void VulkanCommandBuffer::TransitionImageLayout(VkImage image,

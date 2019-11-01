@@ -30,7 +30,7 @@ class VULKAN_EXPORT VulkanCommandBuffer {
   void Destroy();
 
   // Submit primary command buffer to the queue.
-  bool Submit(uint32_t num_wait_semaphores,
+  bool Submit(int queue_index, uint32_t num_wait_semaphores,
               VkSemaphore* wait_semaphores,
               uint32_t num_signal_semaphores,
               VkSemaphore* signal_semaphores);
@@ -89,6 +89,7 @@ class VULKAN_EXPORT VulkanCommandBuffer {
   VulkanCommandPool* command_pool_;
   VkCommandBuffer command_buffer_ = VK_NULL_HANDLE;
   VulkanFenceHelper::FenceHandle submission_fence_;
+  int queue_index_;
 
   DISALLOW_COPY_AND_ASSIGN(VulkanCommandBuffer);
 };

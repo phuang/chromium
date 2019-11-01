@@ -72,6 +72,8 @@ class VULKAN_EXPORT VulkanDeviceQueue {
   }
 
   VkQueue GetVulkanQueue(size_t index = 0) const {
+    if(index >= vk_queues_.size())
+      return vk_queues_.back();
     DCHECK(!vk_queues_.empty());
     DCHECK_LT(index, vk_queues_.size());
     return vk_queues_[index];
@@ -86,6 +88,8 @@ class VULKAN_EXPORT VulkanDeviceQueue {
   std::unique_ptr<gpu::VulkanCommandPool> CreateCommandPool();
 
   VulkanFenceHelper* GetFenceHelper(size_t index = 0) const {
+    if(index >= cleanup_helpers_.size())
+      return cleanup_helpers_.back().get();
     DCHECK_LT(index, cleanup_helpers_.size());
     return cleanup_helpers_[index].get();
   }
