@@ -55,7 +55,8 @@ class WrappedSkImage : public SharedImageBacking {
   void Destroy() override {
     promise_texture_.reset();
     image_.reset();
-    DeleteGrBackendTexture(context_state_, &backend_texture_);
+    if (backend_texture_.isValid())
+      DeleteGrBackendTexture(context_state_, &backend_texture_);
   }
 
   bool IsCleared() const override { return cleared_; }
