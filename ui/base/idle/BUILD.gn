@@ -60,7 +60,7 @@ component("idle") {
     sources += [ "idle_fuchsia.cc" ]
   }
 
-  if (is_linux) {
+  if (is_linux || is_ohos) {
     sources += [ "idle_linux.cc" ]
     deps += [ "//ui/display" ]
     if (use_dbus) {

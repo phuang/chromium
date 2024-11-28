@@ -42,8 +42,9 @@ class MerchantTrustService : public KeyedService {
   MerchantTrustService& operator=(const MerchantTrustService&) = delete;
 
   // Returns merchant trust information for the website with |url|.
-  virtual std::optional<page_info::MerchantData>
-  GetMerchantTrustInfo(const GURL& url, ukm::SourceId source_id) const;
+  virtual std::optional<page_info::MerchantData> GetMerchantTrustInfo(
+      const GURL& url,
+      ukm::SourceId source_id) const;
 
  private:
   const raw_ptr<optimization_guide::OptimizationGuideDecider>

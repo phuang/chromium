@@ -2238,7 +2238,6 @@ TEST_F(CloudPolicyClientTest, UploadPolicyValidationReport) {
       CloudPolicyValidatorBase::VALIDATION_VALUE_WARNING, issues, kStore,
       policy_type_, kPolicyToken, result_future.GetCallback());
 
-
   const CloudPolicyClient::Result result = result_future.Get();
   EXPECT_TRUE(result.IsSuccess());
   EXPECT_EQ(DeviceManagementService::JobConfiguration::

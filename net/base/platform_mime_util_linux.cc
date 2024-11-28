@@ -23,6 +23,12 @@ bool PlatformMimeUtil::GetPlatformMimeTypeFromExtension(
     std::string* result) const {
   return android::GetMimeTypeFromExtension(ext, result);
 }
+#elif BUILDFLAG(IS_OHOS)
+bool PlatformMimeUtil::GetPlatformMimeTypeFromExtension(
+    const base::FilePath::StringType& ext,
+    std::string* result) const {
+  return false;
+}
 #else
 bool PlatformMimeUtil::GetPlatformMimeTypeFromExtension(
     const base::FilePath::StringType& ext,

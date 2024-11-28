@@ -34,6 +34,10 @@
 #include "ui/gl/android/scoped_a_native_window.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "ui/gfx/ohos/scoped_oh_native_window.h"
+#endif
+
 namespace gl {
 
 class GLSurfacePresentationHelper;
@@ -70,6 +74,10 @@ class GL_EXPORT NativeViewGLSurfaceEGL : public GLSurfaceEGL,
 #if BUILDFLAG(IS_ANDROID)
   NativeViewGLSurfaceEGL(GLDisplayEGL* display,
                          ScopedANativeWindow scoped_window,
+                         std::unique_ptr<gfx::VSyncProvider> vsync_provider);
+#elif BUILDFLAG(IS_OHOS)
+  NativeViewGLSurfaceEGL(GLDisplayEGL* display,
+                         ui::ScopedOHNativeWindow scoped_window,
                          std::unique_ptr<gfx::VSyncProvider> vsync_provider);
 #else
   NativeViewGLSurfaceEGL(GLDisplayEGL* display,
@@ -125,6 +133,9 @@ class GL_EXPORT NativeViewGLSurfaceEGL : public GLSurfaceEGL,
 
 #if BUILDFLAG(IS_ANDROID)
   ScopedANativeWindow scoped_window_;
+#endif
+#if BUILDFLAG(IS_OHOS)
+  ui::ScopedOHNativeWindow scoped_window_;
 #endif
   EGLNativeWindowType window_ = 0;
   gfx::Size size_ = gfx::Size(1, 1);

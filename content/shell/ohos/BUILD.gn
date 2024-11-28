@@ -1,0 +1,55 @@
+group("content_shell_hap") {
+  testonly = true
+  deps = [ ":content_shell_content_view" ]
+}
+
+config("napi_config") {
+  defines = [
+    "NAPI_DISABLE_CPP_EXCEPTIONS",
+    "NODE_ADDON_API_DISABLE_DEPRECATED",
+  ]
+}
+
+source_set("napi") {
+  sources = [
+    "napi-inl.h",
+    "napi.h",
+  ]
+  public_configs = [ ":napi_config" ]
+}
+
+shared_library("content_shell_content_view") {
+  testonly = true
+  sources = [
+    "log.h",
+    "napi_init.cc",
+    "napi_manager.cc",
+    "napi_manager.h",
+    "shell_main_delegate.cc",
+    "shell_main_delegate.h",
+    "web_contents_observer.cc",
+    "web_contents_observer.h",
+  ]
+
+  libs = [
+    "ace_napi.z",
+    "ace_ndk.z",
+    "hilog_ndk.z",
+    "uv",
+    "z",
+    "EGL",
+    "GLESv3",
+  ]
+
+  deps = [
+    ":napi",
+    "//base",
+    "//components/crash/content/browser",
+    "//content/shell:content_shell_app",
+    "//content/shell:content_shell_lib",
+    "//content/shell:pak",
+    "//media",
+    "//skia",
+    "//ui/ohos",
+  ]
+}

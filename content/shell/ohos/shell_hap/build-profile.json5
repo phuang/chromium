@@ -1,0 +1,50 @@
+{
+
+  "app": {
+    "signingConfigs": [
+      // {
+      //   "name": "default",
+      //   "type": "HarmonyOS",
+      //   "material": {
+      //     "storePassword": "000000162FA0D29D2D62BD1D607D00A2E3A5823B263A27CA17908D5B65874F4D43DE68FC0BBE",
+      //     "certpath": "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/toolchains/lib/OpenHarmonyProfileRelease.pem",
+      //     "keyAlias": "openharmony application release",
+      //     "keyPassword": "000000166533BCBA88A2F6253F65195BA499278CA341DC2218524CA470EBACC5DB93F782742D",
+      //     "profile": "openharmony_sx.p7b",
+      //     "signAlg": "SHA256withECDSA",
+      //     "storeFile": "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/toolchains/lib/OpenHarmony.p12"
+      //   }
+      // }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS"
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

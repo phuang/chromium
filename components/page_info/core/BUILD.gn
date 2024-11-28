@@ -6,7 +6,10 @@ if (is_android) {
 
 proto_library("proto") {
   proto_in_dir = "//"
-  sources = [ "proto/about_this_site_metadata.proto", "proto/merchant_trust_metadata.proto" ]
+  sources = [
+    "proto/about_this_site_metadata.proto",
+    "proto/merchant_trust_metadata.proto",
+  ]
 
   deps = [ "//components/optimization_guide/proto:optimization_guide_proto" ]
 }

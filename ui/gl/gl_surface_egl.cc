@@ -354,6 +354,16 @@ NativeViewGLSurfaceEGL::NativeViewGLSurfaceEGL(
       scoped_window_(std::move(scoped_window)),
       window_(scoped_window_.a_native_window()),
       vsync_provider_external_(std::move(vsync_provider)) {}
+#elif BUILDFLAG(IS_OHOS)
+NativeViewGLSurfaceEGL::NativeViewGLSurfaceEGL(
+    GLDisplayEGL* display,
+    ui::ScopedOHNativeWindow scoped_window,
+    std::unique_ptr<gfx::VSyncProvider> vsync_provider)
+    : GLSurfaceEGL(display),
+      scoped_window_(std::move(scoped_window)),
+      window_(reinterpret_cast<EGLNativeWindowType>(
+          scoped_window_.native_window())),
+      vsync_provider_external_(std::move(vsync_provider)) {}
 #else
 NativeViewGLSurfaceEGL::NativeViewGLSurfaceEGL(
     GLDisplayEGL* display,

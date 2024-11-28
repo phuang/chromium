@@ -234,6 +234,9 @@ bool GetNetworkListUsingGetifaddrs(NetworkInterfaceList* networks,
             base::android::SDK_VERSION_NOUGAT);
   DCHECK(getifaddrs);
   DCHECK(freeifaddrs);
+#elif BUILDFLAG(IS_OHOS)
+bool GetNetworkListNoutUsed(NetworkInterfaceList* networks, int policy) {
+  constexpr bool use_alternative_getifaddrs = false;
 #else
 bool GetNetworkList(NetworkInterfaceList* networks, int policy) {
   constexpr bool use_alternative_getifaddrs = false;
@@ -287,7 +290,7 @@ bool GetNetworkList(NetworkInterfaceList* networks, int policy) {
 #if BUILDFLAG(IS_ANDROID)
 }  // namespace internal
 // For Android use GetWifiSSID() impl in network_interfaces_linux.cc.
-#else
+#elif !BUILDFLAG(IS_OHOS)
 std::string GetWifiSSID() {
   NOTIMPLEMENTED();
   return std::string();

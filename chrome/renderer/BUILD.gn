@@ -19,7 +19,7 @@ import("//testing/libfuzzer/fuzzer_test.gni")
 import("//third_party/widevine/cdm/widevine.gni")
 import("//tools/grit/grit_rule.gni")
 
-assert(enable_supervised_users)
+# assert(enable_supervised_users)
 
 grit("resources") {
   source = "resources/renderer_resources.grd"
@@ -362,7 +362,7 @@ static_library("renderer") {
     ]
   }
 
-  if (is_android) {
+  if (is_android || is_ohos) {
     sources += [
       "net/page_auto_fetcher_helper_android.cc",
       "net/page_auto_fetcher_helper_android.h",

@@ -32,6 +32,10 @@
 #include "ui/base/win/win_cursor_factory.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "ui/base/ohos/cursor_factory.h"
+#endif
+
 #if BUILDFLAG(IS_OZONE)
 #include "ui/ozone/public/ozone_platform.h"
 #endif
@@ -240,6 +244,9 @@ Env::Env()
       input_state_lookup_(InputStateLookup::Create()) {
 #if BUILDFLAG(IS_WIN)
   cursor_factory_ = std::make_unique<ui::WinCursorFactory>();
+#endif
+#if BUILDFLAG(IS_OHOS)
+  cursor_factory_ = std::make_unique<ui::ohos::CursorFactory>();
 #endif
 }
 

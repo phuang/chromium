@@ -2027,7 +2027,7 @@ BASE_FEATURE(kPreferCompositingToLCDText,
 #endif
 );
 
-#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_WIN) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 BASE_FEATURE(kPrefetchFontLookupTables,
              "PrefetchFontLookupTables",
 #if BUILDFLAG(IS_WIN)

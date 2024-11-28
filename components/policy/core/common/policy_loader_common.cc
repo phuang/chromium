@@ -64,7 +64,7 @@ const char* kSensitivePolicies[] = {
     key::kFirstPartySetsOverrides,
     key::kHomepageLocation,
 #endif
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
     key::kNewTabPageLocation,
 #endif
 #if !BUILDFLAG(IS_CHROMEOS)
@@ -80,7 +80,7 @@ void RecordInvalidPolicies(const std::string& policy_name) {
   base::UmaHistogramSparse("EnterpriseCheck.InvalidPolicies", details->id);
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 // Marks the sensitive ExtensionInstallForceList policy entries, returns true if
 // there is any sensitive entries in the policy.
 bool FilterSensitiveExtensionsInstallForcelist(PolicyMap::Entry* map_entry) {
@@ -180,7 +180,7 @@ bool FilterSensitiveExtensionSettings(PolicyMap::Entry* map_entry) {
 
 void FilterSensitivePolicies(PolicyMap* policy) {
   int invalid_policies = 0;
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   if (FilterSensitiveExtensionsInstallForcelist(
           policy->GetMutable(key::kExtensionInstallForcelist))) {
     invalid_policies++;

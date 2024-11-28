@@ -51,7 +51,8 @@ constexpr char kDiscardedBuffer[] = "discarded";
 constexpr char kDeviceAddress[] = "00:00:00:00:00:00";
 constexpr uint32_t kElementNumBytes = 1;
 constexpr uint32_t kCapacityNumBytes = 64;
-constexpr std::string_view kOpenSocketResult = "Bluetooth.Serial.OpenSocketResult";
+constexpr std::string_view kOpenSocketResult =
+    "Bluetooth.Serial.OpenSocketResult";
 
 std::string CreateTestData(size_t buffer_size) {
   std::string test_data(buffer_size, 'X');

@@ -2,7 +2,7 @@
 # Use of this source code is governed by a BSD-style license that can be
 # found in the LICENSE file.
 
-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_ohos)
 
 source_set("search") {
   sources = [
@@ -31,6 +31,7 @@ source_set("search") {
     ]
     public_deps += [ "//components/policy/core/browser" ]
     deps += [ "//components/prefs" ]
+  } else if (is_ohos) {
   } else {
     sources += [
       "instant_service.cc",

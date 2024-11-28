@@ -29,6 +29,8 @@
 #define METRICS_OS_NAME "Linux"
 #elif BUILDFLAG(IS_FUCHSIA)
 #define METRICS_OS_NAME "Fuchsia"
+#elif BUILDFLAG(IS_OHOS)
+#define METRICS_OS_NAME "OpenHarmony"
 #endif
 
 namespace crashpad {

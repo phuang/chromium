@@ -321,8 +321,9 @@ void TestPaymentsDataManager::SetNicknameForCardWithGUID(
 
 void TestPaymentsDataManager::RemoveCardWithoutNotification(
     const CreditCard& card) {
-  if (auto it = base::ranges::find(local_credit_cards_,
-        card.guid(), &CreditCard::guid); it != local_credit_cards_.end()) {
+  if (auto it = base::ranges::find(local_credit_cards_, card.guid(),
+                                   &CreditCard::guid);
+      it != local_credit_cards_.end()) {
     local_credit_cards_.erase(it);
   }
 }

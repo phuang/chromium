@@ -157,7 +157,7 @@ void UnsentLogStore::LogInfo::Init(const std::string& log_data,
   hash = base::SHA1HashString(log_data);
 
   CHECK(ComputeHMACForLog(log_data, signing_key, &signature))
-    << "HMAC signing failed";
+      << "HMAC signing failed";
 
   timestamp = log_timestamp;
   this->log_metadata = optional_log_metadata;

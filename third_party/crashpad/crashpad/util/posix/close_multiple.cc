@@ -75,7 +75,8 @@ void CloseNowOrOnExec(int fd, bool ebadf_ok) {
 bool CloseMultipleNowOrOnExecUsingFDDir(int min_fd, int preserve_fd) {
 #if BUILDFLAG(IS_APPLE)
   static constexpr char kFDDir[] = "/dev/fd";
-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   static constexpr char kFDDir[] = "/proc/self/fd";
 #endif
 
@@ -143,7 +144,7 @@ void CloseMultipleNowOrOnExec(int fd, int preserve_fd) {
 #endif
 
 #if !(BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
-      BUILDFLAG(IS_ANDROID)) ||                        \
+      BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)) ||  \
     defined(OPEN_MAX)
   // Linux does not provide OPEN_MAX. See
   // https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/include/linux/limits.h?id=77293034696e3e0b6c8b8fc1f96be091104b3d2b.

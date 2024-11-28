@@ -32,7 +32,8 @@
 #include <sys/sysctl.h>
 #endif
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_OHOS)
 #include "util/linux/ptrace_connection.h"
 #endif
 
@@ -48,7 +49,7 @@ class ProcessInfo {
   ~ProcessInfo();
 
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
-    DOXYGEN
+    BUILDFLAG(IS_OHOS) || DOXYGEN
   //! \brief Initializes this object with information about the process whose ID
   //!     is \a pid using a PtraceConnection \a connection.
   //!
@@ -173,7 +174,8 @@ class ProcessInfo {
  private:
 #if BUILDFLAG(IS_APPLE)
   kinfo_proc kern_proc_info_;
-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // Some members are marked mutable so that they can be lazily initialized by
   // const methods. These are always InitializationState-protected so that
   // multiple successive calls will always produce the same return value and out

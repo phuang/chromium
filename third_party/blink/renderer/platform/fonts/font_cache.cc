@@ -76,7 +76,7 @@ namespace blink {
 const char kColorEmojiLocale[] = "und-Zsye";
 const char kMonoEmojiLocale[] = "und-Zsym";
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 extern const char kNotoColorEmojiCompat[] = "Noto Color Emoji Compat";
 #endif
 

@@ -81,7 +81,7 @@ StartObservingWebContents(GlobalRenderFrameHostId render_frame_host_id,
   return web_contents_observer;
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 // Checks whether a track living in the WebContents indicated by
 // (render_process_id, render_frame_id) may be cropped or restricted
 // to the target indicated by |target|.
@@ -676,7 +676,7 @@ void MediaStreamDispatcherHost::KeepDeviceAliveForTransfer(
       render_frame_host_id_, requester_id_, session_id, transfer_id));
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 void MediaStreamDispatcherHost::FocusCapturedSurface(const std::string& label,
                                                      bool focus) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);

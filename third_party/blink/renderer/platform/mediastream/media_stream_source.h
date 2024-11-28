@@ -70,7 +70,7 @@ class PLATFORM_EXPORT MediaStreamSource final
     virtual void SourceChangedCaptureConfiguration() = 0;
     virtual void SourceChangedCaptureHandle() = 0;
     // No listener needs zoom-level updates on Android or iOS.
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
     virtual void SourceChangedZoomLevel(int) = 0;
 #endif
   };

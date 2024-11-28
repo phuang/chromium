@@ -25,16 +25,14 @@ NativeWebKeyboardEvent::NativeWebKeyboardEvent(
       os_event(nullptr),
       skip_if_unhandled(false) {}
 
-NativeWebKeyboardEvent::NativeWebKeyboardEvent(
-    JNIEnv* env,
-    const base::android::JavaRef<jobject>& android_key_event,
-    blink::WebInputEvent::Type type,
-    int modifiers,
-    base::TimeTicks timestamp,
-    int keycode,
-    int scancode,
-    int unicode_character,
-    bool is_system_key)
+NativeWebKeyboardEvent::NativeWebKeyboardEvent(const void* android_key_event,
+                                               blink::WebInputEvent::Type type,
+                                               int modifiers,
+                                               base::TimeTicks timestamp,
+                                               int keycode,
+                                               int scancode,
+                                               int unicode_character,
+                                               bool is_system_key)
     : WebKeyboardEvent(WebKeyboardEventBuilder::Build(env,
                                                       android_key_event,
                                                       type,

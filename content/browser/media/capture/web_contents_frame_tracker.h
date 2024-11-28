@@ -161,7 +161,7 @@ class CONTENT_EXPORT WebContentsFrameTracker final
   // UI thread. This is not guaranteed to be valid and must be checked before
   // use.
   // https://crbug.com/1480152
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
   const base::WeakPtr<MouseCursorOverlayController> cursor_controller_;
 #endif
 

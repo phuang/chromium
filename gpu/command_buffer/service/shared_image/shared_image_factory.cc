@@ -79,6 +79,7 @@
 
 #if BUILDFLAG(IS_FUCHSIA)
 #include <lib/zx/channel.h>
+
 #include "gpu/vulkan/vulkan_device_queue.h"
 #include "gpu/vulkan/vulkan_implementation.h"
 #endif  // BUILDFLAG(IS_FUCHSIA)
@@ -87,6 +88,10 @@
 #include "base/android/android_hardware_buffer_compat.h"
 #include "gpu/command_buffer/service/shared_image/ahardwarebuffer_image_backing_factory.h"
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_OHOS)
+#include "gpu/command_buffer/service/shared_image/oh_native_buffer_image_backing_factory.h"
+#endif  // BUILDFLAG(IS_OHOS)
 
 namespace gpu {
 
@@ -307,6 +312,10 @@ SharedImageFactory::SharedImageFactory(
         context_state_->vk_context_provider());
     factories_.push_back(std::move(ahb_factory));
   }
+#elif BUILDFLAG(IS_OHOS)
+  auto ohnb_factory = std::make_unique<OHNativeBufferImageBackingFactory>(
+      feature_info.get(), gpu_preferences_);
+  factories_.push_back(std::move(ohnb_factory));
 #elif BUILDFLAG(IS_OZONE)
   // For all Ozone platforms - Desktop Linux, ChromeOS, Fuchsia, CastOS.
   if (ui::OzonePlatform::GetInstance()
@@ -357,6 +366,7 @@ bool SharedImageFactory::CreateSharedImage(const Mailbox& mailbox,
                                            std::string debug_label) {
   auto* factory = GetFactoryByUsage(usage, format, size,
                                     /*pixel_data=*/{}, gfx::EMPTY_BUFFER);
+
   if (!factory) {
     LogGetFactoryFailed(usage, format, gfx::EMPTY_BUFFER, debug_label);
     return false;
@@ -841,8 +851,9 @@ SharedImageBackingFactory* SharedImageFactory::GetFactoryByUsage(
     const gfx::Size& size,
     base::span<const uint8_t> pixel_data,
     gfx::GpuMemoryBufferType gmb_type) {
-  if (backing_factory_for_testing_)
+  if (backing_factory_for_testing_) {
     return backing_factory_for_testing_;
+  }
 
   bool share_between_threads = IsSharedBetweenThreads(usage);
   for (auto& factory : factories_) {
@@ -860,7 +871,7 @@ void SharedImageFactory::LogGetFactoryFailed(gpu::SharedImageUsageSet usage,
                                              viz::SharedImageFormat format,
                                              gfx::GpuMemoryBufferType gmb_type,
                                              const std::string& debug_label) {
-  LOG(ERROR) << "Could not find SharedImageBackingFactory with params: usage: "
+  LOG(FATAL) << "Could not find SharedImageBackingFactory with params: usage: "
              << CreateLabelForSharedImageUsage(usage)
              << ", format: " << format.ToString()
              << ", share_between_threads: " << IsSharedBetweenThreads(usage)

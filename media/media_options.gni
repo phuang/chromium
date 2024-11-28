@@ -127,8 +127,9 @@ declare_args() {
 
   # Determines if a GpuChannel is needed between media capture utility process
   # and gpu process for a given platform.
-  enable_gpu_channel_media_capture = is_linux || is_win || is_chromeos_ash ||
-                                     is_apple || is_android || is_fuchsia
+  enable_gpu_channel_media_capture =
+      is_linux || is_win || is_chromeos_ash || is_apple || is_android ||
+      is_fuchsia || is_ohos
 }
 
 # Use another declare_args() to allow dependence on args defined above.
@@ -202,7 +203,7 @@ declare_args() {
   #
   # TODO(crbug.com/1336055): Remove legacy target_cpu hack used for targeting
   # desktop Chromecast builds.
-  if (is_posix && !is_android && !is_apple &&
+  if (is_posix && !is_android && !is_apple && !is_ohos &&
       (!is_castos || (target_cpu == "x86" || target_cpu == "x64") ||
        is_cast_audio_only)) {
     use_alsa = true

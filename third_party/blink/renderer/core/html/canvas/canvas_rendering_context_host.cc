@@ -343,8 +343,12 @@ void CanvasRenderingContextHost::CreateCanvasResourceProvider2D(
 }
 
 SkColorInfo CanvasRenderingContextHost::GetRenderingContextSkColorInfo() const {
-  if (RenderingContext())
+  return SkColorInfo(kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+                     SkColorSpace::MakeSRGB());
+
+  if (RenderingContext()) {
     return RenderingContext()->CanvasRenderingContextSkColorInfo();
+  }
   return SkColorInfo(kN32_SkColorType, kPremul_SkAlphaType,
                      SkColorSpace::MakeSRGB());
 }

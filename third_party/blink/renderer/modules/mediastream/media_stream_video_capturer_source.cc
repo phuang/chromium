@@ -192,7 +192,7 @@ void MediaStreamVideoCapturerSource::ChangeSourceImpl(
                          weak_factory_.GetWeakPtr(), capture_params_));
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 void MediaStreamVideoCapturerSource::ApplySubCaptureTarget(
     media::mojom::blink::SubCaptureTargetType type,
     const base::Token& sub_capture_target,

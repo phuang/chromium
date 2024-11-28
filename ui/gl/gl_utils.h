@@ -17,7 +17,7 @@
 #include <dxgi1_6.h>
 #endif
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 #include "base/files/scoped_file.h"
 #endif
 
@@ -29,7 +29,7 @@ class GLDisplay;
 GL_EXPORT void Crash();
 GL_EXPORT void Hang();
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 GL_EXPORT base::ScopedFD MergeFDs(base::ScopedFD a, base::ScopedFD b);
 
 // Disable ANGLE and force to use native or other GL implementation.

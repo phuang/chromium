@@ -11,6 +11,7 @@
 #include <string>
 
 #include "base/containers/span.h"
+#include "base/logging.h"
 #include "base/trace_event/trace_event.h"
 #include "ui/gl/gl_bindings.h"
 #include "ui/gl/gl_context.h"

@@ -92,7 +92,7 @@ class MODULES_EXPORT MediaStreamVideoCapturerSource
   void RestartSourceImpl(const media::VideoCaptureFormat& new_format) override;
   std::optional<media::VideoCaptureFormat> GetCurrentFormat() const override;
   void ChangeSourceImpl(const MediaStreamDevice& new_device) override;
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   void ApplySubCaptureTarget(
       media::mojom::blink::SubCaptureTargetType type,
       const base::Token& sub_capture_target,

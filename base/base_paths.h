@@ -18,6 +18,8 @@
 #include "base/base_paths_ios.h"
 #elif BUILDFLAG(IS_ANDROID)
 #include "base/base_paths_android.h"
+#elif BUILDFLAG(IS_OHOS)
+#include "base/base_paths_ohos.h"
 #endif
 
 #if BUILDFLAG(IS_POSIX)

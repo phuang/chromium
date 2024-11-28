@@ -526,6 +526,11 @@ def BuildLLVMLibraries(skip_build):
         if sys.platform.startswith('linux'):
             build_cmd.append('--without-android')
             build_cmd.append('--without-fuchsia')
+
+        build_cmd.append('--with-ohos')
+        build_cmd.append('--skip-checkout')
+        build_cmd.append('--bootstrap')
+
         RunCommand(build_cmd + [
             '--build-dir', RUST_HOST_LLVM_BUILD_DIR, '--install-dir',
             RUST_HOST_LLVM_INSTALL_DIR
@@ -583,6 +588,13 @@ def GitApplyCherryPicks():
     # with `GitMoveSubmoduleBranch()`.
     #############################
 
+<<<<<<< HEAD
+=======
+    # TODO(crbug.com/363219692): Remove once we roll past this revision.
+    GitCherryPick(RUST_SRC_DIR, 'https://github.com/rust-lang/rust.git',
+                  'edb669350a59ce48586152cf87b1d1f2841cea62', '-m')
+
+>>>>>>> d51cdbb96602a (Add OHOS platform support)
     print('Finished applying cherry-picks.')
 
 
@@ -747,7 +759,7 @@ def main():
 
         # This happens after initializing submodules, so that we can include
         # changes that move submodules.
-        GitApplyCherryPicks()
+        # GitApplyCherryPicks()
 
         # TODO(crbug.com/356618943): Workaround for https://github.com/rust-lang/cargo/issues/14253
         bootstrap_cargo = os.path.join(RUST_SRC_DIR, 'src', 'bootstrap',

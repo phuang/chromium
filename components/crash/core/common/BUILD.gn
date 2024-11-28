@@ -28,7 +28,7 @@ group("common") {
 }
 
 use_crashpad_annotation =
-    (is_mac || is_ios || is_win || is_android || is_chromeos ||
+    (is_mac || is_ios || is_win || is_android || is_chromeos || is_ohos ||
      (is_linux && !is_castos)) && !use_crash_key_stubs
 
 # Make sure that breakpad use is limited to is_castos here so that there's no

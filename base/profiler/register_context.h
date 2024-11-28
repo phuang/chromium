@@ -22,7 +22,8 @@
 #include <windows.h>
 #elif BUILDFLAG(IS_APPLE)
 #include <mach/machine/thread_status.h>
-#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || \
+    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 #include <sys/ucontext.h>
 #endif
 
@@ -134,7 +135,8 @@ inline uintptr_t& RegisterContextInstructionPointer(RegisterContext* context) {
 
 #endif
 
-#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || \
+    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 
 using RegisterContext = mcontext_t;
 

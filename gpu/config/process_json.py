@@ -31,6 +31,7 @@ _OS_TYPE_MAP = {
     'win': 'kOsWin',
     'macosx': 'kOsMacosx',
     'android': 'kOsAndroid',
+    'ohos': 'kOsOHOS',
     'linux': 'kOsLinux',
     'chromeos': 'kOsChromeOS',
     'fuchsia': 'kOsFuchsia',

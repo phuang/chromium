@@ -259,7 +259,8 @@ std::unique_ptr<CertVerifyImpl> CreateCertVerifyImplFromName(
     scoped_refptr<net::CertNetFetcher> cert_net_fetcher,
     scoped_refptr<net::CRLSet> crl_set,
     RootStoreType root_store_type) {
-#if !(BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(CHROME_ROOT_STORE_ONLY))
+#if !(BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(CHROME_ROOT_STORE_ONLY) || \
+      BUILDFLAG(IS_OHOS))
   if (impl_name == "platform") {
     if (root_store_type != RootStoreType::kSystem) {
       std::cerr << "WARNING: platform verifier not supported with "

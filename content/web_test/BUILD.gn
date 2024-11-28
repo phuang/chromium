@@ -165,6 +165,8 @@ static_library("web_test_browser") {
     sources += [ "browser/web_test_shell_platform_delegate_views.cc" ]
   } else if (is_ios) {
     sources += [ "browser/web_test_shell_platform_delegate_ios.mm" ]
+  } else if (is_ohos) {
+    sources += [ "browser/web_test_shell_platform_delegate_ohos.cc" ]
   } else {
     sources += [ "browser/web_test_shell_platform_delegate_aura.cc" ]
   }
