@@ -37,6 +37,7 @@ PLATFORM_STRINGS = {
     'webview_android': ['android'],
     'ios': ['ios'],
     'fuchsia': ['fuchsia'],
+    'android': ['ohos'],
     'chrome.win': ['win'],
     'chrome.linux': ['linux'],
     'chrome.mac': ['mac'],
@@ -83,6 +84,8 @@ class PolicyDetails:
   def __init__(self, policy, chrome_major_version, target_platform, valid_tags):
     self.id = policy['id']
     self.name = policy['name']
+    if self.name == "GenAiDefaultSettings":
+      pass
     self.tags = policy.get('tags', None)
     self._CheckTagsValidity(valid_tags)
     features = policy.get('features', {})
@@ -340,6 +343,7 @@ def main():
       for policy in template_file_contents['policy_definitions']
       if policy['type'] != 'group'
   ]
+
   risk_tags.ComputeMaxTags(policy_details)
   sorted_policy_details = sorted(policy_details, key=lambda policy: policy.name)
 
@@ -373,6 +377,7 @@ def main():
     GenerateFile(args.chrome_settings_proto_path,
                  _WriteChromeSettingsProtobuf,
                  sorted=True)
+  print("EEEEEEEEEEEEEE platform=%s" % target_platform)
 
   if target_platform == 'android' and args.app_restrictions_path:
     GenerateFile(args.app_restrictions_path, _WriteAppRestrictions, xml=True)
@@ -1669,4 +1674,5 @@ def _WriteAppRestrictions(policies, policy_atomic_groups, target_platform, f,
 
 
 if __name__ == '__main__':
+  print(sys.argv)
   sys.exit(main())

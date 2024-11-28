@@ -87,7 +87,7 @@ sync_pb::SyncEnums::DeviceType GetLocalDeviceType() {
   return sync_pb::SyncEnums_DeviceType_TYPE_CROS;
 #elif BUILDFLAG(IS_LINUX)
   return sync_pb::SyncEnums_DeviceType_TYPE_LINUX;
-#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
   switch (ui::GetDeviceFormFactor()) {
     case ui::DEVICE_FORM_FACTOR_TABLET:
       return sync_pb::SyncEnums_DeviceType_TYPE_TABLET;
@@ -112,6 +112,8 @@ DeviceInfo::OsType GetLocalDeviceOSType() {
   return DeviceInfo::OsType::kChromeOsLacros;
 #elif BUILDFLAG(IS_LINUX)
   return DeviceInfo::OsType::kLinux;
+#elif BUILDFLAG(IS_OHOS)
+  return DeviceInfo::OsType::kLinux;
 #elif BUILDFLAG(IS_ANDROID)
   return DeviceInfo::OsType::kAndroid;
 #elif BUILDFLAG(IS_IOS)
@@ -131,7 +133,7 @@ DeviceInfo::FormFactor GetLocalDeviceFormFactor() {
 #if BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_MAC) || \
     BUILDFLAG(IS_WIN)
   return DeviceInfo::FormFactor::kDesktop;
-#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
   return ui::GetDeviceFormFactor() == ui::DEVICE_FORM_FACTOR_TABLET
              ? DeviceInfo::FormFactor::kTablet
              : DeviceInfo::FormFactor::kPhone;

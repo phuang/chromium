@@ -78,11 +78,23 @@ uintptr_t SystemAllocPagesInternal(uintptr_t hint,
   // execute writable memory by default. They can opt into this capability by
   // specifying the "com.apple.security.cs.allow-jit" code signing entitlement
   // and allocating the region with the MAP_JIT flag.
-  static const bool kUseMapJit = UseMapJit();
+  // static const bool kUseMapJit = UseMapJit();
   if (accessibility.permissions ==
-          PageAccessibilityConfiguration::kInaccessibleWillJitLater &&
-      kUseMapJit) {
-    map_flags |= MAP_JIT;
+      PageAccessibilityConfiguration::kInaccessibleWillJitLater) {
+    // map_flags |= MAP_JIT;
+    map_flags |= 0x1000;
+  }
+#endif
+
+#if PA_BUILDFLAG(IS_OHOS)
+  // On OHOS, executables that are code signed with the "runtime" option cannot
+  // execute writable memory by default. They can opt into this capability by
+  // specifying the "com.apple.security.cs.allow-jit" code signing entitlement
+  // and allocating the region with the MAP_JIT flag.
+  if (accessibility.permissions ==
+      PageAccessibilityConfiguration::kInaccessibleWillJitLater) {
+    constexpr int kMapJit = 0x1000;
+    map_flags |= kMapJit;
   }
 #endif
 

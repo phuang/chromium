@@ -769,13 +769,23 @@ bool ExecutableExistsInPath(Environment* env,
 #if !BUILDFLAG(IS_APPLE)
 // This is implemented in file_util_apple.mm for Mac.
 bool GetTempDir(FilePath* path) {
+#if !BUILDFLAG(IS_OHOS)
   const char* tmp = getenv("TMPDIR");
   if (tmp) {
     *path = FilePath(tmp);
     return true;
   }
+#endif
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_OHOS)
+  if (PathService::Get(DIR_CACHE, path) && path != nullptr) {
+    *path = path->Append("Temp");
+    if (!base::PathExists(*path)) {
+      return base::CreateDirectory(*path);
+    }
+    return true;
+  }
+#elif BUILDFLAG(IS_ANDROID)
   return PathService::Get(DIR_CACHE, path);
 #else
   *path = FilePath("/tmp");

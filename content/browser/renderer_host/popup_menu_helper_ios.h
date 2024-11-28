@@ -13,8 +13,6 @@
 #include "third_party/blink/public/mojom/choosers/popup_menu.mojom.h"
 #include "ui/gfx/geometry/rect.h"
 
-@class WebMenuRunner;
-
 namespace content {
 
 class RenderFrameHost;
@@ -74,8 +72,6 @@ class PopupMenuHelper : public RenderWidgetHostObserver,
       observation_{this};
   base::WeakPtr<RenderFrameHostImpl> render_frame_host_;
   mojo::Remote<blink::mojom::PopupMenuClient> popup_client_;
-
-  WebMenuRunner* __strong menu_runner_;
 
   base::WeakPtrFactory<PopupMenuHelper> weak_ptr_factory_{this};
 };

@@ -51,6 +51,14 @@ static_library("libevent") {
       "epoll.c",
     ]
     include_dirs += [ "android" ]
+  } else if (is_ohos) {
+    sources += [
+      "epoll.c",
+      "ohos/config.h",
+      "ohos/event-config.h",
+    ]
+    include_dirs += [ "ohos" ]
+    defines += [ "_GNU_SOURCE" ]
   }
 
   if (!is_debug) {

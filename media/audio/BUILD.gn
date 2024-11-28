@@ -269,7 +269,7 @@ source_set("audio") {
     deps += [ "//media/base/android:media_jni_headers" ]
   }
 
-  if (is_linux || is_chromeos) {
+  if (is_linux || is_chromeos || is_ohos) {
     sources += [ "linux/audio_manager_linux.cc" ]
   }
 

@@ -630,6 +630,10 @@ if (enable_base_tracing) {
       configs -= [ "//build/config/android:hide_all_but_jni_onload" ]
     }
 
+    if (is_ohos) {
+      libs = [ "hilog_ndk.z" ]
+    }
+
     if (is_ios) {
       info_plist = "test_trace_processor_impl.plist"
       output_name = "TestTraceProcessor"

@@ -24,7 +24,7 @@ namespace policy {
 
 namespace {
 
-#if !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
 constexpr const char* kDictionaryPoliciesToMerge[] = {
 #if BUILDFLAG(IS_CHROMEOS_ASH)
     key::kExtensionSettings,       key::kDeviceLoginScreenPowerManagement,
@@ -191,7 +191,7 @@ void PolicyListMerger::DoMerge(PolicyMap::Entry* policy) const {
 
 PolicyDictionaryMerger::PolicyDictionaryMerger(
     base::flat_set<std::string> policies_to_merge)
-#if BUILDFLAG(IS_IOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_IOS) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
     : policies_to_merge_(std::move(policies_to_merge)){}
 #else
     : policies_to_merge_(std::move(policies_to_merge)),

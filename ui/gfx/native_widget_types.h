@@ -28,6 +28,10 @@
 #include "base/win/windows_types.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include <native_window/external_window.h>
+#endif
+
 // This file provides cross platform typedefs for native widget types.
 //   NativeWindow: this is a handle to a native, top-level window
 //   NativeView: this is a handle to a native UI element. It may be the
@@ -99,6 +103,14 @@ class WindowAndroid;
 class ViewAndroid;
 }  // namespace ui
 #endif
+
+#if BUILDFLAG(IS_OHOS)
+namespace ui::ohos {
+class Window;
+class View;
+}  // namespace ui::ohos
+#endif
+
 class SkBitmap;
 
 #if BUILDFLAG(IS_LINUX)
@@ -196,6 +208,11 @@ using NativeCursor = void*;
 using NativeView = ui::ViewAndroid*;
 using NativeWindow = ui::WindowAndroid*;
 using NativeEvent = base::android::ScopedJavaGlobalRef<jobject>;
+#elif BUILDFLAG(IS_OHOS)
+using NativeCursor = void*;
+using NativeView = ui::ohos::View*;
+using NativeWindow = ui::ohos::Window*;
+using NativeEvent = void*;
 #else
 #error Unknown build environment.
 #endif
@@ -244,6 +261,9 @@ constexpr AcceleratedWidget kNullAcceleratedWidget = 0;
 #elif BUILDFLAG(IS_ANDROID)
 using AcceleratedWidget = ANativeWindow*;
 constexpr AcceleratedWidget kNullAcceleratedWidget = nullptr;
+#elif BUILDFLAG(IS_OHOS)
+using AcceleratedWidget = uint64_t;
+constexpr AcceleratedWidget kNullAcceleratedWidget = 0;
 #elif BUILDFLAG(IS_OZONE)
 using AcceleratedWidget = uint32_t;
 constexpr AcceleratedWidget kNullAcceleratedWidget = 0;

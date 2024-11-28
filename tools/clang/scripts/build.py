@@ -63,12 +63,18 @@ FUCHSIA_SDK_DIR = os.path.join(CHROMIUM_DIR, 'third_party', 'fuchsia-sdk',
                                'sdk')
 PINNED_CLANG_DIR = os.path.join(LLVM_BUILD_TOOLS_DIR, 'pinned-clang')
 
+OHOS_NDK_TOOLCHAIN_DIR = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native"
+
 BUG_REPORT_URL = ('https://crbug.com in the Tools>LLVM component,'
                   ' run tools/clang/scripts/process_crashreports.py'
                   ' (only if inside Google) to upload crash related files,')
 
 LIBXML2_VERSION = 'libxml2-v2.9.12'
 ZSTD_VERSION = 'zstd-1.5.5'
+
+#
+# LLVM_GIT_URL = ('https://github.com/phuang/llvm-project.git')
+# CLANG_REVISION = "ab556184ef5c6e3e0c1ef2d4018208403150940e"
 
 win_sdk_dir = None
 def GetWinSDKDir():
@@ -124,6 +130,7 @@ def RunCommand(command, setenv=False, env=None, fail_hard=True):
   if sys.platform != 'win32':
     command = ' '.join([shlex.quote(c) for c in command])
   print('Running', command)
+
   if subprocess.call(command, env=env, shell=True) == 0:
     return True
   print('Failed.')
@@ -675,13 +682,24 @@ def main():
                       const=True,
                       help='build the Fuchsia runtimes (linux only)',
                       default=sys.platform.startswith('linux'))
-  parser.add_argument('--without-android', action='store_false',
+  parser.add_argument('--with-ohos',
+                      type=gn_arg,
+                      nargs='?',
+                      const=True,
+                      help='build the OpenHarmony ASan runtime (linux only)',
+                      default=sys.platform.startswith('linux'))
+  parser.add_argument('--without-android',
+                      action='store_false',
                       help='don\'t build Android ASan runtime (linux only)',
                       dest='with_android')
   parser.add_argument('--without-fuchsia', action='store_false',
                       help='don\'t build Fuchsia clang_rt runtime (linux/mac)',
                       dest='with_fuchsia',
                       default=sys.platform in ('linux2', 'darwin'))
+  parser.add_argument('--without-ohos',
+                      action='store_false',
+                      help='don\'t build OpenHarmony ASan runtime (linux only)',
+                      dest='with_ohos')
   parser.add_argument('--with-ccache',
                       action='store_true',
                       help='Use ccache to build the stage 1 compiler')
@@ -1327,6 +1345,31 @@ def main():
       ]
       runtimes_triples_args[target_triple] = {
           "args": android_args,
+          "sanitizers": True,
+          "profile": True
+      }
+
+  if args.with_ohos:
+    for target_arch in ['aarch64', 'x86_64']:
+      toolchain_dir = OHOS_NDK_TOOLCHAIN_DIR
+      sysroot_dir = toolchain_dir + "/sysroot"
+      target_triple = target_arch + '-unknown-linux-ohos'
+      llvm_lib_dir = toolchain_dir + "/llvm/lib/" + target_triple
+      ohos_args = [
+          'LLVM_ENABLE_RUNTIMES=compiler-rt',
+          'CMAKE_BUILD_TYPE=Release',
+          'CMAKE_SYSROOT=%s' % sysroot_dir,
+          'CMAKE_LIBRARY_PATH=%s' % llvm_lib_dir,
+          # 'CMAKE_C_COMPILER_TARGET=%s' % target_triple,
+          # 'COMPILER_RT_DEFAULT_TARGET_ONLY=ON',
+          'COMPILER_RT_USE_BUILTINS_LIBRARY=ON',
+          # 'COMPILER_RT_USE_LLVM_UNWINDER=ON', # ?
+          # 'COMPILER_RT_USE_LIBCXX=ON', # ?
+          'LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON',
+          'LLVM_INCLUDE_TESTS=OFF',
+      ]
+      runtimes_triples_args[target_triple] = {
+          "args": ohos_args,
           "sanitizers": True,
           "profile": True
       }

@@ -137,7 +137,7 @@ class CONTENT_EXPORT MediaStreamDispatcherHost
       const base::UnguessableToken& session_id,
       const base::UnguessableToken& transfer_id,
       KeepDeviceAliveForTransferCallback callback) override;
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   void FocusCapturedSurface(const std::string& label, bool focus) override;
   void ApplySubCaptureTarget(const base::UnguessableToken& session_id,
                              media::mojom::SubCaptureTargetType type,

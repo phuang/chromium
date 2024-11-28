@@ -10,7 +10,7 @@ import("//build/config/cast.gni")
 # disabled.
 
 declare_args() {
-  enable_pdf = !is_android && !is_ios && !is_castos && !is_fuchsia
+  enable_pdf = !is_android && !is_ios && !is_castos && !is_fuchsia && !is_ohos
 }
 
 declare_args() {

@@ -13,7 +13,7 @@
 
 namespace gl {
 
-class GL_EXPORT GLStubApi: public GLStubApiBase {
+class GL_EXPORT GLStubApi : public GLStubApiBase {
  public:
   GLStubApi();
 

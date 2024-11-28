@@ -65,7 +65,8 @@ AtomicString ToAtomicString(const SkString& str) {
   return AtomicString::FromUTF8(std::string_view(str.begin(), str.end()));
 }
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_OHOS)
 // This function is called on android or when we are emulating android fonts on
 // linux and the embedder has overriden the default fontManager with
 // WebFontRendering::setSkiaFontMgr.
@@ -82,15 +83,16 @@ AtomicString FontCache::GetFamilyNameForCharacter(
       GetBcp47LocaleForRequest(font_description, fallback_priority);
   sk_sp<SkTypeface> typeface(fm->matchFamilyStyleCharacter(
       family_name, SkFontStyle(), locales.data(), locales.size(), c));
-  if (!typeface)
+  if (!typeface) {
     return g_empty_atom;
+  }
 
   SkString skia_family_name;
   typeface->getFamilyName(&skia_family_name);
   return ToAtomicString(skia_family_name);
 }
 #endif  // BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) ||
-        // BUILDFLAG(IS_CHROMEOS)
+        // BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 
 void FontCache::PlatformInit() {}
 
@@ -194,6 +196,16 @@ const SimpleFontData* FontCache::GetLastResortFallbackFont(
   }
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  if (!font_platform_data) {
+    DEFINE_THREAD_SAFE_STATIC_LOCAL(const FontFaceCreationParams,
+                                    sans_creation_params,
+                                    (font_family_names::kHarmonyOSSans));
+    font_platform_data = GetFontPlatformData(description, sans_creation_params,
+                                             AlternateFontName::kLastResort);
+  }
+#endif
+
   DCHECK(font_platform_data);
   return FontDataFromFontPlatformData(font_platform_data);
 }
@@ -202,7 +214,8 @@ sk_sp<SkTypeface> FontCache::CreateTypeface(
     const FontDescription& font_description,
     const FontFaceCreationParams& creation_params,
     std::string& name) {
-#if !BUILDFLAG(IS_WIN) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_FUCHSIA)
+#if !BUILDFLAG(IS_WIN) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_FUCHSIA) && \
+    !BUILDFLAG(IS_OHOS)
   // TODO(fuchsia): Revisit this and other font code for Fuchsia.
 
   if (creation_params.CreationType() == kCreateFontByFciIdAndTtcIndex) {
@@ -220,15 +233,16 @@ sk_sp<SkTypeface> FontCache::CreateTypeface(
   // convert the name to utf8
   name = family.Utf8();
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // If this is a locale-specific family, try looking up locale-specific
   // typeface first.
   if (const char* locale_family = GetLocaleSpecificFamilyName(family)) {
     if (sk_sp<SkTypeface> typeface =
-            CreateLocaleSpecificTypeface(font_description, locale_family))
+            CreateLocaleSpecificTypeface(font_description, locale_family)) {
       return typeface;
+    }
   }
-#endif  // BUILDFLAG(IS_ANDROID)
+#endif  // BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 
   // TODO(https://crbug.com/1425390: Assign FontCache::font_manager_ in the
   // ctor.
@@ -246,9 +260,10 @@ const FontPlatformData* FontCache::CreateFontPlatformData(
   std::string name;
 
   sk_sp<SkTypeface> typeface;
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_OHOS)
   bool noto_color_emoji_from_gmscore = false;
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // Use the unique local matching pathway for fetching Noto Color Emoji Compat
   // from GMS core if this family is requested, see font_cache_android.cc. Noto
   // Color Emoji Compat is an up-to-date emoji font shipped with GMSCore which
@@ -270,8 +285,9 @@ const FontPlatformData* FontCache::CreateFontPlatformData(
   typeface = CreateTypeface(font_description, creation_params, name);
 #endif
 
-  if (!typeface)
+  if (!typeface) {
     return nullptr;
+  }
 
   bool synthetic_bold =
       (font_description.Weight() >

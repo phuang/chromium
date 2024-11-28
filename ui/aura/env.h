@@ -30,6 +30,13 @@ class PlatformEventSource;
 #if BUILDFLAG(IS_WIN)
 class WinCursorFactory;
 #endif
+
+#if BUILDFLAG(IS_OHOS)
+namespace ohos {
+class CursorFactory;
+}
+#endif
+
 }  // namespace ui
 
 namespace aura {
@@ -207,6 +214,10 @@ class AURA_EXPORT Env : public ui::EventTarget {
 
 #if BUILDFLAG(IS_WIN)
   std::unique_ptr<ui::WinCursorFactory> cursor_factory_;
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  std::unique_ptr<ui::ohos::CursorFactory> cursor_factory_;
 #endif
 
   std::unique_ptr<InputStateLookup> input_state_lookup_;

@@ -829,6 +829,8 @@ GpuControlList::OsType GpuControlList::GetOsType() {
   return kOsWin;
 #elif BUILDFLAG(IS_ANDROID)
   return kOsAndroid;
+#elif BUILDFLAG(IS_OHOS)
+  return kOsOHOS;
 #elif BUILDFLAG(IS_FUCHSIA)
   return kOsFuchsia;
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OPENBSD)

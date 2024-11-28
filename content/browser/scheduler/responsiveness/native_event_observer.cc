@@ -15,7 +15,7 @@
 
 #include "ui/events/platform/platform_event_source.h"
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 #include "ui/aura/env.h"
 #include "ui/events/event.h"
 #endif
@@ -78,7 +78,8 @@ void NativeEventObserver::DidDispatchMSG(const MSG& msg) {
 }
 #endif  // BUILDFLAG(IS_WIN)
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_IOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_IOS) || \
+    BUILDFLAG(IS_OHOS)
 void NativeEventObserver::RegisterObserver() {}
 void NativeEventObserver::DeregisterObserver() {}
 #endif  // BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA)

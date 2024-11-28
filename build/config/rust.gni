@@ -11,6 +11,10 @@ if (is_android) {
   import("//build/config/android/config.gni")
 }
 
+if (is_ohos) {
+  import("//build/config/ohos/config.gni")
+}
+
 if (is_ios) {
   import("//build/config/apple/mobile_config.gni")  # For `target_environment`
 }
@@ -233,6 +237,16 @@ if (is_linux || is_chromeos) {
     cargo_target_abi = ""
   } else {
     assert(false, "Unknown Android ABI: " + android_abi_target)
+  }
+} else if (is_ohos) {
+  import("//build/config/ohos/abi.gni")
+  if (ohos_abi_target == "x86_64-unknown-linux-ohos" ||
+      ohos_abi_target == "aarch64-unknown-linux-ohos" ||
+      ohos_abi_target == "arm-unknown-linux-ohos") {
+    rust_abi_target = ohos_abi_target
+    cargo_target_abi = ""
+  } else {
+    assert(false, "Unknown Android ABI: " + ohos_abi_target)
   }
 } else if (is_fuchsia) {
   if (current_cpu == "arm64") {

@@ -36,6 +36,12 @@ extern "C" {
 // intercept calls made by dynamic libraries. See crbug.com/1292206 for such
 // an example.
 
+// Musl libc's malloc, free and etc are not defined with __THROW
+#if defined(__MUSL__) && defined(__THROW)
+#undef __THROW
+#define __THROW
+#endif
+
 SHIM_ALWAYS_EXPORT void* malloc(size_t size) __THROW {
   return ShimMalloc(size, nullptr);
 }

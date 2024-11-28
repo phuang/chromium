@@ -26,7 +26,7 @@ BASE_EXPORT BASE_DECLARE_FEATURE(kLowEndMemoryExperiment);
 
 BASE_EXPORT extern const base::FeatureParam<int> kLowMemoryDeviceThresholdMB;
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 BASE_EXPORT BASE_DECLARE_FEATURE(kPartialLowEndModeOn3GbDevices);
 BASE_EXPORT BASE_DECLARE_FEATURE(kPartialLowEndModeOnMidRangeDevices);
 #endif

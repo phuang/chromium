@@ -5,6 +5,8 @@
 import("//build/config/features.gni")
 import("//testing/libfuzzer/fuzzer_test.gni")
 
+assert(!is_ohos)
+
 source_set("sharing") {
   sources = [
     "incoming_password_sharing_invitation_data_type_controller.cc",

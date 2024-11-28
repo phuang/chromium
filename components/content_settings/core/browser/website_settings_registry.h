@@ -36,6 +36,7 @@ class WebsiteSettingsRegistry {
     PLATFORM_ANDROID = 1 << 4,
     PLATFORM_IOS = 1 << 5,
     PLATFORM_FUCHSIA = 1 << 6,
+    PLATFORM_OHOS = 1 << 7,
 
     // Settings only applied to win, mac, linux, chromeos, and fuchsia.
     DESKTOP = PLATFORM_WINDOWS | PLATFORM_LINUX | PLATFORM_CHROMEOS |

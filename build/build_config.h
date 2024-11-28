@@ -65,6 +65,8 @@
 #define OS_NACL 1
 #elif defined(ANDROID)
 #define OS_ANDROID 1
+#elif defined(__OHOS__)
+#define OS_OHOS 1
 #elif defined(__APPLE__)
 // Only include TargetConditionals after testing ANDROID as some Android builds
 // on the Mac have this header available and it's not needed unless the target
@@ -137,7 +139,7 @@
     defined(OS_FREEBSD) || defined(OS_IOS) || defined(OS_LINUX) ||  \
     defined(OS_CHROMEOS) || defined(OS_MAC) || defined(OS_NACL) ||  \
     defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_QNX) || \
-    defined(OS_SOLARIS) || defined(OS_ZOS)
+    defined(OS_SOLARIS) || defined(OS_ZOS) || defined(OS_OHOS)
 #define OS_POSIX 1
 #endif
 
@@ -152,6 +154,12 @@
 #define BUILDFLAG_INTERNAL_IS_ANDROID() (1)
 #else
 #define BUILDFLAG_INTERNAL_IS_ANDROID() (0)
+#endif
+
+#if defined(OS_OHOS)
+#define BUILDFLAG_INTERNAL_IS_OHOS() (1)
+#else
+#define BUILDFLAG_INTERNAL_IS_OHOS() (0)
 #endif
 
 #if defined(OS_APPLE)

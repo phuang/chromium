@@ -114,7 +114,8 @@ jlong JNI_AutofillTestHelper_GetProfileUseDate(
 }
 
 // static
-base::android::ScopedJavaLocalRef<jstring> JNI_AutofillTestHelper_AddCreditCardWithUseStats(
+base::android::ScopedJavaLocalRef<jstring>
+JNI_AutofillTestHelper_AddCreditCardWithUseStats(
     JNIEnv* env,
     const JavaParamRef<jobject>& jcard,
     jint count,
@@ -122,7 +123,8 @@ base::android::ScopedJavaLocalRef<jstring> JNI_AutofillTestHelper_AddCreditCardW
   DCHECK(count >= 0 && days_since_last_used >= 0);
 
   CreditCard card;
-  PersonalDataManagerAndroid::PopulateNativeCreditCardFromJava(jcard, env, &card);
+  PersonalDataManagerAndroid::PopulateNativeCreditCardFromJava(jcard, env,
+                                                               &card);
 
   card.set_use_count(static_cast<size_t>(count));
   card.set_use_date(AutofillClock::Now() - base::Days(days_since_last_used));

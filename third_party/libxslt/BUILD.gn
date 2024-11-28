@@ -4,9 +4,13 @@
 
 config("libxslt_config") {
   defines = [ "LIBXSLT_STATIC" ]
+
   # TODO(crbug.com/364568421): Consdier removing "src/libxslt" from this list
   # if we can remove win32config.h
-  include_dirs = [ "src", "src/libxslt" ]
+  include_dirs = [
+    "src",
+    "src/libxslt",
+  ]
 }
 
 config("libxslt_warnings") {
@@ -80,7 +84,7 @@ static_library("libxslt") {
   ]
   public_configs = [ ":libxslt_config" ]
 
-  if (is_linux || is_chromeos) {
+  if (is_linux || is_chromeos || is_ohos) {
     sources += [ "linux/config.h" ]
   }
   if (is_apple) {
@@ -88,7 +92,7 @@ static_library("libxslt") {
   }
 
   cflags = []
-  if (is_linux || is_chromeos || is_android || is_fuchsia) {
+  if (is_linux || is_chromeos || is_android || is_fuchsia || is_ohos) {
     include_dirs = [ "linux" ]
   } else if (is_win) {
     include_dirs = [ "win32" ]

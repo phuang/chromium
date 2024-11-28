@@ -4,6 +4,8 @@
 
 #include "content/browser/gpu/gpu_main_thread_factory.h"
 
+#include "base/logging.h"
+
 namespace content {
 namespace {
 

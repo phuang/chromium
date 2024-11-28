@@ -162,7 +162,7 @@ void OSExchangeData::GetVirtualFilesAsTempFiles(
 }
 #endif
 
-#if defined(USE_AURA)
+#if defined(USE_AURA) || BUILDFLAG(IS_OHOS)
 bool OSExchangeData::HasHtml() const {
   return provider_->HasHtml();
 }

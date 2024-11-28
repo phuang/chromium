@@ -82,7 +82,7 @@ const PolicyToPreferenceMapEntry kDefaultSearchPolicyDataMap[] = {
      base::Value::Type::STRING},
     {key::kDefaultSearchProviderImageURLPostParams,
      DefaultSearchManager::kImageURLPostParams, base::Value::Type::STRING},
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
     {key::kDefaultSearchProviderContextMenuAccessAllowed,
      prefs::kDefaultSearchProviderContextMenuAccessAllowed,
      base::Value::Type::BOOLEAN},
@@ -113,7 +113,7 @@ bool DefaultSearchPolicyHandler::CheckPolicySettings(const PolicyMap& policies,
     for (const auto& policy_map_entry : kDefaultSearchPolicyDataMap) {
       const char* policy_name = policy_map_entry.policy_name;
       if (policy_name != key::kDefaultSearchProviderEnabled &&
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
           policy_name != key::kDefaultSearchProviderContextMenuAccessAllowed &&
 #endif
           HasDefaultSearchPolicy(policies, policy_name)) {
@@ -180,7 +180,7 @@ void DefaultSearchPolicyHandler::ApplyPolicySettings(const PolicyMap& policies,
                   DefaultSearchManager::kSuggestionsURLPostParams, dict);
   SetStringInPref(policies, key::kDefaultSearchProviderImageURLPostParams,
                   DefaultSearchManager::kImageURLPostParams, dict);
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   SetBooleanInPref(policies,
                    key::kDefaultSearchProviderContextMenuAccessAllowed,
                    prefs::kDefaultSearchProviderContextMenuAccessAllowed, dict);

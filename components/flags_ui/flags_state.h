@@ -45,12 +45,13 @@ enum {
   kOsFuchsia = 1 << 7,
   kOsWebView = 1 << 8,
   kOsLacros = 1 << 9,
+  kOsOHOS = 1 << 10,
 
-  kDeprecated = 1 << 10,
+  kDeprecated = 1 << 11,
 
   // Flags marked with this are internal to the flags system. Never set this on
   // a manually-added flag.
-  kFlagInfrastructure = 1 << 11,
+  kFlagInfrastructure = 1 << 12,
 };
 
 // A flag controlling the behavior of the |ConvertFlagsToSwitches| function -

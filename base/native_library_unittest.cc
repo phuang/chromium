@@ -83,7 +83,7 @@ const char kTestLibraryName[] =
     "Frameworks/test_shared_library_ios.framework/test_shared_library_ios";
 #elif BUILDFLAG(IS_MAC)
     "libtest_shared_library.dylib";
-#elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA)
+#elif BUILDFLAG(IS_POSIX) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_OHOS)
     "libtest_shared_library.so";
 #endif
 

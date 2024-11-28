@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "base/containers/span.h"
+#include "base/logging.h"
 #include "base/strings/utf_string_conversions.h"
 #include "third_party/blink/public/common/font_unique_name_lookup/icu_fold_case_util.h"
 

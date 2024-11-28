@@ -4,6 +4,8 @@
 
 #include "ui/gl/gl_stub_api.h"
 
+#include "base/logging.h"
+
 namespace gl {
 
 GLStubApi::GLStubApi() = default;

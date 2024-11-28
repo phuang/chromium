@@ -135,6 +135,8 @@ std::string GetMachineName() {
   return std::string();
 #elif BUILDFLAG(IS_ANDROID)
   return std::string();
+#elif BUILDFLAG(IS_OHOS)
+  return std::string();
 #elif BUILDFLAG(IS_CHROMEOS)
   NOTREACHED();
 #else

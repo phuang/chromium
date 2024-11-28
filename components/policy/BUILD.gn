@@ -23,8 +23,8 @@ gen_policy_templates_local = false
 # enable these flags (but don't check that in!).
 gen_policy_templates_common = true
 gen_policy_templates_win = is_win
-gen_policy_templates_linux = is_linux || is_chromeos
-gen_policy_templates_android = is_android
+gen_policy_templates_linux = is_linux || is_chromeos || is_ohos
+gen_policy_templates_android = is_android || is_ohos
 gen_policy_templates_mac = is_mac
 gen_policy_templates_ios = is_ios
 
@@ -248,8 +248,7 @@ proto_library("chrome_settings_proto_generated_compile_proto") {
   component_build_force_source_set = true
   defines = [ "POLICY_CHROME_SETTINGS_PROTO_COMPILATION" ]
 
-  deps =
-      [ "//components/policy/proto:policy_common_definitions_compile_proto" ]
+  deps = [ "//components/policy/proto:policy_common_definitions_compile_proto" ]
   proto_deps = [ ":policy_code_generate" ]
 }
 

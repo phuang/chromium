@@ -156,7 +156,7 @@ class ContextProviderObserver : viz::ContextLostObserver {
   base::WeakPtrFactory<ContextProviderObserver> weak_factory_{this};
 };
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 FrameSinkVideoCaptureDevice::FrameSinkVideoCaptureDevice()
     : cursor_controller_(
           RescopeToUIThread(std::make_unique<MouseCursorOverlayController>())) {
@@ -339,7 +339,7 @@ void FrameSinkVideoCaptureDevice::AllocateCapturer(
     capturer_->ChangeTarget(target_, sub_capture_target_version_);
   }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   GetUIThreadTaskRunner({})->PostTask(
       FROM_HERE,
       base::BindOnce(&MouseCursorOverlayController::Start,
@@ -419,7 +419,7 @@ void FrameSinkVideoCaptureDevice::StopAndDeAllocate() {
     wake_lock_.reset();
   }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   GetUIThreadTaskRunner({})->PostTask(
       FROM_HERE, base::BindOnce(&MouseCursorOverlayController::Stop,
                                 cursor_controller_->GetWeakPtr()));
@@ -491,7 +491,7 @@ void FrameSinkVideoCaptureDevice::OnFrameCaptured(
   }
   const BufferId buffer_id = static_cast<BufferId>(index);
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   info->metadata.interactive_content =
       cursor_controller_->IsUserInteractingWithView();
 #else

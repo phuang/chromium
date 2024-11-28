@@ -137,8 +137,12 @@ component("display") {
     ldflags = [ "/DELAYLOAD:shcore.dll" ]
   }
 
-  if (use_aura) {
+  if (use_aura && !use_aura) {
     sources += [ "screen_aura.cc" ]
+  }
+
+  if (is_ohos) {
+    sources += [ "screen_ohos.cc" ]
   }
 
   if (is_mac) {

@@ -26,7 +26,7 @@ BASE_EXPORT void EnableTerminationOnOutOfMemory();
 using partition_alloc::TerminateBecauseOutOfMemory;
 
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
-    BUILDFLAG(IS_AIX)
+    BUILDFLAG(IS_AIX) || BUILDFLAG(IS_OHOS)
 // The maximum allowed value for the OOM score.
 const int kMaxOomScore = 1000;
 

@@ -47,6 +47,15 @@ struct COMPONENT_EXPORT(INPUT) NativeWebKeyboardEvent :
       int scancode,
       int unicode_character,
       bool is_system_key);
+#elif BUILDFLAG(IS_OHOS) && !defined(USE_AURA)
+  NativeWebKeyboardEvent(const void* ohos_key_event,
+                         blink::WebInputEvent::Type type,
+                         int modifiers,
+                         base::TimeTicks timestamp,
+                         int keycode,
+                         int scancode,
+                         int unicode_character,
+                         bool is_system_key);
 #else
   explicit NativeWebKeyboardEvent(const ui::KeyEvent& key_event);
 #if defined(USE_AURA)

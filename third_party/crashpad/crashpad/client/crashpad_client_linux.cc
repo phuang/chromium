@@ -489,7 +489,8 @@ bool CrashpadClient::StartHandler(
       std::move(client_sock), handler_pid, &unhandled_signals_);
 }
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_OHOS)
 // static
 bool CrashpadClient::GetHandlerSocket(int* sock, pid_t* pid) {
   auto signal_handler = RequestCrashDumpHandler::Get();

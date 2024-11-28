@@ -139,7 +139,8 @@ bool ProcessMetrics::GetCumulativeCPUUsagePerThread(
   return !cpu_per_thread.empty();
 }
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_OHOS)
 uint64_t ProcessMetrics::GetVmSwapBytes() const {
   return internal::ReadProcStatusAndGetKbFieldAsSizeT(process_, "VmSwap") *
          1024;

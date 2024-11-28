@@ -28,6 +28,7 @@ std::atomic_bool g_is_ownership_enforced{false};
 std::array<std::atomic_bool, kMaxTrackedFds> g_is_fd_owned;
 
 NOINLINE void CrashOnFdOwnershipViolation() {
+  LOG(ERROR) << "Crashing due to FD ownership violation:";
   RAW_LOG(ERROR, "Crashing due to FD ownership violation:\n");
   base::debug::StackTrace().Print();
   base::ImmediateCrash();
@@ -82,7 +83,7 @@ bool IsFDOwned(int fd) {
 
 }  // namespace base
 
-#if !defined(COMPONENT_BUILD)
+#if !defined(COMPONENT_BUILD) && false
 using LibcCloseFuncPtr = int (*)(int);
 
 // Load the libc close symbol to forward to from the close wrapper.
@@ -93,7 +94,8 @@ LibcCloseFuncPtr LoadCloseSymbol() {
   return reinterpret_cast<LibcCloseFuncPtr>(
       dlsym(RTLD_DEFAULT, "__interceptor___close"));
 #else
-  return reinterpret_cast<LibcCloseFuncPtr>(dlsym(RTLD_NEXT, "close"));
+  void* handle = dlopen("libc.so", RTLD_LAZY);
+  return reinterpret_cast<LibcCloseFuncPtr>(dlsym(handle, "close"));
 #endif
 }
 
