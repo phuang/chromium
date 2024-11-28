@@ -83,8 +83,13 @@
 #else
 #define OS_MAC 1
 #endif  // defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE
+
 #elif defined(__linux__)
-#if !defined(OS_CHROMEOS)
+#if defined(__OHOS__)
+#define OS_OHOS 1
+#endif
+
+#if !defined(OS_CHROMEOS) && !defined(OS_OHOS)
 // Do not define OS_LINUX on Chrome OS build.
 // The OS_CHROMEOS macro is defined in GN.
 #define OS_LINUX 1
@@ -137,7 +142,7 @@
     defined(OS_FREEBSD) || defined(OS_IOS) || defined(OS_LINUX) ||  \
     defined(OS_CHROMEOS) || defined(OS_MAC) || defined(OS_NACL) ||  \
     defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_QNX) || \
-    defined(OS_SOLARIS) || defined(OS_ZOS)
+    defined(OS_SOLARIS) || defined(OS_ZOS) || defined(OS_OHOS)
 #define OS_POSIX 1
 #endif
 
@@ -152,6 +157,12 @@
 #define BUILDFLAG_INTERNAL_IS_ANDROID() (1)
 #else
 #define BUILDFLAG_INTERNAL_IS_ANDROID() (0)
+#endif
+
+#if defined(OS_OHOS)
+#define BUILDFLAG_INTERNAL_IS_OHOS() (1)
+#else
+#define BUILDFLAG_INTERNAL_IS_OHOS() (0)
 #endif
 
 #if defined(OS_APPLE)
