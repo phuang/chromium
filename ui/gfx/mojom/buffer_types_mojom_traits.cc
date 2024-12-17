@@ -33,7 +33,8 @@ gfx::mojom::GpuMemoryBufferPlatformHandlePtr StructTraits<
       return gfx::mojom::GpuMemoryBufferPlatformHandle::NewSharedMemoryHandle(
           std::move(handle.region));
     case gfx::NATIVE_PIXMAP:
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OZONE)
+#if !BUILDFLAG(IS_OHOS) && \
+    !(BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OZONE))
       return gfx::mojom::GpuMemoryBufferPlatformHandle::NewNativePixmapHandle(
           std::move(handle.native_pixmap_handle));
 #else
@@ -93,8 +94,9 @@ bool StructTraits<gfx::mojom::GpuMemoryBufferHandleDataView,
                   gfx::GpuMemoryBufferHandle>::
     Read(gfx::mojom::GpuMemoryBufferHandleDataView data,
          gfx::GpuMemoryBufferHandle* out) {
-  if (!data.ReadId(&out->id))
+  if (!data.ReadId(&out->id)) {
     return false;
+  }
 
   out->offset = data.offset();
   out->stride = data.stride();
@@ -115,7 +117,8 @@ bool StructTraits<gfx::mojom::GpuMemoryBufferHandleDataView,
       out->type = gfx::SHARED_MEMORY_BUFFER;
       out->region = std::move(platform_handle->get_shared_memory_handle());
       return true;
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OZONE)
+#if !BUILDFLAG(IS_OHOS) && \
+    (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OZONE))
     case gfx::mojom::GpuMemoryBufferPlatformHandleDataView::Tag::
         kNativePixmapHandle:
       out->type = gfx::NATIVE_PIXMAP;
@@ -125,8 +128,9 @@ bool StructTraits<gfx::mojom::GpuMemoryBufferHandleDataView,
 #elif BUILDFLAG(IS_APPLE)
     case gfx::mojom::GpuMemoryBufferPlatformHandleDataView::Tag::kMachPort: {
       out->type = gfx::IO_SURFACE_BUFFER;
-      if (!platform_handle->get_mach_port().is_mach_send())
+      if (!platform_handle->get_mach_port().is_mach_send()) {
         return false;
+      }
       gfx::ScopedRefCountedIOSurfaceMachPort io_surface_mach_port(
           platform_handle->get_mach_port().ReleaseMachSendRight());
       if (io_surface_mach_port) {
@@ -152,12 +156,14 @@ bool StructTraits<gfx::mojom::GpuMemoryBufferHandleDataView,
       out->type = gfx::ANDROID_HARDWARE_BUFFER;
       gfx::mojom::AHardwareBufferHandlePtr buffer_handle =
           std::move(platform_handle->get_android_hardware_buffer_handle());
-      if (!buffer_handle)
+      if (!buffer_handle) {
         return false;
+      }
 
       base::ScopedFD scoped_fd = buffer_handle->buffer_handle.TakeFD();
-      if (!scoped_fd.is_valid())
+      if (!scoped_fd.is_valid()) {
         return false;
+      }
       out->android_hardware_buffer = base::android::ScopedHardwareBufferHandle::
           DeserializeFromFileDescriptor(std::move(scoped_fd));
       return out->android_hardware_buffer.is_valid();

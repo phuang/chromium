@@ -16,6 +16,7 @@ component("error_reporting") {
 }
 
 source_set("mock_crash_endpoint") {
+  assert(!is_ohos)
   testonly = true
   sources = [
     "mock_crash_endpoint.cc",

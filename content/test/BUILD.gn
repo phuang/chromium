@@ -3293,7 +3293,7 @@ test("content_unittests") {
     deps += [ "//services/tracing:test_utils" ]
   }
 
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     deps += [ "//components/crash/content/browser/error_reporting" ]
   }
 

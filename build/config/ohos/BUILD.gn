@@ -68,3 +68,6 @@ config("compiler") {
   # to the assembler.
   asmflags = cflags
 }
+
+config("runtime_library") {
+}

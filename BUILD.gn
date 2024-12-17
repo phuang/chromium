@@ -1258,7 +1258,7 @@ if (use_blink && !is_cronet_build) {
         "//third_party/breakpad:minidump_stackwalk",
         "//third_party/breakpad:symupload",
       ]
-    } else {
+    } else if (!is_ohos) {
       data_deps += [ "//content/web_test:web_test_common_mojom_js_data_deps" ]
     }
 
@@ -1747,7 +1747,7 @@ group("chromium_builder_perf") {
     }
   }
 
-  if ((is_linux && !is_castos) || is_chromeos_lacros) {
+  if ((is_linux && !is_castos && !is_ohos) || is_chromeos_lacros) {
     if (is_official_build) {
       # In GN builds, this is controlled by the 'linux_dump_symbols'
       # flag, which defaults to 1 for official builds. For now,

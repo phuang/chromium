@@ -10,7 +10,8 @@ declare_args() {
       use_ozone && (is_linux || is_chromeos) && !is_castos &&
       # Avoid needing the 32-bit version of this library when Android is
       # building things via secondary toolchains.
-      target_os != "android"
+      target_os != "android" &&
+      target_os != "ohos"
 
   # Whether the platform provides a native accessibility toolkit, in other words
   # the platform has a C/C++ interface for accessibility that Chrome

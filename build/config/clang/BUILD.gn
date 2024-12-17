@@ -165,6 +165,17 @@ template("clang_lib") {
         }
       } else if (is_apple) {
         _dir = "darwin"
+      } else if (is_ohos) {
+        _dir = "linux"
+        if (current_cpu == "x64") {
+          _dir = "x86_64-unknown-linux-ohos"
+        } else if (current_cpu == "arm64") {
+          _dir = "aarch64-unknown-linux-ohos"
+        } else if (current_cpu == "arm") {
+          _dir = "arm-unknown-linux-ohos"
+        } else {
+          assert(false)  # Unhandled cpu type
+        }
       } else if (is_linux || is_chromeos) {
         if (current_cpu == "x64") {
           _dir = "x86_64-unknown-linux-gnu"
@@ -197,17 +208,6 @@ template("clang_lib") {
           _suffix = "-aarch64-android"
         } else if (current_cpu == "riscv64") {
           _suffix = "-riscv64-android"
-        } else {
-          assert(false)  # Unhandled cpu type
-        }
-      } else if (is_ohos) {
-        _dir = "linux"
-        if (current_cpu == "x64") {
-          _dir = "x86_64-unknown-linux-ohos"
-        } else if (current_cpu == "arm64") {
-          _dir = "aarch64-unknown-linux-ohos"
-        } else if (current_cpu == "arm") {
-          _dir = "arm-unknown-linux-ohos"
         } else {
           assert(false)  # Unhandled cpu type
         }

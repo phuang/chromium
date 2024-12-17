@@ -179,7 +179,7 @@ if (is_castos || is_cast_android || is_nacl) {
   # for how that is done.
   webrtc_public_deps += [ ":field_trial" ]
 }
-if ((is_linux || is_chromeos) && rtc_use_pipewire) {
+if ((is_linux || is_chromeos) && rtc_use_pipewire && !is_ohos) {
   webrtc_public_deps += [
     "//third_party/webrtc/modules/portal",
     "//third_party/webrtc/modules/video_capture:video_capture_internal_impl",

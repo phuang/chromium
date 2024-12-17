@@ -44,7 +44,7 @@ shared_library("content_shell_content_view") {
   deps = [
     ":napi",
     "//base",
-    "//components/crash/content/browser",
+    # "//components/crash/content/browser",
     "//content/shell:content_shell_app",
     "//content/shell:content_shell_lib",
     "//content/shell:pak",

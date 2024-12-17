@@ -681,7 +681,7 @@ if (is_win) {
   blink_core_sources_layout += [ "layout_theme_font_provider_default.cc" ]
 }
 
-if (is_linux || is_chromeos) {
+if ((is_linux || is_chromeos) && !is_ohos) {
   blink_core_sources_layout += [
     "layout_theme_linux.cc",
     "layout_theme_linux.h",

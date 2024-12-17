@@ -293,6 +293,7 @@ int GpuMain(MainFunctionParams parameters) {
           std::make_unique<base::SingleThreadTaskExecutor>(
               gpu_preferences.message_pump_type);
     }
+#elif BUILDFLAG(IS_OHOS)
 #elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 #error "Unsupported Linux platform."
 #elif BUILDFLAG(IS_MAC)

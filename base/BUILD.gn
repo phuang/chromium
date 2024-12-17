@@ -2236,9 +2236,9 @@ component("base") {
     sources += [
       # "nix/mime_util_xdg.cc",
       # "nix/mime_util_xdg.h",
-      "process/set_process_title_linux.cc",
-      "process/set_process_title_linux.h",
-      "system/sys_info_linux.cc",
+      # "process/set_process_title_linux.cc",
+      # "process/set_process_title_linux.h",
+      # "system/sys_info_linux.cc",
     ]
   }
 
@@ -2247,7 +2247,7 @@ component("base") {
   }
 
   # Linux.
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     # TODO(brettw) this will need to be parameterized at some point.
     linux_configs = []
     if (use_glib) {
@@ -2643,7 +2643,7 @@ buildflag_header("protected_memory_buildflags") {
   header_dir = "base/memory"
 
   protected_memory_enabled = !is_component_build && is_clang &&
-                             (is_win || is_linux || is_android || is_mac)
+                             (is_win || is_linux || is_android || is_mac) && !is_ohos
 
   flags = [ "PROTECTED_MEMORY_ENABLED=$protected_memory_enabled" ]
 }

@@ -24,6 +24,7 @@ import("//tools/grit/grit_rule.gni")
 
 # assert(enable_supervised_users)
 assert(!is_fuchsia, "Fuchsia shouldn't use anything in //chrome")
+assert(!is_ohos, "OHOS shouldn't use anything in //chrome")
 
 declare_args() {
   enable_android_site_isolation = is_desktop_android

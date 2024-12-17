@@ -465,7 +465,7 @@ static_library("test_support") {
     "//ui/base",
   ]
 
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     deps += [ "//ui/platform_window/common" ]
   }
 

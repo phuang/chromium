@@ -33,7 +33,7 @@ component("init") {
   if (is_chromeos) {
     deps += [ "//ui/base/ime/ash" ]
   }
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     deps += [ "//ui/base/ime/linux" ]
   }
   if (use_ozone) {

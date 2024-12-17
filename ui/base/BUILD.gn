@@ -587,7 +587,7 @@ component("base") {
     sources += [ "resource/resource_bundle_auralinux.cc" ]
   }
 
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     deps += [ "//third_party/fontconfig" ]
   }
 
@@ -1190,7 +1190,7 @@ test("ui_base_unittests") {
         "//ui/base/ime/ash:typing_session_manager",
       ]
     }
-    if (is_linux && use_aura) {
+    if (is_linux && use_aura && !is_ohos) {
       sources += [
         "dragdrop/os_exchange_data_provider_non_backed_unittest.cc",
         "ime/input_method_minimal_unittest.cc",

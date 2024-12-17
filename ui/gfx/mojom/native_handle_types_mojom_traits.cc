@@ -8,7 +8,8 @@
 
 namespace mojo {
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OZONE)
+#if !BUILDFLAG(IS_OHOS) && \
+    (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OZONE))
 mojo::PlatformHandle StructTraits<
     gfx::mojom::NativePixmapPlaneDataView,
     gfx::NativePixmapPlane>::buffer_handle(gfx::NativePixmapPlane& plane) {
@@ -28,13 +29,15 @@ bool StructTraits<
   out->size = data.size();
 
   mojo::PlatformHandle handle = data.TakeBufferHandle();
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
-  if (!handle.is_fd())
+#if !BUILDFLAG(IS_OHOS) && (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS))
+  if (!handle.is_fd()) {
     return false;
+  }
   out->fd = handle.TakeFD();
 #elif BUILDFLAG(IS_FUCHSIA)
-  if (!handle.is_handle())
+  if (!handle.is_handle()) {
     return false;
+  }
   out->vmo = zx::vmo(handle.TakeHandle());
 #endif  // BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 
@@ -54,7 +57,7 @@ bool StructTraits<
     gfx::mojom::NativePixmapHandleDataView,
     gfx::NativePixmapHandle>::Read(gfx::mojom::NativePixmapHandleDataView data,
                                    gfx::NativePixmapHandle* out) {
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if !BUILDFLAG(IS_OHOS) && (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS))
   out->modifier = data.modifier();
   out->supports_zero_copy_webgpu_import =
       data.supports_zero_copy_webgpu_import();
@@ -62,8 +65,9 @@ bool StructTraits<
 
 #if BUILDFLAG(IS_FUCHSIA)
   mojo::PlatformHandle handle = data.TakeBufferCollectionHandle();
-  if (!handle.is_handle())
+  if (!handle.is_handle()) {
     return false;
+  }
   out->buffer_collection_handle = zx::eventpair(handle.TakeHandle());
   out->buffer_index = data.buffer_index();
   out->ram_coherency = data.ram_coherency();
@@ -78,8 +82,9 @@ bool StructTraits<gfx::mojom::DXGIHandleTokenDataView, gfx::DXGIHandleToken>::
     Read(gfx::mojom::DXGIHandleTokenDataView& input,
          gfx::DXGIHandleToken* output) {
   base::UnguessableToken token;
-  if (!input.ReadValue(&token))
+  if (!input.ReadValue(&token)) {
     return false;
+  }
   *output = gfx::DXGIHandleToken(token);
   return true;
 }

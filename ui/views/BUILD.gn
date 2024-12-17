@@ -628,7 +628,7 @@ component("views") {
     ]
   }
 
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     public_deps += [ "//ui/linux:linux_ui" ]
     deps += [ "//ui/base/ime/linux" ]
     sources += [ "controls/menu/menu_config_linux.cc" ]
@@ -885,7 +885,7 @@ component("views") {
         public += [ "widget/desktop_aura/desktop_screen_ozone.h" ]
         sources += [ "widget/desktop_aura/desktop_screen_ozone.cc" ]
       }
-      if (is_linux) {
+      if (is_linux && !is_ohos) {
         public += [ "widget/desktop_aura/desktop_window_tree_host_linux.h" ]
         sources += [
           "widget/desktop_aura/desktop_window_tree_host_linux.cc",
@@ -897,7 +897,7 @@ component("views") {
           "//ui/base:ozone_buildflags",
         ]
       }
-      if (is_linux || is_fuchsia) {
+      if ((is_linux || is_fuchsia) && !is_ohos) {
         public += [
           "widget/desktop_aura/desktop_window_tree_host_platform.h",
           "widget/desktop_aura/window_move_client_platform.h",
@@ -910,7 +910,7 @@ component("views") {
         ]
         public_deps += [ "//ui/base/dragdrop/mojom:mojom_shared" ]
       }
-      if (is_linux) {
+      if (is_linux && !is_ohos) {
         sources += [
           "widget/desktop_aura/desktop_drag_drop_client_ozone_linux.cc",
           "widget/desktop_aura/desktop_drag_drop_client_ozone_linux.h",
@@ -1407,7 +1407,7 @@ test("views_unittests") {
     ]
   }
 
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     deps += [
       "//ui/base/ime/linux",
       "//ui/linux:test_support",

@@ -52,7 +52,7 @@ component("animation") {
     sources += [ "animation_ohos.cc" ]
   }
 
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     sources += [ "animation_linux.cc" ]
   }
 
@@ -85,7 +85,7 @@ component("animation") {
     deps += [ "//ui/gfx:gfx_jni_headers" ]
   }
 
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     deps += [ "//ui/linux:linux_ui" ]
   }
 

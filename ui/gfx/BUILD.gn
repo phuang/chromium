@@ -178,7 +178,7 @@ component("gfx") {
       "ohos/scoped_oh_native_window.h",
     ]
   }
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     sources += [
       "font_fallback_linux.cc",
       "font_fallback_linux.h",
@@ -421,10 +421,10 @@ component("gfx") {
   }
 
   # Linux.
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     deps += [ "//ui/linux:linux_ui" ]
   }
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     deps += [ "//third_party/fontconfig" ]
   }
 
@@ -676,7 +676,7 @@ source_set("memory_buffer_sources") {
     public_deps += [ "//ipc:message_support" ]
   }
 
-  if ((is_linux || is_chromeos || use_ozone) && !is_nacl) {
+  if ((is_linux || is_chromeos || use_ozone) && !is_nacl && !is_ohos) {
     sources += [
       "native_pixmap_handle.cc",
       "native_pixmap_handle.h",
@@ -971,11 +971,11 @@ test("gfx_unittests") {
     ]
   }
 
-  if (is_linux) {
+  if (is_linux && !is_ohos) {
     deps += [ "//ui/linux:test_support" ]
   }
 
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     sources += [
       "linux/fontconfig_util_unittest.cc",
       "linux/native_pixmap_dmabuf_unittest.cc",

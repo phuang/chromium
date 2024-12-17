@@ -67,6 +67,7 @@
 #define OS_ANDROID 1
 #elif defined(__OHOS__)
 #define OS_OHOS 1
+#define OS_LINUX 1
 #elif defined(__APPLE__)
 // Only include TargetConditionals after testing ANDROID as some Android builds
 // on the Mac have this header available and it's not needed unless the target

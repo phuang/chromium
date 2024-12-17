@@ -1,6 +1,8 @@
 OUT=/home/penghuang/sources/chromium/src/out/Release
 SIGN_TOOL_PATH = /home/penghuang/sources/command-line-tools/sdk/default/openharmony/toolchains/lib
 APP_BUNDLE_NAME = "org.chromium.content_shell"
+HVIGORW=/home/penghuang/sources/chromium/src/third_party/ohos_sdk/hvigor/bin/hvigorw
+HVIGORW=/home/penghuang/sources/command-line-tools/bin/hvigorw
 
 all:
 
@@ -18,7 +20,7 @@ sign-profile: openharmony_sx.p7b
 unsigned-hap: entry/build/default/outputs/default/entry-default-unsigned.hap
 
 entry/build/default/outputs/default/entry-default-unsigned.hap: .libs.stamp .resfile.stamp
-	hvigorw assembleHap
+	${HVIGORW} assembleHap
 
 openharmony_sx.p7b: UnsgnedReleasedProfileTemplate.json
 	java -jar ${SIGN_TOOL_PATH}/hap-sign-tool.jar sign-profile \

@@ -384,7 +384,7 @@ source_set("common") {
     sources -= [ "cursors/webcursor_aura.cc" ]
   }
 
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     sources += [
       "gpu_pre_sandbox_hook_linux.cc",
       "gpu_pre_sandbox_hook_linux.h",

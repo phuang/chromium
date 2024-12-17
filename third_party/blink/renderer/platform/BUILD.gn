@@ -1683,7 +1683,7 @@ component("platform") {
   if (is_ios) {
     sources += [ "fonts/ios/font_cache_ios.mm" ]
   }
-  if (is_linux || is_chromeos) {
+  if ((is_linux || is_chromeos) && !is_ohos) {
     sources += [
       "fonts/linux/font_cache_linux.cc",
       "fonts/linux/font_unique_name_lookup_linux.cc",

@@ -6,5 +6,5 @@ import("//build/config/chromeos/ui_mode.gni")
 import("//build/config/ui.gni")
 
 declare_args() {
-  use_pangocairo = is_linux && !is_castos
+  use_pangocairo = is_linux && !is_castos && !is_ohos
 }

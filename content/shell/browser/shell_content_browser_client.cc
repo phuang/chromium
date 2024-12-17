@@ -157,7 +157,7 @@ GetShellContentBrowserClientInstancesImpl() {
 int GetCrashSignalFD(const base::CommandLine& command_line) {
   return crashpad::CrashHandlerHost::Get()->GetDeathSignalSocket();
 }
-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#elif !BUILDFLAG(IS_OHOS) && (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS))
 int GetCrashSignalFD(const base::CommandLine& command_line) {
   int fd;
   pid_t pid;
@@ -174,10 +174,11 @@ class ShellControllerImpl : public mojom::ShellController {
   void GetSwitchValue(const std::string& name,
                       GetSwitchValueCallback callback) override {
     const auto& command_line = *base::CommandLine::ForCurrentProcess();
-    if (command_line.HasSwitch(name))
+    if (command_line.HasSwitch(name)) {
       std::move(callback).Run(command_line.GetSwitchValueASCII(name));
-    else
+    } else {
       std::move(callback).Run(std::nullopt);
+    }
   }
 
   void ExecuteJavaScript(const std::u16string& script,
@@ -433,22 +434,23 @@ void ShellContentBrowserClient::AppendExtraCommandLineSwitches(
     int child_process_id) {
   static const char* const kForwardSwitches[] = {
 #if BUILDFLAG(IS_MAC)
-    // Needed since on Mac, content_browsertests doesn't use
-    // content_test_launcher.cc and instead uses shell_main.cc. So give a signal
-    // to shell_main.cc that it's a browser test.
-    switches::kBrowserTest,
+      // Needed since on Mac, content_browsertests doesn't use
+      // content_test_launcher.cc and instead uses shell_main.cc. So give a
+      // signal
+      // to shell_main.cc that it's a browser test.
+      switches::kBrowserTest,
 #endif
-    switches::kCrashDumpsDir,
-    switches::kEnableCrashReporter,
-    switches::kExposeInternalsForTesting,
-    switches::kRunWebTests,
-    switches::kTestRegisterStandardScheme,
+      switches::kCrashDumpsDir,
+      switches::kEnableCrashReporter,
+      switches::kExposeInternalsForTesting,
+      switches::kRunWebTests,
+      switches::kTestRegisterStandardScheme,
   };
 
   command_line->CopySwitchesFrom(*base::CommandLine::ForCurrentProcess(),
                                  kForwardSwitches);
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if !BUILDFLAG(IS_OHOS) && (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS))
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kEnableCrashReporter)) {
     int fd;
@@ -592,8 +594,9 @@ void ShellContentBrowserClient::OverrideWebkitPrefs(
     prefs->preferred_contrast = blink::mojom::PreferredContrast::kNoPreference;
   }
 
-  if (override_web_preferences_callback_)
+  if (override_web_preferences_callback_) {
     override_web_preferences_callback_.Run(prefs);
+  }
 }
 
 std::unique_ptr<content::DevToolsManagerDelegate>
@@ -659,8 +662,9 @@ std::vector<std::unique_ptr<NavigationThrottle>>
 ShellContentBrowserClient::CreateThrottlesForNavigation(
     NavigationHandle* navigation_handle) {
   std::vector<std::unique_ptr<NavigationThrottle>> empty_throttles;
-  if (create_throttles_for_navigation_callback_)
+  if (create_throttles_for_navigation_callback_) {
     return create_throttles_for_navigation_callback_.Run(navigation_handle);
+  }
   return empty_throttles;
 }
 
@@ -735,7 +739,8 @@ void ShellContentBrowserClient::OverrideURLLoaderFactoryParams(
   }
 }
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_OHOS) && \
+    (BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID))
 void ShellContentBrowserClient::GetAdditionalMappedFilesForChildProcess(
     const base::CommandLine& command_line,
     int child_process_id,
@@ -801,8 +806,9 @@ BluetoothDelegate* ShellContentBrowserClient::GetBluetoothDelegate() {
 
 void ShellContentBrowserClient::BindBrowserControlInterface(
     mojo::ScopedMessagePipeHandle pipe) {
-  if (!pipe.is_valid())
+  if (!pipe.is_valid()) {
     return;
+  }
   mojo::MakeSelfOwnedReceiver(
       std::make_unique<ShellControllerImpl>(),
       mojo::PendingReceiver<mojom::ShellController>(std::move(pipe)));
@@ -840,8 +846,9 @@ void ShellContentBrowserClient::ConfigureNetworkContextParamsForShell(
   auto exempt_header =
       base::CommandLine::ForCurrentProcess()->GetSwitchValueASCII(
           "cors_exempt_header_list");
-  if (!exempt_header.empty())
+  if (!exempt_header.empty()) {
     context_params->cors_exempt_header_list.push_back(exempt_header);
+  }
 }
 
 void ShellContentBrowserClient::GetHyphenationDictionary(

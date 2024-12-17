@@ -44,7 +44,7 @@ component("shell_dialogs") {
     sources += [ "shell_dialog_stub.cc" ]
   }
 
-  if (is_linux && !is_castos) {
+  if (is_linux && !is_castos && !is_ohos) {
     sources += [
       "select_file_dialog_linux.cc",
       "select_file_dialog_linux.h",

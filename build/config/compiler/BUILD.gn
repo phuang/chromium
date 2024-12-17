@@ -291,7 +291,11 @@ config("compiler") {
   } else if (is_android) {
     configs += [ "//build/config/android:compiler" ]
   } else if (is_linux || is_chromeos) {
-    configs += [ "//build/config/linux:compiler" ]
+    if (is_ohos) {
+      configs += [ "//build/config/ohos:compiler" ]
+    } else {
+      configs += [ "//build/config/linux:compiler" ]
+    }
   } else if (is_nacl) {
     configs += [ "//build/config/nacl:compiler" ]
   } else if (is_mac) {
@@ -300,8 +304,6 @@ config("compiler") {
     configs += [ "//build/config/ios:compiler" ]
   } else if (is_fuchsia) {
     configs += [ "//build/config/fuchsia:compiler" ]
-  } else if (is_ohos) {
-    configs += [ "//build/config/ohos:compiler" ]
   } else if (current_os == "aix") {
     configs += [ "//build/config/aix:compiler" ]
   } else if (current_os == "zos") {
@@ -1784,9 +1786,13 @@ config("runtime_library") {
   if (is_win) {
     configs += [ "//build/config/win:runtime_library" ]
   } else if (is_linux || is_chromeos) {
-    configs += [ "//build/config/linux:runtime_library" ]
-    if (is_chromeos) {
-      configs += [ "//build/config/chromeos:runtime_library" ]
+    if (is_ohos) {
+      configs += [ "//build/config/ohos:runtime_library" ]
+    } else {
+      configs += [ "//build/config/linux:runtime_library" ]
+      if (is_chromeos) {
+        configs += [ "//build/config/chromeos:runtime_library" ]
+      }
     }
   } else if (is_ios) {
     configs += [ "//build/config/ios:runtime_library" ]

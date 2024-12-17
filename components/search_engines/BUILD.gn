@@ -134,7 +134,7 @@ static_library("search_engines") {
     ]
   }
 
-  if (is_linux || is_win || is_mac || is_chromeos) {
+  if (!is_ohos && (is_linux || is_win || is_mac || is_chromeos)) {
     sources += [
       "enterprise/search_aggregator_policy_handler.cc",
       "enterprise/search_aggregator_policy_handler.h",

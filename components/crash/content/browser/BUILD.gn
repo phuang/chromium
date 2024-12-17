@@ -23,6 +23,7 @@ if (is_android) {
 }
 
 source_set("browser") {
+  assert(!is_ohos)
   sources = []
 
   deps = [
