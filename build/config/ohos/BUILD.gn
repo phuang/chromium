@@ -29,9 +29,9 @@ config("compiler") {
 
   _max_page_size = 16384
   if (current_cpu == "arm64") {
-    _llvm_lib_dir = "${ohos_llvm_root}/lib/aarch64-linux-ohos"
+    _llvm_lib_dir = "${ohos_llvm_root}/lib/aarch64-unknown-linux-ohos"
   } else if (current_cpu == "x86_64") {
-    _llvm_lib_dir = "${ohos_llvm_root}/lib/x86_64-linux-ohos"
+    _llvm_lib_dir = "${ohos_llvm_root}/lib/x86_64-unknown-linux-ohos"
   }
 
   ldflags = [
