@@ -117,6 +117,8 @@ RUST_HOST_LLVM_INSTALL_DIR = os.path.join(CHROMIUM_DIR, 'third_party',
 CIPD_DOWNLOAD_URL = f'https://chrome-infra-packages.appspot.com/dl'
 OPENSSL_CIPD_LINUX_AMD_PATH = 'infra/3pp/static_libs/openssl/linux-amd64'
 OPENSSL_CIPD_LINUX_AMD_VERSION = '1.1.1j.chromium.2'
+OPENSSL_CIPD_LINUX_ARM_PATH = 'infra/3pp/static_libs/openssl/linux-arm64'
+OPENSSL_CIPD_LINUX_ARM_VERSION = '1.1.1j.chromium.2'
 OPENSSL_CIPD_MAC_AMD_PATH = 'infra/3pp/static_libs/openssl/mac-amd64'
 OPENSSL_CIPD_MAC_AMD_VERSION = '1.1.1j.chromium.2'
 OPENSSL_CIPD_MAC_ARM_PATH = 'infra/3pp/static_libs/openssl/mac-arm64'
@@ -156,8 +158,12 @@ def AddOpenSSLToEnv():
         ssl_url = (f'{CIPD_DOWNLOAD_URL}/{OPENSSL_CIPD_WIN_AMD_PATH}'
                    f'/+/version:2@{OPENSSL_CIPD_WIN_AMD_VERSION}')
     else:
-        ssl_url = (f'{CIPD_DOWNLOAD_URL}/{OPENSSL_CIPD_LINUX_AMD_PATH}'
-                   f'/+/version:2@{OPENSSL_CIPD_LINUX_AMD_VERSION}')
+        if platform.machine() == 'arm64':
+            ssl_url = (f'{CIPD_DOWNLOAD_URL}/{OPENSSL_CIPD_LINUX_ARM_PATH}'
+                    f'/+/version:2@{OPENSSL_CIPD_LINUX_ARM_VERSION}')
+        else:
+            ssl_url = (f'{CIPD_DOWNLOAD_URL}/{OPENSSL_CIPD_LINUX_AMD_PATH}'
+                    f'/+/version:2@{OPENSSL_CIPD_LINUX_AMD_VERSION}')
 
     if os.path.exists(ssl_dir):
         RmTree(ssl_dir)
@@ -504,7 +510,10 @@ def RustTargetTriple():
     elif sys.platform == 'win32':
         return 'x86_64-pc-windows-msvc'
     else:
-        return 'x86_64-unknown-linux-gnu'
+        if platform.machine() == 'aarch64':
+            return 'aarch64-unknown-linux-gnu'
+        else:
+            return 'x86_64-unknown-linux-gnu'
 
 
 # Build the LLVM libraries and install them .
@@ -588,13 +597,10 @@ def GitApplyCherryPicks():
     # with `GitMoveSubmoduleBranch()`.
     #############################
 
-<<<<<<< HEAD
-=======
     # TODO(crbug.com/363219692): Remove once we roll past this revision.
     GitCherryPick(RUST_SRC_DIR, 'https://github.com/rust-lang/rust.git',
                   'edb669350a59ce48586152cf87b1d1f2841cea62', '-m')
 
->>>>>>> d51cdbb96602a (Add OHOS platform support)
     print('Finished applying cherry-picks.')
 
 
@@ -679,7 +685,10 @@ def main():
         # Fetch sysroot we build rustc against. This ensures a minimum supported
         # host (not Chromium target). Since the rustc linux package is for
         # x86_64 only, that is the sole needed sysroot.
-        debian_sysroot = DownloadDebianSysroot('amd64', args.skip_checkout)
+        if platform.machine() == 'aarch64':
+            debian_sysroot = DownloadDebianSysroot('arm64', args.skip_checkout)
+        else:
+            debian_sysroot = DownloadDebianSysroot('amd64', args.skip_checkout)
 
     # Require zlib compression.
     if sys.platform == 'win32':
