@@ -63,7 +63,7 @@ FUCHSIA_SDK_DIR = os.path.join(CHROMIUM_DIR, 'third_party', 'fuchsia-sdk',
                                'sdk')
 PINNED_CLANG_DIR = os.path.join(LLVM_BUILD_TOOLS_DIR, 'pinned-clang')
 
-OHOS_NDK_TOOLCHAIN_DIR = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native"
+OHOS_NDK_TOOLCHAIN_DIR = os.path.expanduser("~/sources/command-line-tools/sdk/default/openharmony/native")
 
 BUG_REPORT_URL = ('https://crbug.com in the Tools>LLVM component,'
                   ' run tools/clang/scripts/process_crashreports.py'
@@ -72,9 +72,9 @@ BUG_REPORT_URL = ('https://crbug.com in the Tools>LLVM component,'
 LIBXML2_VERSION = 'libxml2-v2.9.12'
 ZSTD_VERSION = 'zstd-1.5.5'
 
-#
-# LLVM_GIT_URL = ('https://github.com/phuang/llvm-project.git')
-# CLANG_REVISION = "ab556184ef5c6e3e0c1ef2d4018208403150940e"
+
+LLVM_GIT_URL = ('https://github.com/phuang/llvm-project.git')
+CLANG_REVISION = "db61f4b2fdc31d162a9a3b07e32dae8caa476152"
 
 win_sdk_dir = None
 def GetWinSDKDir():
@@ -664,12 +664,14 @@ def main():
   parser.add_argument('--tf-path',
                       help='path to python tensorflow pip package. '
                       'Used for embedding an MLGO model')
+  is_linux_x86_64 = sys.platform.startswith('linux') and \
+      platform.machine() == 'x86_64'
   parser.add_argument(
       '--with-ml-inliner-model',
       help='path to MLGO inliner model to embed. Setting to '
       '\'default\', will download an official model which was '
       'trained for Chrome on Android',
-      default='default' if sys.platform.startswith('linux') else '')
+      default='default' if is_linux_x86_64 else '')
   parser.add_argument('--with-android', type=gn_arg, nargs='?', const=True,
                       help='build the Android ASan runtime (linux only)',
                       default=sys.platform.startswith('linux'))
@@ -738,8 +740,9 @@ def main():
     print('for general Fuchsia build instructions.')
     return 1
 
-  if args.with_ml_inliner_model and not sys.platform.startswith('linux'):
-    print('--with-ml-inliner-model only supports linux hosts')
+  if args.with_ml_inliner_model and \
+    not (sys.platform.startswith('linux') and platform.machine() == 'x86_64'):
+    print('--with-ml-inliner-model only supports linux x86_64 hosts')
     return 1
 
   # Don't buffer stdout, so that print statements are immediately flushed.
@@ -1355,18 +1358,25 @@ def main():
       sysroot_dir = toolchain_dir + "/sysroot"
       target_triple = target_arch + '-unknown-linux-ohos'
       llvm_lib_dir = toolchain_dir + "/llvm/lib/" + target_triple
+      ohos_clags = [
+        '-D__MUSL__',
+      ]
       ohos_args = [
-          'LLVM_ENABLE_RUNTIMES=compiler-rt',
+          'LLVM_ENABLE_RUNTIMES=libcxx;libcxxabi;libunwind;compiler-rt',
           'CMAKE_BUILD_TYPE=Release',
           'CMAKE_SYSROOT=%s' % sysroot_dir,
+          'CMAKE_C_FLAGS=' + ' '.join(ohos_clags),
+          'CMAKE_CXX_FLAGS=' + ' '.join(ohos_clags),
+          'CMAKE_ASM_FLAGS=' + ' '.join(ohos_clags),
           'CMAKE_LIBRARY_PATH=%s' % llvm_lib_dir,
           # 'CMAKE_C_COMPILER_TARGET=%s' % target_triple,
           # 'COMPILER_RT_DEFAULT_TARGET_ONLY=ON',
           'COMPILER_RT_USE_BUILTINS_LIBRARY=ON',
-          # 'COMPILER_RT_USE_LLVM_UNWINDER=ON', # ?
-          # 'COMPILER_RT_USE_LIBCXX=ON', # ?
+          'COMPILER_RT_USE_LLVM_UNWINDER=ON',
+          'COMPILER_RT_USE_LIBCXX=ON',
           'LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=ON',
           'LLVM_INCLUDE_TESTS=OFF',
+          'LIBCXX_HAS_MUSL_LIBC=ON',
       ]
       runtimes_triples_args[target_triple] = {
           "args": ohos_args,
