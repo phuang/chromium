@@ -11,7 +11,8 @@ import("//build_overrides/build.gni")
 import("abi.gni")
 assert(is_ohos)
 
-assert(host_cpu == "x64", "Need ohos toolchain support for your build CPU arch")
+assert(host_cpu == "x64" || host_cpu == "arm64",
+       "Need ohos toolchain support for your build CPU: ${host_cpu}")
 assert(host_os == "linux", "Need ohos toolchain support for your build OS")
 
 declare_args() {
