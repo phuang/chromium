@@ -27,6 +27,10 @@
 #include <vulkan/vulkan_android.h>
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include <vulkan/vulkan_ohos.h>
+#endif
+
 #if BUILDFLAG(IS_FUCHSIA)
 #include <zircon/types.h>
 // <vulkan/vulkan_fuchsia.h> must be included after <zircon/types.h>
@@ -179,6 +183,10 @@ struct COMPONENT_EXPORT(VULKAN) VulkanFunctionPointers {
   VulkanFunction<PFN_vkCreateAndroidSurfaceKHR> vkCreateAndroidSurfaceKHR;
 #endif  // BUILDFLAG(IS_ANDROID)
 
+#if BUILDFLAG(IS_OHOS)
+  VulkanFunction<PFN_vkCreateSurfaceOHOS> vkCreateSurfaceOHOS;
+#endif  // BUILDFLAG(IS_OHOS)
+
 #if BUILDFLAG(IS_FUCHSIA)
   VulkanFunction<PFN_vkCreateImagePipeSurfaceFUCHSIA>
       vkCreateImagePipeSurfaceFUCHSIA;
@@ -270,6 +278,12 @@ struct COMPONENT_EXPORT(VULKAN) VulkanFunctionPointers {
   VulkanFunction<PFN_vkGetAndroidHardwareBufferPropertiesANDROID>
       vkGetAndroidHardwareBufferPropertiesANDROID;
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_OHOS)
+  VulkanFunction<PFN_vkGetNativeBufferPropertiesOHOS>
+      vkGetNativeBufferPropertiesOHOS;
+  VulkanFunction<PFN_vkGetMemoryNativeBufferOHOS> vkGetMemoryNativeBufferOHOS;
+#endif  // BUILDFLAG(IS_OHOS)
 
 #if BUILDFLAG(IS_POSIX)
   VulkanFunction<PFN_vkGetSemaphoreFdKHR> vkGetSemaphoreFdKHR;
@@ -586,6 +600,11 @@ vkCreateAndroidSurfaceKHR(VkInstance instance,
       instance, pCreateInfo, pAllocator, pSurface);
 }
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_OHOS)
+#define vkCreateSurfaceOHOS \
+  gpu::GetVulkanFunctionPointers()->vkCreateSurfaceOHOS
+#endif  // BUILDFLAG(IS_OHOS)
 
 #if BUILDFLAG(IS_FUCHSIA)
 ALWAYS_INLINE VkResult vkCreateImagePipeSurfaceFUCHSIA(
@@ -1164,6 +1183,13 @@ ALWAYS_INLINE VkResult vkGetAndroidHardwareBufferPropertiesANDROID(
                                                     pProperties);
 }
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_OHOS)
+#define vkGetNativeBufferPropertiesOHOS \
+  gpu::GetVulkanFunctionPointers()->vkGetNativeBufferPropertiesOHOS
+#define vkGetMemoryNativeBufferOHOS \
+  gpu::GetVulkanFunctionPointers()->vkGetMemoryNativeBufferOHOS
+#endif  // BUILDFLAG(IS_OHOS)
 
 #if BUILDFLAG(IS_POSIX)
 ALWAYS_INLINE VkResult

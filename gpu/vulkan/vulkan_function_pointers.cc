@@ -410,6 +410,18 @@ bool VulkanFunctionPointers::BindInstanceFunctionPointers(
   }
 #endif  // BUILDFLAG(IS_ANDROID)
 
+#if BUILDFLAG(IS_OHOS)
+  if (gfx::HasExtension(enabled_extensions, VK_OHOS_SURFACE_EXTENSION_NAME)) {
+    constexpr char kvkCreateSurfaceOHOS[] = "vkCreateSurfaceOHOS";
+    vkCreateSurfaceOHOS = reinterpret_cast<PFN_vkCreateSurfaceOHOS>(
+        vkGetInstanceProcAddr(vk_instance, kvkCreateSurfaceOHOS));
+    if (!vkCreateSurfaceOHOS) {
+      LogGetProcError(kvkCreateSurfaceOHOS);
+      return false;
+    }
+  }
+#endif  // BUILDFLAG(IS_OHOS)
+
 #if BUILDFLAG(IS_FUCHSIA)
   if (gfx::HasExtension(enabled_extensions,
                         VK_FUCHSIA_IMAGEPIPE_SURFACE_EXTENSION_NAME)) {
@@ -1075,6 +1087,31 @@ bool VulkanFunctionPointers::BindDeviceFunctionPointers(
   }
 #endif  // BUILDFLAG(IS_ANDROID)
 
+#if BUILDFLAG(IS_OHOS)
+  if (gfx::HasExtension(enabled_extensions,
+                        VK_OHOS_EXTERNAL_MEMORY_EXTENSION_NAME)) {
+    constexpr char kvkGetNativeBufferPropertiesOHOS[] =
+        "vkGetNativeBufferPropertiesOHOS";
+    vkGetNativeBufferPropertiesOHOS =
+        reinterpret_cast<PFN_vkGetNativeBufferPropertiesOHOS>(
+            vkGetDeviceProcAddr(vk_device, kvkGetNativeBufferPropertiesOHOS));
+    if (!vkGetNativeBufferPropertiesOHOS) {
+      LogGetProcError(kvkGetNativeBufferPropertiesOHOS);
+      return false;
+    }
+
+    constexpr char kvkGetMemoryNativeBufferOHOS[] =
+        "vkGetMemoryNativeBufferOHOS";
+    vkGetMemoryNativeBufferOHOS =
+        reinterpret_cast<PFN_vkGetMemoryNativeBufferOHOS>(
+            vkGetDeviceProcAddr(vk_device, kvkGetMemoryNativeBufferOHOS));
+    if (!vkGetMemoryNativeBufferOHOS) {
+      LogGetProcError(kvkGetMemoryNativeBufferOHOS);
+      return false;
+    }
+  }
+#endif  // BUILDFLAG(IS_OHOS)
+
 #if BUILDFLAG(IS_POSIX)
   if (gfx::HasExtension(enabled_extensions,
                         VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME)) {
@@ -1371,6 +1408,10 @@ void VulkanFunctionPointers::ResetForTesting() {
   vkCreateAndroidSurfaceKHR = nullptr;
 #endif  // BUILDFLAG(IS_ANDROID)
 
+#if BUILDFLAG(IS_OHOS)
+  vkCreateSurfaceOHOS = nullptr;
+#endif  // BUILDFLAG(IS_OHOS)
+
 #if BUILDFLAG(IS_FUCHSIA)
   vkCreateImagePipeSurfaceFUCHSIA = nullptr;
 #endif  // BUILDFLAG(IS_FUCHSIA)
@@ -1455,6 +1496,11 @@ void VulkanFunctionPointers::ResetForTesting() {
 #if BUILDFLAG(IS_ANDROID)
   vkGetAndroidHardwareBufferPropertiesANDROID = nullptr;
 #endif  // BUILDFLAG(IS_ANDROID)
+
+#if BUILDFLAG(IS_OHOS)
+  vkGetNativeBufferPropertiesOHOS = nullptr;
+  vkGetMemoryNativeBufferOHOS = nullptr;
+#endif  // BUILDFLAG(IS_OHOS)
 
 #if BUILDFLAG(IS_POSIX)
   vkGetSemaphoreFdKHR = nullptr;

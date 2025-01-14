@@ -104,6 +104,13 @@ VULKAN_INSTANCE_FUNCTIONS = [
     ]
   },
   {
+    'ifdef': 'BUILDFLAG(IS_OHOS)',
+    'extension': 'VK_OHOS_SURFACE_EXTENSION_NAME',
+    'functions': [
+      'vkCreateSurfaceOHOS',
+    ]
+  },
+  {
     'ifdef': 'BUILDFLAG(IS_FUCHSIA)',
     'extension': 'VK_FUCHSIA_IMAGEPIPE_SURFACE_EXTENSION_NAME',
     'functions': [
@@ -199,6 +206,15 @@ VULKAN_DEVICE_FUNCTIONS = [
         'VK_ANDROID_EXTERNAL_MEMORY_ANDROID_HARDWARE_BUFFER_EXTENSION_NAME',
     'functions': [
       'vkGetAndroidHardwareBufferPropertiesANDROID',
+    ]
+  },
+  {
+    'ifdef': 'BUILDFLAG(IS_OHOS)',
+    'extension':
+        'VK_OHOS_EXTERNAL_MEMORY_EXTENSION_NAME',
+    'functions': [
+      'vkGetNativeBufferPropertiesOHOS',
+      'vkGetMemoryNativeBufferOHOS',
     ]
   },
   {
@@ -429,6 +445,10 @@ def GenerateHeaderFile(out_file):
 
 #if BUILDFLAG(IS_ANDROID)
 #include <vulkan/vulkan_android.h>
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+#include <vulkan/vulkan_ohos.h>
 #endif
 
 #if BUILDFLAG(IS_FUCHSIA)
