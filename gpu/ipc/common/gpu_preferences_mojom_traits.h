@@ -35,6 +35,8 @@ struct GPU_EXPORT EnumTraits<gpu::mojom::GrContextType, gpu::GrContextType> {
         return gpu::mojom::GrContextType::kGraphiteDawn;
       case gpu::GrContextType::kGraphiteMetal:
         return gpu::mojom::GrContextType::kGraphiteMetal;
+      case gpu::GrContextType::kGraphiteVulkan:
+        return gpu::mojom::GrContextType::kGraphiteVulkan;
     }
     NOTREACHED();
   }
@@ -55,6 +57,9 @@ struct GPU_EXPORT EnumTraits<gpu::mojom::GrContextType, gpu::GrContextType> {
         return true;
       case gpu::mojom::GrContextType::kGraphiteMetal:
         *out = gpu::GrContextType::kGraphiteMetal;
+        return true;
+      case gpu::mojom::GrContextType::kGraphiteVulkan:
+        *out = gpu::GrContextType::kGraphiteVulkan;
         return true;
     }
     return false;

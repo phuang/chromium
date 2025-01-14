@@ -177,6 +177,9 @@ SkiaBackendType FindSkiaBackendType(SharedContextState* context) {
     case gpu::GrContextType::kGraphiteMetal:
       // Graphite/Metal isn't expected to be used outside tests.
       return SkiaBackendType::kUnknown;
+    case gpu::GrContextType::kGraphiteVulkan:
+      // Graphite/Vulkan isn't expected to be used outside tests.
+      return SkiaBackendType::kUnknown;
     case gpu::GrContextType::kGraphiteDawn: {
 #if BUILDFLAG(SKIA_USE_DAWN)
       if (!context->dawn_context_provider()) {
@@ -543,7 +546,8 @@ bool SharedContextState::InitializeSkia(
   }
 
   if (gr_context_type_ == GrContextType::kGraphiteDawn ||
-      gr_context_type_ == GrContextType::kGraphiteMetal) {
+      gr_context_type_ == GrContextType::kGraphiteMetal ||
+      gr_context_type_ == GrContextType::kGraphiteVulkan) {
     return InitializeGraphite(gpu_preferences, workarounds);
   }
 
@@ -679,8 +683,7 @@ bool SharedContextState::InitializeGraphite(
       NOTREACHED();
     }
 #endif
-  } else {
-    CHECK_EQ(gr_context_type_, GrContextType::kGraphiteMetal);
+  } else if (gr_context_type_ == GrContextType::kGraphiteMetal) {
 #if BUILDFLAG(SKIA_USE_METAL)
     if (metal_context_provider_ &&
         metal_context_provider_->InitializeGraphiteContext(context_options)) {
@@ -690,6 +693,19 @@ bool SharedContextState::InitializeGraphite(
       return false;
     }
 #endif
+  } else if (gr_context_type_ == GrContextType::kGraphiteVulkan) {
+#if BUILDFLAG(SKIA_USE_VULKAN)
+    if (vk_context_provider_) {
+      if (!vk_context_provider_->InitializeGraphiteContext(context_options)) {
+        LOG(ERROR) << "Failed to initialize Graphite Context for Vulkan.";
+        return false;
+      }
+      graphite_context_ = vk_context_provider_->GetGraphiteContext();
+      DCHECK(graphite_context_);
+    }
+#endif
+  } else {
+    NOTREACHED();
   }
   if (!graphite_context_) {
     LOG(ERROR) << "Skia Graphite disabled: Graphite Context creation failed.";

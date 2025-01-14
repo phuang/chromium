@@ -71,6 +71,8 @@ std::string GrContextTypeToString(GrContextType type) {
       return "GraphiteDawn";
     case GrContextType::kGraphiteMetal:
       return "GraphiteMetal";
+    case GrContextType::kGraphiteVulkan:
+      return "GraphiteVulkan";
   }
   NOTREACHED();
 }

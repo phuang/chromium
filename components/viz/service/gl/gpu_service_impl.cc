@@ -413,7 +413,14 @@ GpuServiceImpl::GpuServiceImpl(
       DLOG(ERROR) << "Failed to create Metal context provider for Graphite.";
     }
 #endif  // BUILDFLAG(SKIA_USE_METAL)
+  } else if (gpu_preferences_.gr_context_type ==
+             gpu::GrContextType::kGraphiteVulkan) {
+#if BUILDFLAG(SKIA_USE_VULKAN)
+    // XXX
+    DCHECK(vulkan_context_provider_);
+#endif  // BUILDFLAG(SKIA_USE_VULKAN)
   }
+
 
 #if BUILDFLAG(USE_VAAPI_IMAGE_CODECS)
   image_decode_accelerator_worker_ =

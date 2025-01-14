@@ -490,7 +490,8 @@ bool GpuInit::InitializeAndStartSandbox(base::CommandLine* command_line,
   const bool need_fallback_from_graphite = [this]() {
     // If graphite is requested, check ANGLE implementation.
     if (gpu_preferences_.gr_context_type != GrContextType::kGraphiteDawn &&
-        gpu_preferences_.gr_context_type != GrContextType::kGraphiteMetal) {
+        gpu_preferences_.gr_context_type != GrContextType::kGraphiteMetal &&
+        gpu_preferences_.gr_context_type != GrContextType::kGraphiteVulkan) {
       return false;
     }
 

@@ -26,6 +26,11 @@ struct GrContextOptions;
 class GrDirectContext;
 class GrVkSecondaryCBDrawContext;
 
+namespace skgpu::graphite {
+struct ContextOptions;
+class Context;
+}  // namespace skgpu::graphite
+
 namespace gpu {
 class VulkanDeviceQueue;
 class VulkanImplementation;
@@ -60,6 +65,11 @@ class VIZ_VULKAN_CONTEXT_PROVIDER_EXPORT VulkanContextProvider
   // complete before proceeding when the current amount of allocated memory
   // exceeds this limit.
   virtual std::optional<uint32_t> GetSyncCpuMemoryLimit() const = 0;
+
+  virtual bool InitializeGraphiteContext(
+      const skgpu::graphite::ContextOptions& context_options) = 0;
+
+  virtual skgpu::graphite::Context* GetGraphiteContext() const  = 0;
 
  protected:
   friend class base::RefCountedThreadSafe<VulkanContextProvider>;

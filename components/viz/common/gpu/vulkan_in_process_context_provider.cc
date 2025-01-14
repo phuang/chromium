@@ -43,8 +43,9 @@ VulkanInProcessContextProvider::Create(
       new VulkanInProcessContextProvider(
           vulkan_implementation, heap_memory_limit, sync_cpu_memory_limit,
           cooldown_duration_at_memory_pressure_critical));
-  if (!context_provider->Initialize(gpu_info, is_thread_safe))
+  if (!context_provider->Initialize(gpu_info, is_thread_safe)) {
     return nullptr;
+  }
   return context_provider;
 }
 
@@ -54,8 +55,9 @@ VulkanInProcessContextProvider::CreateForCompositorGpuThread(
     std::unique_ptr<gpu::VulkanDeviceQueue> vulkan_device_queue,
     uint32_t sync_cpu_memory_limit,
     base::TimeDelta cooldown_duration_at_memory_pressure_critical) {
-  if (!vulkan_implementation)
+  if (!vulkan_implementation) {
     return nullptr;
+  }
 
   scoped_refptr<VulkanInProcessContextProvider> context_provider(
       new VulkanInProcessContextProvider(
@@ -107,8 +109,9 @@ bool VulkanInProcessContextProvider::Initialize(const gpu::GPUInfo* gpu_info,
   device_queue_ =
       gpu::CreateVulkanDeviceQueue(vulkan_implementation_, flags, gpu_info,
                                    heap_memory_limit_, is_thread_safe);
-  if (!device_queue_)
+  if (!device_queue_) {
     return false;
+  }
 
   return true;
 }
@@ -167,8 +170,9 @@ bool VulkanInProcessContextProvider::InitializeGrContext(
 
   std::vector<const char*> device_extensions;
   device_extensions.reserve(device_queue_->enabled_extensions().size());
-  for (const auto& extension : device_queue_->enabled_extensions())
+  for (const auto& extension : device_queue_->enabled_extensions()) {
     device_extensions.push_back(extension.data());
+  }
   skgpu::VulkanExtensions vk_extensions;
   vk_extensions.init(get_proc,
                      vulkan_implementation_->GetVulkanInstance()->vk_instance(),
@@ -184,6 +188,16 @@ bool VulkanInProcessContextProvider::InitializeGrContext(
   gr_context_ = GrDirectContexts::MakeVulkan(backend_context, context_options);
 
   return gr_context_ != nullptr;
+}
+
+bool VulkanInProcessContextProvider::InitializeGraphiteContext(
+    const skgpu::graphite::ContextOptions& context_options) {
+  return false;
+}
+
+skgpu::graphite::Context* VulkanInProcessContextProvider::GetGraphiteContext()
+    const {
+  return nullptr;
 }
 
 void VulkanInProcessContextProvider::Destroy() {
@@ -249,8 +263,9 @@ std::optional<uint32_t> VulkanInProcessContextProvider::GetSyncCpuMemoryLimit()
 
 void VulkanInProcessContextProvider::OnMemoryPressure(
     base::MemoryPressureListener::MemoryPressureLevel level) {
-  if (level != base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_CRITICAL)
+  if (level != base::MemoryPressureListener::MEMORY_PRESSURE_LEVEL_CRITICAL) {
     return;
+  }
 
   critical_memory_pressure_expiration_time_ =
       base::TimeTicks::Now() + cooldown_duration_at_memory_pressure_critical_;

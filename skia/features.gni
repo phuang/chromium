@@ -17,6 +17,8 @@ declare_args() {
   # on non-official developer builds.
   skia_use_metal = (is_mac || (is_ios && use_blink)) && !is_official_build
 
+  skia_use_vulkan = false
+
   # Enable gtests using SkiaRenderer on Skia Graphite.
   enable_skia_graphite_gtests = is_mac || (is_ios && use_blink)
 }

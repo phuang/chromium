@@ -224,6 +224,7 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
 #if 1
       "--enable-skia-graphite",
       "--skia-graphite-backend=dawn-vulkan",
+      "--skia-graphite-backend=vulkan",
 #endif
       // "https://webkit.org/blog-files/3d-transforms/poster-circle.html",
       // "https://webkit.org/demos/webgpu/",

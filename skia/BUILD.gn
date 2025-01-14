@@ -33,6 +33,7 @@ buildflag_header("buildflags") {
     "SKIA_SUPPORT_SKOTTIE=$skia_support_skottie",
     "SKIA_USE_DAWN=$skia_use_dawn",
     "SKIA_USE_METAL=$skia_use_metal",
+    "SKIA_USE_VULKAN=$skia_use_vulkan",
   ]
 }
 

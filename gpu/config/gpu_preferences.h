@@ -67,6 +67,7 @@ enum class GrContextType : uint32_t {
   kVulkan,  // Ganesh
   kGraphiteDawn,
   kGraphiteMetal,
+  kGraphiteVulkan,
 };
 
 GPU_EXPORT std::string GrContextTypeToString(GrContextType type);

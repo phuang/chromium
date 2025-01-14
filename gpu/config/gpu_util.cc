@@ -314,6 +314,11 @@ GpuFeatureStatus GetSkiaGraphiteFeatureStatus(
     return kGpuFeatureStatusEnabled;
   }
 #endif  // BUILDFLAG(SKIA_USE_METAL)
+#if BUILDFLAG(SKIA_USE_VULKAN)
+  if (gpu_preferences.gr_context_type == GrContextType::kGraphiteVulkan) {
+    return kGpuFeatureStatusEnabled;
+  }
+#endif  // BUILDFLAG(SKIA_USE_VULKAN)
   return kGpuFeatureStatusDisabled;
 }
 

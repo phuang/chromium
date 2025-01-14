@@ -66,6 +66,9 @@ class VIZ_VULKAN_CONTEXT_PROVIDER_EXPORT VulkanInProcessContextProvider
       std::vector<VkSemaphore> semaphores) override;
   void EnqueueSecondaryCBPostSubmitTask(base::OnceClosure closure) override;
   std::optional<uint32_t> GetSyncCpuMemoryLimit() const override;
+  bool InitializeGraphiteContext(
+      const skgpu::graphite::ContextOptions& context_options) override;
+  skgpu::graphite::Context* GetGraphiteContext() const  override;
 
  private:
   friend class VulkanInProcessContextProviderTest;
