@@ -10,6 +10,7 @@ RM = rm -rf
 HVIGORW = ${OHOS_COMMAND_LINE_TOOLS_PATH}/bin/hvigorw
 JAVA = java
 HAP_SIGN_TOOL = ${JAVA} -jar ${SIGN_TOOL_PATH}/hap-sign-tool.jar
+OPENHARMONY_P7B = openharmony_debug_sx.p7b
 
 all:
 
@@ -27,9 +28,12 @@ signed-profile: openharmony_sx.p7b
 unsigned-hap: entry/build/default/outputs/default/entry-default-unsigned.hap
 
 entry/build/default/outputs/default/entry-default-unsigned.hap: .libs.stamp .resfile.stamp
-	${HVIGORW} assembleHap
+	${HVIGORW} \
+		-p buildMode=debug \
+		-p debuggable=true \
+		assembleHap
 
-openharmony_sx.p7b: UnsgnedReleasedProfileTemplate.json
+openharmony_release_sx.p7b: UnsgnedReleasedProfileTemplate.json
 	${HAP_SIGN_TOOL} sign-profile \
 		-keyAlias "openharmony application profile release" \
 		-signAlg "SHA256withECDSA" \
@@ -37,13 +41,25 @@ openharmony_sx.p7b: UnsgnedReleasedProfileTemplate.json
 		-profileCertFile "${SIGN_TOOL_PATH}/OpenHarmonyProfileRelease.pem" \
 		-inFile "UnsgnedReleasedProfileTemplate.json" \
 		-keystoreFile "${SIGN_TOOL_PATH}/OpenHarmony.p12" \
-		-outFile "openharmony_sx.p7b" \
+		-outFile "openharmony_release_sx.p7b" \
+		-keyPwd "123456" \
+		-keystorePwd "123456"
+
+openharmony_debug_sx.p7b: UnsgnedDebugProfileTemplate.json
+	${HAP_SIGN_TOOL} sign-profile \
+		-keyAlias "openharmony application profile debug" \
+		-signAlg "SHA256withECDSA" \
+		-mode "localSign" \
+		-profileCertFile "${SIGN_TOOL_PATH}/OpenHarmonyProfileDebug.pem" \
+		-inFile "UnsgnedDebugProfileTemplate.json" \
+		-keystoreFile "${SIGN_TOOL_PATH}/OpenHarmony.p12" \
+		-outFile "openharmony_debug_sx.p7b" \
 		-keyPwd "123456" \
 		-keystorePwd "123456"
 
 signed-hap: entry-default-signed.hap
 
-entry-default-signed.hap: entry/build/default/outputs/default/entry-default-unsigned.hap openharmony_sx.p7b
+entry-default-signed.hap: entry/build/default/outputs/default/entry-default-unsigned.hap ${OPENHARMONY_P7B}
 	${HAP_SIGN_TOOL} sign-app \
 		-keyAlias "openharmony application release" \
 		-signAlg "SHA256withECDSA" \
@@ -51,7 +67,7 @@ entry-default-signed.hap: entry/build/default/outputs/default/entry-default-unsi
 		-appCertFile "OpenHarmonyApplication.pem" \
 		-inFile "entry/build/default/outputs/default/entry-default-unsigned.hap" \
 		-keystoreFile "${SIGN_TOOL_PATH}/OpenHarmony.p12" \
-		-profileFile "openharmony_sx.p7b" \
+		-profileFile "${OPENHARMONY_P7B}" \
 		-keyPwd "123456" \
 		-keystorePwd "123456" \
 		-outFile "entry-default-signed.hap"

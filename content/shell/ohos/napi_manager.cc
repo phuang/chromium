@@ -224,13 +224,14 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
 #if 1
       "--enable-skia-graphite",
       "--skia-graphite-backend=dawn-vulkan",
-      "--skia-graphite-backend=vulkan",
+      // "--skia-graphite-backend=vulkan",
 #endif
       // "https://webkit.org/blog-files/3d-transforms/poster-circle.html",
       // "https://webkit.org/demos/webgpu/",
       // "https://webglsamples.org/",
       // "https://browserbench.org/MotionMark1.3/",
-      "https://www.taobao.com/",
+      "https://browserbench.org/MotionMark1.3/developer.html",
+      // "https://www.taobao.com/",
   };
   params.argv = args;
   params.argc = std::size(args);
