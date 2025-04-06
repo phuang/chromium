@@ -45,7 +45,7 @@ constexpr int kBuffersPerSecond = 100;  // 10 ms per buffer.
 
 int GetCaptureBufferSize(bool need_webrtc_processing,
                          const AudioParameters device_format) {
-#if BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CAST_ANDROID)
+#if (BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_CAST_ANDROID)) || BUILDFLAG(IS_OHOS)
   // TODO(henrika): Re-evaluate whether to use same logic as other platforms.
   // https://crbug.com/638081
   // Note: This computation does not match 2x10 ms as defined for audio

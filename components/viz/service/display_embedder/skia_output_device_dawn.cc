@@ -27,7 +27,7 @@ namespace {
 
 // TODO(crbug.com/dawn/286): Dawn requires that surface format is BGRA8Unorm for
 // desktop and RGBA8Unorm for Android. Use GetPreferredSurfaceFormat when ready.
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 constexpr SkColorType kSurfaceColorType = kRGBA_8888_SkColorType;
 constexpr wgpu::TextureFormat kSwapChainFormat =
     wgpu::TextureFormat::RGBA8Unorm;
@@ -129,6 +129,13 @@ bool SkiaOutputDeviceDawn::Initialize(gpu::SurfaceHandle surface_handle) {
   wgpu::SurfaceSourceAndroidNativeWindow android_native_window_desc;
   android_native_window_desc.window = android_native_window_.a_native_window();
   surface_desc.nextInChain = &android_native_window_desc;
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  oh_native_window_ = ui::ScopedOHNativeWindow(surface_handle);
+  wgpu::SurfaceSourceOHNativeWindow oh_native_window_desc;
+  oh_native_window_desc.window = oh_native_window_.native_window();
+  surface_desc.nextInChain = &oh_native_window_desc;
 #endif
 
   auto* context_provider = context_state_->dawn_context_provider();

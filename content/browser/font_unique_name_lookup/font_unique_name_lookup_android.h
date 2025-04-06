@@ -15,7 +15,8 @@
 #include "content/common/content_export.h"
 #include "third_party/blink/public/mojom/font_unique_name_lookup/font_unique_name_lookup.mojom.h"
 
-static_assert(BUILDFLAG(IS_ANDROID), "This implementation only works safely "
+static_assert(BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS),
+              "This implementation only works safely "
               "on Android due to the way it assumes font files to be "
               "read-only and unmodifiable.");
 

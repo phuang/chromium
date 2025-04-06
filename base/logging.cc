@@ -131,6 +131,10 @@ typedef FILE* FileHandle;
 #include "base/logging/rust_logger.rs.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include <hilog/log.h>
+#endif
+
 namespace logging {
 
 namespace {
@@ -735,7 +739,7 @@ void LogMessage::Flush() {
 
   size_t stack_start = stream_.str().length();
 #if !defined(OFFICIAL_BUILD) && !BUILDFLAG(IS_NACL) && !defined(__UCLIBC__) && \
-    !BUILDFLAG(IS_AIX)
+    !BUILDFLAG(IS_AIX) && !BUILDFLAG(IS_OHOS)
   // Include a stack trace on a fatal, unless a debugger is attached.
   if (severity_ == LOGGING_FATAL && !base::debug::BeingDebugged()) {
     base::debug::StackTrace stack_trace;
@@ -914,7 +918,43 @@ void LogMessage::Flush() {
     GetScopedFxLogger().LogMessage(file_, static_cast<uint32_t>(line_),
                                    message.substr(0, message.size() - 1),
                                    severity_);
-#endif  // BUILDFLAG(IS_FUCHSIA)
+#elif BUILDFLAG(IS_OHOS)
+    LogLevel log_level = LOG_DEBUG;
+    switch (severity_) {
+      case LOGGING_INFO:
+        log_level = LOG_INFO;
+        break;
+      case LOGGING_WARNING:
+        log_level = LOG_WARN;
+        break;
+      case LOGGING_ERROR:
+        log_level = LOG_ERROR;
+        break;
+      case LOGGING_FATAL:
+        log_level = LOG_FATAL;
+        break;
+    }
+    constexpr unsigned int kOHOSLogOdmain = 0x3311;
+    const char kOHOSLogTag[] = "chromium";
+#if DCHECK_IS_ON()
+    // Split the output by new lines to prevent the OHOS system from
+    // truncating the log.
+    std::vector<std::string> lines = base::SplitString(
+        str_newline, "\n", base::KEEP_WHITESPACE, base::SPLIT_WANT_ALL);
+    // str_newline has an extra newline appended to it (at the top of this
+    // function), so skip the last split element to avoid needlessly
+    // logging an empty string.
+    lines.pop_back();
+    for (const auto& line : lines) {
+      OH_LOG_Print(LOG_APP, log_level, kOHOSLogOdmain, kOHOSLogTag,
+                   "%{public}s", line.c_str());
+    }
+#else
+    // The OHOS system may truncate the string if it's too long.
+    OH_LOG_Print(LOG_APP, log_level, kOHOSLogOdmain, kOHOSLogTag, "%{public}s",
+                 str_newline.c_str());
+#endif
+#endif  // BUILDFLAG(IS_OHOS)
   }
 
   if (ShouldLogToStderr(severity_)) {

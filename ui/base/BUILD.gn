@@ -468,6 +468,19 @@ component("base") {
     sources += [ "resource/resource_bundle_fuchsia.cc" ]
   }
 
+  if (is_ohos && !use_aura) {
+    sources += [ "resource/resource_bundle_ohos.cc" ]
+  }
+
+  if (is_ohos) {
+    sources += [
+      "ohos/cursor.cc",
+      "ohos/cursor.h",
+      "ohos/cursor_factory.cc",
+      "ohos/cursor_factory.h",
+    ]
+  }
+
   configs += [
     "//build/config/compiler:prevent_unsafe_narrowing",
     "//build/config/compiler:wexit_time_destructors",
@@ -557,6 +570,14 @@ component("base") {
     deps += [ "//ui/resources:ui_unscaled_resources_grd" ]
   }
 
+  if (is_ohos) {
+    public_deps += [
+      "//ui/base/cursor",
+      "//ui/base/cursor/mojom:cursor_type_shared",
+    ]
+    deps += [ "//ui/resources:ui_unscaled_resources_grd" ]
+  }
+
   if (is_mac) {
     public_deps += [ "//ui/base/cursor" ]
     deps += [ "//ui/resources:ui_resources_grd" ]
@@ -566,7 +587,7 @@ component("base") {
     deps += [ "//ui/events" ]
   }
 
-  if (use_aura && (is_linux || is_chromeos)) {
+  if (use_aura && (is_linux || is_chromeos || is_ohos)) {
     sources += [ "resource/resource_bundle_auralinux.cc" ]
   }
 
@@ -585,7 +606,7 @@ component("base") {
     ]
   }
 
-  if (is_chromeos || (use_aura && is_linux) || is_fuchsia) {
+  if (is_chromeos || (use_aura && is_linux) || is_fuchsia || is_ohos) {
     sources += [
       "dragdrop/os_exchange_data_provider_non_backed.cc",
       "dragdrop/os_exchange_data_provider_non_backed.h",

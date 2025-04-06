@@ -9,7 +9,7 @@
 #include "base/task/task_traits.h"
 #include "base/task/thread_pool.h"
 #include "base/threading/scoped_blocking_call.h"
-#include "net/android/network_library.h"
+// #include "net/android/network_library.h"
 #include "net/cert/internal/platform_trust_store.h"
 #include "net/cert/x509_certificate.h"
 #include "net/cert/x509_util.h"
@@ -25,7 +25,8 @@ class TrustStoreAndroid::Impl
   explicit Impl(int generation) : generation_(generation) {
     base::ScopedBlockingCall scoped_blocking_call(
         FROM_HERE, base::BlockingType::MAY_BLOCK);
-    std::vector<std::string> roots = net::android::GetUserAddedRoots();
+    // std::vector<std::string> roots = net::android::GetUserAddedRoots();
+    std::vector<std::string> roots;
 
     for (auto& root : roots) {
       bssl::CertErrors errors;

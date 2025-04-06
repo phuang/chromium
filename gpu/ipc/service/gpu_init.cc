@@ -4,6 +4,8 @@
 
 #include "gpu/ipc/service/gpu_init.h"
 
+#include <pthread.h>
+
 #include <cstdlib>
 #include <cstring>
 #include <optional>
@@ -991,6 +993,37 @@ void GpuInit::InitializeInProcess(base::CommandLine* command_line,
                                   const GpuPreferences& gpu_preferences) {
   gpu_preferences_ = gpu_preferences;
   init_successful_ = true;
+
+  #if 1
+  pid_t pid = gettid();
+
+  // make this thread only run on big cores
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  // CPU_SET(0, &cpuset);  // Small core
+  // CPU_SET(1, &cpuset);  // Small core
+  // CPU_SET(2, &cpuset);  // Small core
+  // CPU_SET(3, &cpuset);  // Small core
+  // CPU_SET(4, &cpuset);  // Middle core
+  // CPU_SET(5, &cpuset);  // Middle core
+  // CPU_SET(6, &cpuset);  // Middle core
+  // CPU_SET(7, &cpuset);  // Middle core
+  // CPU_SET(8, &cpuset);  // Middle core
+  // CPU_SET(9, &cpuset);  // Middle core
+  CPU_SET(10, &cpuset);  // Big core
+  CPU_SET(11, &cpuset);  // Big core
+  int ret = sched_setaffinity(pid, sizeof(cpu_set_t), &cpuset);
+  LOG(ERROR) << "EEEE sched_setaffinity return " << ret;
+
+  ret = nice(-20);
+  LOG(ERROR) << "EEEE nice return " << ret;
+
+  struct sched_param param;
+  param.sched_priority = 99;
+  ret = sched_setscheduler(pid, SCHED_RR, &param);
+  LOG(ERROR) << "EEEE sched_setscheduler return " << ret;
+#endif
+
 #if BUILDFLAG(IS_OZONE)
   ui::OzonePlatform::InitParams params;
   params.single_process = true;

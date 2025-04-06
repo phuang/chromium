@@ -1,0 +1,48 @@
+# Copyright 2015 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+assert(is_ohos)
+
+component("ohos") {
+  output_name = "ui_ohos"
+  sources = [
+    "display_manager.cc",
+    "display_manager.h",
+    "screen.h",
+    "ui_ohos_export.h",
+
+    # "view.cc",
+    # "view.h",
+    # "window.cc",
+    # "window.h",
+  ]
+
+  defines = [ "UI_OHOS_IMPLEMENTATION" ]
+  libs = [ "native_display_manager" ]
+
+  deps = [
+    "//base",
+
+    # "//cc/slim",
+    # "//components/viz/client",
+    # "//components/viz/common",
+    # "//components/viz/host",
+    # "//services/viz/public/mojom",
+    # "//skia",
+    # "//third_party/blink/public:blink_headers",
+    "//ui/base",
+
+    # "//ui/base/cursor",
+    # "//ui/base/cursor/mojom:cursor_type",
+    # "//ui/compositor",
+    "//ui/display",
+
+    # "//ui/events",
+    # "//ui/events/devices",
+    # "//ui/gfx",
+    # "//ui/gfx/geometry",
+    # "//ui/touch_selection",
+    # "//url",
+  ]
+}

@@ -50,7 +50,8 @@ declare_args() {
 
   # Platforms for which certificate verification can only be performed using
   # the builtin cert verifier with the Chrome Root Store.
-  chrome_root_store_only = is_win || is_mac || is_linux || is_chromeos
+  chrome_root_store_only =
+      is_win || is_mac || is_linux || is_chromeos || is_ohos
 
   # DBSC is only supported on Windows, Linux and Mac for now.
   enable_device_bound_sessions = is_win || is_linux || is_mac

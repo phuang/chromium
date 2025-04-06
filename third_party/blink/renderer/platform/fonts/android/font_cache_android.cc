@@ -105,8 +105,9 @@ sk_sp<SkTypeface> FontCache::CreateLocaleSpecificTypeface(
       // match, use the space character, because all fonts are likely to have
       // a glyph for it.
       kSpaceCharacter));
-  if (!typeface)
+  if (!typeface) {
     return nullptr;
+  }
 
   // When the specified family of the specified language does not exist, we want
   // to fall back to the specified family of the default language, but
@@ -120,6 +121,7 @@ sk_sp<SkTypeface> FontCache::CreateLocaleSpecificTypeface(
       /* bcp47Count */ 1, kSpaceCharacter));
   SkString skia_fallback_name;
   fallback->getFamilyName(&skia_fallback_name);
+
   if (typeface != fallback)
     return typeface;
   return nullptr;

@@ -271,6 +271,12 @@ class BASE_EXPORT RunLoop {
   friend class MessagePumpAndroid;
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+  // Android doesn't support the blocking RunLoop::Run, so it calls
+  // BeforeRun and AfterRun directly.
+  friend class MessagePumpOHOS;
+#endif
+
 #if BUILDFLAG(IS_IOS)
   // iOS doesn't support the blocking RunLoop::Run, so it calls
   // BeforeRun directly.

@@ -51,8 +51,7 @@ void PartialFailureSDKDelegateWrapper::ReadGroups(
     const std::string& group_id = params.group_ids(i);
     data_sharing_pb::ReadGroupsParams single_read_group_params;
     single_read_group_params.add_group_ids(group_id);
-    *single_read_group_params.add_group_params() =
-        params.group_params(i);
+    *single_read_group_params.add_group_params() = params.group_params(i);
     sdk_delegate_->ReadGroups(
         single_read_group_params,
         base::BindOnce(

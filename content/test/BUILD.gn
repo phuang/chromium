@@ -3201,7 +3201,7 @@ test("content_unittests") {
     "//third_party/mesa_headers",
   ]
 
-  if (!is_ios) {
+  if (!is_ios && !is_ohos) {
     data_deps += [ "//third_party/perfetto/protos/perfetto/config/chrome:scenario_descriptor" ]
     data += [ "$root_gen_dir/third_party/perfetto/protos/perfetto/config/chrome/scenario_config.descriptor" ]
   }

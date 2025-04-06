@@ -129,7 +129,7 @@ WebContentsFrameTracker::WebContentsFrameTracker(
     MouseCursorOverlayController* cursor_controller)
     : device_(std::move(device)),
       device_task_runner_(std::move(device_task_runner))
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
       ,
       cursor_controller_(cursor_controller->GetWeakPtr())
 #endif
@@ -140,7 +140,7 @@ WebContentsFrameTracker::WebContentsFrameTracker(
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   CHECK(device_task_runner_);
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   CHECK(cursor_controller_);
 #endif
 }
@@ -428,7 +428,7 @@ void WebContentsFrameTracker::SetTargetView(gfx::NativeView view) {
     return;
   }
   target_native_view_ = view;
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   if (cursor_controller_) {
     cursor_controller_->SetTargetView(view);
   }

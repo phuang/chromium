@@ -783,7 +783,6 @@ bool GLDisplayEGL::InitializeDisplay(bool supports_angle,
           "egl-display-type", base::debug::CrashKeySize::Size32);
       base::debug::SetCrashKeyString(egl_display_type_key,
                                      display_type_string.str());
-
       UMA_HISTOGRAM_ENUMERATION("GPU.EGLDisplayType", display_type,
                                 DISPLAY_TYPE_MAX);
     }
@@ -882,7 +881,9 @@ void GLDisplayEGL::InitializeCommon(bool for_testing) {
     egl_android_native_fence_sync_supported_ = false;
   }
 #endif  // BUILDFLAG(IS_ANDROID)
-
+#if BUILDFLAG(IS_OHOS)
+  DCHECK(egl_android_native_fence_sync_supported_);
+#endif
   if (!for_testing) {
     if (ext->b_EGL_ANGLE_power_preference) {
       gpu_switching_observer_ =

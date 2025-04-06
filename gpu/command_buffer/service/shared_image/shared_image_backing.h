@@ -103,7 +103,8 @@ enum class SharedImageBackingType {
   kDCompSurface = 16,
   kDXGISwapChain = 17,
   kWrappedGraphiteTexture = 18,
-  kMaxValue = kWrappedGraphiteTexture
+  kOHNativeBuffer = 19,
+  kMaxValue = kOHNativeBuffer
 };
 
 #if BUILDFLAG(IS_WIN)
@@ -344,7 +345,7 @@ class GPU_GLES2_EXPORT SharedImageBacking {
       bool needs_detiling);
 #endif
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   virtual std::unique_ptr<LegacyOverlayImageRepresentation>
   ProduceLegacyOverlay(SharedImageManager* manager, MemoryTypeTracker* tracker);
 #endif

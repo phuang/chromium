@@ -73,7 +73,8 @@ void DropPrivileges() {
       CHECK_EQ(setegid(egid), -1);
     }
   }
-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   PCHECK(setresgid(gid, gid, gid) == 0) << "setresgid";
   PCHECK(setresuid(uid, uid, uid) == 0) << "setresuid";
 

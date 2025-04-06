@@ -163,7 +163,7 @@ base::Value::Dict PolicyConversionsClient::GetPrecedencePolicies() {
 base::Value::List PolicyConversionsClient::GetPrecedenceOrder() {
   DCHECK(HasUserPolicies());
 
-#if !BUILDFLAG(IS_CHROMEOS)
+#if !BUILDFLAG(IS_CHROMEOS) && !BUILDFLAG(IS_OHOS)
   PolicyNamespace policy_namespace =
       PolicyNamespace(POLICY_DOMAIN_CHROME, std::string());
   const PolicyMap& chrome_policies =

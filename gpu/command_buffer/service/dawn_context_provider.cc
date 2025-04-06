@@ -39,6 +39,7 @@
 #include "gpu/config/gpu_switches.h"
 #include "gpu/config/gpu_util.h"
 #include "third_party/dawn/include/dawn/webgpu_cpp_print.h"
+#include "third_party/dawn/include/dawn/native/DawnNative.h"
 #include "third_party/skia/include/gpu/graphite/Context.h"
 #include "third_party/skia/include/gpu/graphite/dawn/DawnBackendContext.h"
 #include "third_party/skia/include/gpu/graphite/dawn/DawnUtils.h"
@@ -106,13 +107,12 @@ std::vector<const char*> GetEnabledToggles(
   // Only enable backend labels on Windows or DCHECK builds on other platforms
   // since it can have non-trivial performance overhead e.g. with Metal.
 #if DCHECK_IS_ON() || BUILDFLAG(IS_WIN)
-  enabled_toggles.push_back("use_user_defined_labels_in_backend");
+  // enabled_toggles.push_back("use_user_defined_labels_in_backend");
 #endif
 
   if (features::kSkiaGraphiteDawnSkipValidation.Get()) {
     enabled_toggles.push_back("skip_validation");
   }
-
   enabled_toggles.push_back("disable_robustness");
   enabled_toggles.push_back("disable_lazy_clear_for_mapped_at_creation_buffer");
 
@@ -158,7 +158,7 @@ std::vector<wgpu::FeatureName> GetRequiredFeatures(
   std::vector<wgpu::FeatureName> features = {
       wgpu::FeatureName::DawnInternalUsages,
       wgpu::FeatureName::ImplicitDeviceSynchronization,
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
       wgpu::FeatureName::TextureCompressionETC2,
 #endif
   };
@@ -167,6 +167,10 @@ std::vector<wgpu::FeatureName> GetRequiredFeatures(
   if (backend_type == wgpu::BackendType::Vulkan) {
     features.push_back(wgpu::FeatureName::StaticSamplers);
     features.push_back(wgpu::FeatureName::YCbCrVulkanSamplers);
+  }
+#elif BUILDFLAG(IS_OHOS)
+  if (backend_type == wgpu::BackendType::Vulkan) {
+    features.push_back(wgpu::FeatureName::StaticSamplers);
   }
 #elif BUILDFLAG(IS_WIN)
   if (backend_type == wgpu::BackendType::D3D11) {
@@ -198,6 +202,13 @@ std::vector<wgpu::FeatureName> GetRequiredFeatures(
       // The following features are always supported when running on the Vulkan
       // backend on Android.
       wgpu::FeatureName::SharedTextureMemoryAHardwareBuffer,
+
+      // The following features are always supported when running on the Vulkan
+      // backend on OpenHarmony.
+      wgpu::FeatureName::SharedTextureMemoryOHNativeBuffer,
+
+      // The following features are always supported when running on the Vulkan
+      // backend on Android and OpenHarmony.
       wgpu::FeatureName::SharedFenceSyncFD,
 
       // The following features are always supported by the the D3D backends.
@@ -215,6 +226,8 @@ std::vector<wgpu::FeatureName> GetRequiredFeatures(
 
   for (auto feature : kOptionalFeatures) {
     if (!adapter.HasFeature(feature)) {
+      LOG(ERROR) << "EEEE Feature " << dawn::native::GetFeatureInfo(feature)->name
+                   << " is not supported.";
       continue;
     }
     features.push_back(feature);
@@ -324,7 +337,7 @@ wgpu::BackendType DawnContextProvider::GetDefaultBackendType() {
   return base::FeatureList::IsEnabled(features::kSkiaGraphiteDawnUseD3D12)
              ? wgpu::BackendType::D3D12
              : wgpu::BackendType::D3D11;
-#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   return wgpu::BackendType::Vulkan;
 #elif BUILDFLAG(IS_APPLE)
   return wgpu::BackendType::Metal;

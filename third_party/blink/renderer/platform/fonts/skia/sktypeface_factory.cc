@@ -17,7 +17,7 @@ sk_sp<SkTypeface> SkTypeface_Factory::FromFontConfigInterfaceIdAndTtcIndex(
     int config_id,
     int ttc_index) {
 #if !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_WIN) && \
-    !BUILDFLAG(IS_FUCHSIA)
+    !BUILDFLAG(IS_FUCHSIA) && !BUILDFLAG(IS_OHOS)
   sk_sp<SkFontConfigInterface> fci(SkFontConfigInterface::RefGlobal());
   SkFontConfigInterface::FontIdentity font_identity;
   font_identity.fID = config_id;
@@ -33,7 +33,7 @@ sk_sp<SkTypeface> SkTypeface_Factory::FromFilenameAndTtcIndex(
     const std::string& filename,
     int ttc_index) {
 #if !BUILDFLAG(IS_WIN) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_FUCHSIA) && \
-    !BUILDFLAG(IS_APPLE)
+    !BUILDFLAG(IS_APPLE) && !BUILDFLAG(IS_OHOS)
   return skia::DefaultFontMgr()->makeFromFile(filename.c_str(), ttc_index);
 #else
   NOTREACHED();

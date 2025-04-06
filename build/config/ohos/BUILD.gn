@@ -1,0 +1,70 @@
+# Copyright 2024 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+import("//build/config/c++/c++.gni")
+import("//build/config/compiler/compiler.gni")
+import("//build/config/ohos/config.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+
+if (current_toolchain == default_toolchain) {
+  import("//build/toolchain/concurrent_links.gni")
+}
+
+assert(is_ohos)
+
+# This is included by reference in the //build/config/compiler config that
+# is applied to all targets. It is here to separate out the logic that is
+# Android-only.
+config("compiler") {
+  cflags = [
+    "-ffunction-sections",
+    "-fno-short-enums",
+  ]
+
+  defines = [
+    # OHOS uses musl libc
+    "__MUSL__",
+  ]
+
+  _max_page_size = 16384
+  if (current_cpu == "arm64") {
+    _llvm_lib_dir = "${ohos_llvm_root}/lib/aarch64-unknown-linux-ohos"
+  } else if (current_cpu == "x86_64") {
+    _llvm_lib_dir = "${ohos_llvm_root}/lib/x86_64-unknown-linux-ohos"
+  }
+
+  ldflags = [
+    # Don't allow visible symbols from libraries that contain
+    # assembly code with symbols that aren't hidden properly.
+    # http://crbug.com/448386
+    "-Wl,--exclude-libs=libvpx_assembly_arm.a",
+
+    # Reduce the page size from 65536 in order to reduce binary size slightly
+    # by shrinking the alignment gap between segments. This also causes all
+    # segments to be mapped adjacently, which breakpad relies on.
+    "-Wl,-z,max-page-size=${_max_page_size}",
+
+    "-L" + rebase_path(_llvm_lib_dir, root_build_dir),
+  ]
+
+  if (current_cpu == "arm64") {
+    if (arm_control_flow_integrity == "standard") {
+      cflags += [ "-mbranch-protection=standard" ]
+      rustflags = [ "-Zbranch-protection=bti" ]
+    } else if (arm_control_flow_integrity == "pac") {
+      cflags += [ "-mbranch-protection=pac-ret" ]
+      rustflags = [ "-Zbranch-protection=pac-ret" ]
+    }
+  }
+
+  cflags += [ "--target=${ohos_abi_target}" ]
+  ldflags += [
+    "--target=${ohos_abi_target}",
+    "-Wl,-Bsymbolic",
+  ]
+
+  # Assign any flags set for the C compiler to asmflags so that they are sent
+  # to the assembler.
+  asmflags = cflags
+}

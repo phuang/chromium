@@ -45,6 +45,11 @@ component("init") {
       "gl_factory_android.cc",
       "gl_initializer_android.cc",
     ]
+  } else if (is_ohos) {
+    sources += [
+      "gl_factory_ohos.cc",
+      "gl_initializer_ohos.cc",
+    ]
   } else if (is_win && !use_ozone) {
     sources += [
       "gl_factory_win.cc",

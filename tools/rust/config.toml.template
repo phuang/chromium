@@ -87,3 +87,11 @@ cc = "$LLVM_BIN/clang"
 cxx = "$LLVM_BIN/clang++"
 linker = "$LLVM_BIN/clang"
 
+[target.aarch64-unknown-linux-gnu]
+llvm-config = "$LLVM_BIN/llvm-config"
+# TODO(danakj): We don't ship this in the clang toolchain package.
+# ranlib = "$LLVM_BIN/llvm-ranlib"
+ar = "$LLVM_BIN/llvm-ar"
+cc = "$LLVM_BIN/clang"
+cxx = "$LLVM_BIN/clang++"
+linker = "$LLVM_BIN/clang"

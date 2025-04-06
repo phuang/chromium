@@ -90,7 +90,8 @@ int SocketPosix::Open(int address_family) {
       SOCK_STREAM,
       address_family == AF_UNIX ? 0 : IPPROTO_TCP);
   if (socket_fd_ < 0) {
-    PLOG(ERROR) << "CreatePlatformSocket() failed";
+    PLOG(ERROR) << "CreatePlatformSocket() failed address_family = "
+                << address_family;
     return MapSystemError(errno);
   }
 

@@ -10,10 +10,16 @@
 #include "base/check.h"
 #include "build/build_config.h"
 
+#if BUILDFLAG(IS_OHOS)
+struct __res_state _res;
+#else
+extern struct __res_state _res;
+#endif
+
 namespace net {
 
 ScopedResState::ScopedResState() {
-#if BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_FUCHSIA)
+#if BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_OHOS)
   // Note: res_ninit in glibc always returns 0 and sets RES_INIT.
   // res_init behaves the same way.
   memset(&_res, 0, sizeof(_res));
@@ -25,7 +31,7 @@ ScopedResState::ScopedResState() {
 }
 
 ScopedResState::~ScopedResState() {
-#if !BUILDFLAG(IS_OPENBSD) && !BUILDFLAG(IS_FUCHSIA)
+#if !BUILDFLAG(IS_OPENBSD) && !BUILDFLAG(IS_FUCHSIA) && !BUILDFLAG(IS_OHOS)
 
   // Prefer res_ndestroy where available.
 #if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_FREEBSD)
@@ -43,7 +49,7 @@ bool ScopedResState::IsValid() const {
 
 const struct __res_state& ScopedResState::state() const {
   DCHECK(IsValid());
-#if BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_FUCHSIA)
+#if BUILDFLAG(IS_OPENBSD) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_OHOS)
   return _res;
 #else
   return res_;

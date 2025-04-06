@@ -250,7 +250,7 @@ PlatformThreadId PlatformThreadBase::CurrentId() {
 #endif
   }
   return g_thread_id;
-#elif BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // Note: do not cache the return value inside a thread_local variable on
   // Android (as above). The reasons are:
   // - thread_local is slow on Android (goes through emutls)

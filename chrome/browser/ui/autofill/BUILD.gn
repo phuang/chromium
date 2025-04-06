@@ -6,7 +6,7 @@ import("//build/config/ui.gni")
 import("//build/util/branding.gni")
 import("//components/signin/features.gni")
 
-assert(is_win || is_mac || is_linux || is_chromeos || is_android)
+assert(is_win || is_mac || is_linux || is_chromeos || is_android || is_ohos)
 
 source_set("autofill") {
   sources = [

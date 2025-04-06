@@ -697,7 +697,7 @@ if (is_android) {
   ]
 }
 
-if (is_fuchsia) {
+if (is_fuchsia || is_ohos) {
   blink_core_sources_layout += [ "layout_theme_fuchsia.cc" ]
 }
 

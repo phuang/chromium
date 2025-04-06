@@ -151,6 +151,10 @@ component("service") {
   if (is_linux || is_chromeos) {
     sources += [ "image_transport_surface_linux.cc" ]
   }
+  if (is_ohos) {
+    sources += [ "image_transport_surface_ohos.cc" ]
+    libs += [ "" ]
+  }
   if (use_ozone) {
     sources += [
       "gpu_memory_buffer_factory_native_pixmap.cc",

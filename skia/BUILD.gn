@@ -193,7 +193,7 @@ config("skia_library_config") {
       "SK_GAMMA_EXPONENT=1.2",
       "SK_GAMMA_CONTRAST=0.2",
     ]
-  } else if (is_android) {
+  } else if (is_android || is_ohos) {
     defines += [
       "SK_GAMMA_APPLY_TO_A8",
       "SK_GAMMA_EXPONENT=1.4",
@@ -460,6 +460,11 @@ component("skia") {
     # fonts. See content/zygote/zygote_main_linux.cc
     # Note that this requires expat.
     sources += skia_ports_fontmgr_android_sources
+  }
+
+  if (is_ohos) {
+    sources += skia_ports_fontmgr_ohos_sources
+    deps += [ "//third_party/jsoncpp" ]
   }
 
   if (is_fuchsia) {

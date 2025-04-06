@@ -813,7 +813,7 @@ bool GPUQueue::CopyFromCanvasSourceImage(
 // backend is failing for unknown reasons.
 #if BUILDFLAG(IS_LINUX)
   bool forceReadback = true;
-#elif BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // TODO(crbug.com/dawn/1969): Some Android devices don't fail to copy from
   // ImageBitmaps that were created from a non-texture-backed source, like
   // ImageData. Forcing those textures down the readback path is an easy way to

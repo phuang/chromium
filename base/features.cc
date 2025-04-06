@@ -9,7 +9,8 @@
 #include "base/threading/platform_thread.h"
 #include "build/buildflag.h"
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_OHOS)
 #include "base/message_loop/message_pump_epoll.h"
 #endif
 
@@ -71,7 +72,7 @@ const base::FeatureParam<int> kLowMemoryDeviceThresholdMB{
     &kLowEndMemoryExperiment, "LowMemoryDeviceThresholdMB",
     LOW_MEMORY_DEVICE_THRESHOLD_MB};
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 // Force to enable LowEndDeviceMode partially on Android 3Gb devices.
 // (see PartialLowEndModeOnMidRangeDevices below)
 BASE_FEATURE(kPartialLowEndModeOn3GbDevices,
@@ -89,7 +90,7 @@ BASE_FEATURE(kPartialLowEndModeOn3GbDevices,
 // population to collect data.
 BASE_FEATURE(kPartialLowEndModeOnMidRangeDevices,
              "PartialLowEndModeOnMidRangeDevices",
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
              FEATURE_ENABLED_BY_DEFAULT);
 #elif BUILDFLAG(IS_CHROMEOS)
              FEATURE_DISABLED_BY_DEFAULT);

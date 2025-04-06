@@ -87,7 +87,7 @@ static_library("utility") {
     deps += [ "//chrome/services/mac_notifications" ]
   }
 
-  if (!is_android) {
+  if (!is_android && !is_ohos) {
     sources += [
       "importer/bookmark_html_reader.cc",
       "importer/bookmark_html_reader.h",

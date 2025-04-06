@@ -66,6 +66,8 @@
 //
 // To avoid relying on these external definitions, PartitionAlloc uses its own
 // dedicated build flag.
+#elif defined(__OHOS__)
+#define PA_IS_OHOS
 #elif defined(__APPLE__)
 // Only include TargetConditionals after testing ANDROID as some Android builds
 // on the Mac have this header available and it's not needed unless the target
@@ -123,7 +125,8 @@
     defined(PA_IS_IOS) || defined(PA_IS_LINUX) || defined(PA_IS_CHROMEOS) ||  \
     defined(PA_IS_MAC) || defined(PA_IS_NACL) || defined(PA_IS_NETBSD) ||     \
     defined(PA_IS_OPENBSD) || defined(PA_IS_QNX) || defined(PA_IS_SOLARIS) || \
-    PA_BUILDFLAG(IS_ANDROID) || PA_BUILDFLAG(IS_CHROMEOS)
+    PA_BUILDFLAG(IS_ANDROID) || PA_BUILDFLAG(IS_CHROMEOS) ||                  \
+    defined(PA_IS_OHOS)
 #define PA_IS_POSIX
 #endif
 
@@ -462,6 +465,13 @@
 #define PA_BUILDFLAG_INTERNAL_IS_NETBSD() (0)
 #endif
 #undef PA_IS_NETBSD
+
+#if defined(PA_IS_OHOS)
+#define PA_BUILDFLAG_INTERNAL_IS_OHOS() (1)
+#else
+#define PA_BUILDFLAG_INTERNAL_IS_OHOS() (0)
+#endif
+#undef PA_IS_OHOS
 
 #if defined(PA_IS_OPENBSD)
 #define PA_BUILDFLAG_INTERNAL_IS_OPENBSD() (1)

@@ -352,11 +352,13 @@ SkColorInfo CanvasRenderingContextHost::GetRenderingContextSkColorInfo() const {
 }
 
 SkAlphaType CanvasRenderingContextHost::GetRenderingContextAlphaType() const {
+  // XXX: OHOS
   return RenderingContext() ? RenderingContext()->GetAlphaType()
                             : kPremul_SkAlphaType;
 }
 
 SkColorType CanvasRenderingContextHost::GetRenderingContextSkColorType() const {
+  // XXX: OHOS
   return RenderingContext() ? RenderingContext()->GetSkColorType()
                             : kN32_SkColorType;
 }

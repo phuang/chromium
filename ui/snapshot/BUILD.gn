@@ -17,6 +17,10 @@ component("snapshot") {
     sources += [ "snapshot_android.cc" ]
   }
 
+  if (is_ohos && !use_aura) {
+    sources += [ "snapshot_ohos.cc" ]
+  }
+
   if (is_mac) {
     sources += [
       "snapshot_mac.h",

@@ -29,8 +29,8 @@ import("//tools/ipc_fuzzer/ipc_fuzzer.gni")
 if (is_mac) {
   import("//content/public/app/mac_helpers.gni")
 }
-if (is_android) {
-  import("//third_party/jni_zero/jni_zero.gni")
+if (is_android || is_ohos) {
+  # import("//third_party/jni_zero/jni_zero.gni")
 
   rust_static_library("fontations_name_table_ffi") {
     allow_unsafe = true  # Needed for FFI that underpins the `cxx` crate.
@@ -2504,12 +2504,18 @@ source_set("browser") {
     ]
   }
 
+  if (is_ohos) {
+    sources += [
+      "child_process_launcher_helper_ohos.cc",
+      "speech/tts_fuchsia.cc",
+    ]
+  }
+
   if (is_linux || is_chromeos) {
     sources -=
         [ "file_system_access/file_path_watcher/file_path_watcher_stub.cc" ]
 
     sources += [
-      "child_process_launcher_helper_linux.cc",
       "child_thread_type_switcher_linux.cc",
       "child_thread_type_switcher_linux.h",
       "file_system_access/file_path_watcher/file_path_watcher_inotify.cc",
@@ -2853,6 +2859,15 @@ source_set("browser") {
       public_deps += [ "//ui/base/cursor" ]
       deps += [ "//third_party/webrtc_overrides:webrtc_component" ]
     }
+
+    # if (is_ohos) {
+    #   sources += [
+    #     "media/capture/desktop_capture_device.cc",
+    #     "media/capture/desktop_capture_device.h",
+    #     # "media/capture/mouse_cursor_overlay_controller.cc",
+    #     # "media/capture/mouse_cursor_overlay_controller.h",
+    #   ]
+    # }
     if (use_aura) {
       sources += [
         "media/capture/aura_window_to_mojo_device_adapter.cc",
@@ -3518,7 +3533,27 @@ source_set("browser") {
     ]
   }
 
-  if (use_aura || is_apple) {
+  if (is_ohos && !use_aura) {
+    sources += [
+      "web_contents/web_contents_view_ohos.cc",
+      "web_contents/web_contents_view_ohos.h",
+    ]
+  }
+
+  if (is_ohos) {
+    sources += [
+      "font_unique_name_lookup/font_unique_name_lookup_android.cc",
+      "font_unique_name_lookup/font_unique_name_lookup_android.h",
+      "font_unique_name_lookup/font_unique_name_lookup_service.cc",
+      "font_unique_name_lookup/font_unique_name_lookup_service.h",
+    ]
+    deps += [
+      ":fontations_name_table_ffi",
+      "//build/config/freetype",
+    ]
+  }
+
+  if (use_aura || is_apple || is_ohos) {
     sources += [
       "compositor/image_transport_factory.cc",
       "compositor/image_transport_factory.h",

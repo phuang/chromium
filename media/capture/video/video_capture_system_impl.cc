@@ -81,6 +81,7 @@ VideoCaptureSystemImpl::VideoCaptureSystemImpl(
     std::unique_ptr<VideoCaptureDeviceFactory> factory)
     : factory_(std::move(factory)) {
   thread_checker_.DetachFromThread();
+  CHECK(factory_);
 }
 
 VideoCaptureSystemImpl::~VideoCaptureSystemImpl() = default;

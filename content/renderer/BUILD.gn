@@ -367,6 +367,10 @@ target(link_target_type, "renderer") {
     ]
   }
 
+  if (is_ohos) {
+    sources += [ "renderer_main_platform_delegate_fuchsia.cc" ]
+  }
+
   if (enable_cast_receiver) {
     deps += [
       "//components/cast_streaming/common",

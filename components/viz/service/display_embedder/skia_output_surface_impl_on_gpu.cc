@@ -126,7 +126,9 @@
 #include "components/viz/service/display_embedder/skia_output_device_x11.h"
 #endif
 
-#if BUILDFLAG(SKIA_USE_DAWN) && (BUILDFLAG(IS_WIN) || BUILDFLAG(IS_ANDROID))
+#if BUILDFLAG(SKIA_USE_DAWN) &&                         \
+        (BUILDFLAG(IS_WIN) || BUILDFLAG(IS_ANDROID)) || \
+    BUILDFLAG(IS_OHOS)
 #include "components/viz/service/display_embedder/skia_output_device_dawn.h"
 #endif
 
@@ -2165,11 +2167,12 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForDawn() {
   }
   return true;
 
-#elif BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS)
+#elif BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
   scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
   presenter_ = presenter.get();
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   if (!presenter_) {
     output_device_ = SkiaOutputDeviceDawn::Create(
         context_state_, gfx::SurfaceOrigin::kTopLeft,

@@ -51,6 +51,8 @@ static_library("internals") {
     "quantization_utils.h",
   ]
 
+  defines = [ "IS_LANGUAGE_DETECTION_IMPL" ]
+
   deps = [
     "//base",
     "//third_party/smhasher:murmurhash2",

@@ -226,7 +226,7 @@ group("blink_platform_public_deps") {
   ]
   public_configs = [ "//third_party/blink/renderer:features" ]
 
-  if (is_android || is_win) {
+  if (is_android || is_win || is_ohos) {
     public_deps +=
         [ "//third_party/blink/public/common:font_unique_name_table_proto" ]
   }
@@ -1898,6 +1898,14 @@ component("platform") {
 
   if (is_fuchsia) {
     sources += [ "fonts/fuchsia/font_cache_fuchsia.cc" ]
+  }
+
+  if (is_ohos) {
+    sources += [
+      "fonts/android/font_cache_android.cc",
+      "fonts/ohos/font_unique_name_lookup_ohos.cc",
+      "fonts/ohos/font_unique_name_lookup_ohos.h",
+    ]
   }
 
   if (use_minikin_hyphenation) {

@@ -51,6 +51,8 @@ if (libcxx_is_shared) {
   _libcxx_target_type = "source_set"
 }
 target(_libcxx_target_type, "libc++") {
+  output_name = "libc++chromium"
+
   # Most things that need to depend on libc++ should do so via the implicit
   # 'common_deps' dependency below.  Some targets that package libc++.so may
   # need to explicitly depend on libc++.

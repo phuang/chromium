@@ -44,6 +44,10 @@
 #include "ui/platform_window/win/win_window.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "ui/platform_window/ohos/window.h"
+#endif
+
 namespace aura {
 
 namespace {
@@ -238,6 +242,8 @@ WindowTreeHostPlatform::CreatePlatformWindow(
       this, std::move(properties));
 #elif BUILDFLAG(IS_WIN)
   return std::make_unique<ui::WinWindow>(this, properties.bounds);
+#elif BUILDFLAG(IS_OHOS)
+  return std::make_unique<ui::ohos::Window>(this, properties.bounds);
 #else
   NOTIMPLEMENTED();
   return nullptr;

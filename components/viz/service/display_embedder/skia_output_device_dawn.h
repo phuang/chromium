@@ -26,6 +26,10 @@
 #include "ui/gl/android/scoped_a_native_window.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "ui/gfx/ohos/scoped_oh_native_window.h"
+#endif
+
 namespace gpu {
 class SharedContextState;
 }  // namespace gpu
@@ -95,6 +99,11 @@ class SkiaOutputDeviceDawn : public SkiaOutputDevice {
 #if BUILDFLAG(IS_ANDROID)
   // Use ScopedANativeWindow to keep the window alive
   gl::ScopedANativeWindow android_native_window_;
+#endif
+
+#if BUILDFLAG(IS_OHOS)
+  // Use ScopedANativeWindow to keep the window alive
+  ui::ScopedOHNativeWindow oh_native_window_;
 #endif
 };
 

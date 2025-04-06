@@ -171,6 +171,10 @@ component("aura") {
     ]
   }
 
+  if (is_ohos) {
+    deps += [ "//ui/platform_window/ohos" ]
+  }
+
   if (use_ozone) {
     deps += [ "//ui/ozone" ]
     public += [ "screen_ozone.h" ]

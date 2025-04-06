@@ -126,7 +126,7 @@ net_configs = [
   "//build/config/compiler:wexit_time_destructors",
 ]
 
-if (is_linux || is_chromeos) {
+if (is_linux || is_chromeos || is_ohos) {
   net_configs += [ "//build/config/linux:libresolv" ]
 }
 
@@ -1255,6 +1255,10 @@ component("net") {
     ]
   }
 
+  if (is_ohos) {
+    sources += [ "cert/test_root_certs_ohos.cc" ]
+  }
+
   if (is_chromeos && use_nss_certs) {
     sources += [
       "cert/nss_cert_database_chromeos.cc",
@@ -1284,7 +1288,7 @@ component("net") {
     ]
   }
 
-  if (is_linux || is_chromeos || is_android) {
+  if (is_linux || is_chromeos || is_android || is_ohos) {
     sources += [
       "base/address_map_linux.cc",
       "base/address_map_linux.h",
@@ -1433,7 +1437,7 @@ component("net") {
     }
   }
 
-  if (is_android || is_chromeos || is_linux) {
+  if (is_android || is_chromeos || is_linux || is_ohos) {
     sources += [
       "base/network_change_notifier_passive.cc",
       "base/network_change_notifier_passive.h",
@@ -1497,7 +1501,7 @@ component("net") {
         "third_party/mozilla_win/cert/win_util.h",
       ]
     }
-    if (is_android) {
+    if (is_android || is_ohos) {
       sources += [
         "cert/internal/trust_store_android.cc",
         "cert/internal/trust_store_android.h",

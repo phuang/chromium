@@ -96,6 +96,8 @@ group("gn_all") {
     } else {
       deps = []
     }
+  } else if (is_ohos) {
+    deps = []
   } else {
     deps = [
       "//base:base_perftests",
@@ -142,14 +144,14 @@ group("gn_all") {
       deps += [ ":webui_closure_compile" ]
     }
 
-    if (!is_android && !is_castos) {
+    if (!is_android && !is_castos && !is_ohos) {
       deps += [
         "//crypto:crypto_unittests",
         "//google_apis/gcm:gcm_unit_tests",
       ]
     }
 
-    if (!is_ios && !is_android && !is_castos) {
+    if (!is_ios && !is_android && !is_castos && !is_ohos) {
       if (!is_fuchsia) {
         deps += [
           "//chrome",
@@ -190,7 +192,7 @@ group("gn_all") {
       ]
     }
 
-    if (!is_ios && !is_castos) {
+    if (!is_ios && !is_castos && !is_ohos) {
       if (!is_fuchsia) {
         deps += [ "//chrome/test:unit_tests" ]
       }
@@ -240,7 +242,7 @@ group("gn_all") {
       }
     }
 
-    if (!is_ios) {
+    if (!is_ios && !is_ohos) {
       deps += [
         ":chromedriver_group",
         "//components:components_browsertests",
@@ -261,7 +263,7 @@ group("gn_all") {
         "//third_party/catapult/telemetry:bitmaptools($host_toolchain)",
       ]
       if (!is_android) {
-        if (!is_castos && !is_fuchsia) {
+        if (!is_castos && !is_fuchsia && !is_ohos) {
           deps += [ "//chrome/test:telemetry_perf_unittests" ]
         }
       } else {
@@ -545,7 +547,7 @@ group("gn_all") {
         "//ui/compositor:compositor_unittests",
       ]
 
-      if (!is_ios) {
+      if (!is_ios && !is_ohos) {
         deps += [
           "//base:build_utf8_validator_tables",
           "//base:check_example",
@@ -555,14 +557,14 @@ group("gn_all") {
         ]
       }
 
-      if (!is_android && !is_castos && !is_ios && !is_fuchsia) {
+      if (!is_android && !is_castos && !is_ios && !is_fuchsia && !is_ohos) {
         deps += [
           "//chrome/test:load_library_perf_tests",
           "//chrome/test:sync_performance_tests",
         ]
       }
 
-      if (!is_android && !is_ios) {
+      if (!is_android && !is_ios && !is_ohos) {
         deps += [
           "//net:crash_cache",
           "//net:net_watcher",  # TODO(GYP): This should be conditional on
@@ -593,7 +595,7 @@ group("gn_all") {
         }
       }
 
-      if (media_use_ffmpeg && !is_android) {
+      if (media_use_ffmpeg && !is_android && !is_ohos) {
         deps += [ "//media:ffmpeg_regression_tests" ]
       }
     }
@@ -730,7 +732,7 @@ group("gn_all") {
       deps += [ "//ui/message_center:message_center_unittests" ]
     }
 
-    if (!is_android && !is_ios) {
+    if (!is_android && !is_ios && !is_ohos) {
       deps += [ "//content/browser/bluetooth/tools:bluetooth_metrics_hash" ]
     }
 
@@ -779,7 +781,7 @@ group("gn_all") {
       ]
 
       if (target_cpu == "x86" || target_cpu == "x64") {
-        if (!is_android) {
+        if (!is_android && !is_ohos) {
           deps += [ "//chrome/test:load_library_perf_tests" ]
         }
         deps += [ "//third_party/libjpeg_turbo:simd_asm" ]
@@ -865,7 +867,7 @@ group("gn_all") {
       deps += [ ":all_rust" ]
     }
 
-    if (!is_android && !is_ios) {
+    if (!is_android && !is_ios && !is_ohos) {
       deps += [ "//components/cronet:cronet_tests" ]
     }
   }
@@ -1100,7 +1102,7 @@ if (use_blink && !is_cronet_build) {
       if (is_android && !is_cast_android) {
         deps += [ "//chrome/test/chromedriver/test/webview_shell:chromedriver_webview_shell_apk" ]
       }
-    } else if (!is_castos && !is_ios) {
+    } else if (!is_castos && !is_ios && !is_ohos) {
       deps = [
         "//chrome/test/chromedriver:chromedriver_server",
         "//chrome/test/chromedriver:chromedriver_unittests",
@@ -1171,7 +1173,8 @@ if (use_blink && !is_cronet_build) {
     ]
   }
 
-  if (!is_chromeos_ash && !is_ios && !is_fuchsia && !is_android && !is_castos) {
+  if (!is_chromeos_ash && !is_ios && !is_fuchsia && !is_android && !is_castos &&
+      !is_ohos) {
     script_test("chrome_wpt_tests") {
       script = "//third_party/blink/tools/run_wpt_tests.py"
       args = _common_web_test_options + [ "--product=chrome" ]
@@ -1264,7 +1267,7 @@ if (use_blink && !is_cronet_build) {
       data_deps += [ "//content/web_test:web_test_common_mojom_js_data_deps" ]
     }
 
-    if (!is_win && !is_android) {
+    if (!is_win && !is_android && !is_ohos) {
       # Using the default toolchain for this tool, as it's run during tests not
       # during the build. This places a symlink in the root_build_dir for scrips
       # to use.
@@ -1728,7 +1731,7 @@ assert(
 group("chromium_builder_perf") {
   testonly = true
 
-  if (!is_ios && !is_android && !is_castos && !is_cronet_build) {
+  if (!is_ios && !is_android && !is_castos && !is_cronet_build && !is_ohos) {
     data_deps = [
       "//components/tracing:tracing_perftests",
       "//gpu:command_buffer_perftests",
@@ -1737,14 +1740,14 @@ group("chromium_builder_perf") {
       "//tools/perf/chrome_telemetry_build:telemetry_chrome_test",
     ]
 
-    if (!is_fuchsia) {
+    if (!is_fuchsia && !is_ohos) {
       data_deps += [
         "//chrome/test:load_library_perf_tests",
         "//chrome/test:performance_test_suite",
       ]
     }
 
-    if (!is_chromeos_ash && !is_fuchsia) {
+    if (!is_chromeos_ash && !is_fuchsia && !is_ohos) {
       data_deps += [ "//chrome/test:performance_browser_tests" ]
     }
 
@@ -1773,7 +1776,7 @@ group("chromium_builder_perf") {
   }
 }
 
-if (!is_ios && !is_android && !is_castos && !is_cronet_build) {
+if (!is_ios && !is_android && !is_castos && !is_cronet_build && !is_ohos) {
   group("chromium_builder_asan") {
     testonly = true
 

@@ -43,6 +43,9 @@ BINDGEN_CROSS_TARGET_BUILD_DIR = os.path.join(THIRD_PARTY_DIR,
 NCURSESW_CIPD_LINUX_AMD_PATH = 'infra/3pp/static_libs/ncursesw/linux-amd64'
 NCURSESW_CIPD_LINUX_AMD_VERSION = '6.0.chromium.1'
 
+NCURSESW_CIPD_LINUX_ARM_PATH = 'infra/3pp/static_libs/ncursesw/linux-arm64'
+NCURSESW_CIPD_LINUX_ARM_VERSION = '6.0.chromium.1'
+
 RUST_BETA_SYSROOT_DIR = os.path.join(THIRD_PARTY_DIR,
                                      'rust-toolchain-intermediate',
                                      'beta-sysroot')
@@ -66,8 +69,14 @@ def InstallRustBetaSysroot(rust_git_hash, target_triples):
 def FetchNcurseswLibrary():
     assert sys.platform.startswith('linux')
     ncursesw_dir = os.path.join(LLVM_BUILD_TOOLS_DIR, 'ncursesw')
-    ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_AMD_PATH}'
-                    f'/+/version:2@{NCURSESW_CIPD_LINUX_AMD_VERSION}')
+    if platform.machine() == 'aarch64':
+        ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_ARM_PATH}'
+                        f'/+/version:2@{NCURSESW_CIPD_LINUX_ARM_VERSION}')
+    elif platform.machine() == 'x86_64':
+        ncursesw_url = (f'{CIPD_DOWNLOAD_URL}/{NCURSESW_CIPD_LINUX_AMD_PATH}'
+                        f'/+/version:2@{NCURSESW_CIPD_LINUX_AMD_VERSION}')
+    else:
+        assert False, f'Unsupported platform: {platform.machine()}'
 
     if os.path.exists(ncursesw_dir):
         RmTree(ncursesw_dir)
@@ -146,7 +155,13 @@ def RunCargo(cargo_args):
 
     if sys.platform.startswith('linux'):
         # We use these flags to avoid linking with the system libstdc++.
-        sysroot = DownloadDebianSysroot('amd64')
+        if platform.machine() == 'aarch64':
+            sysroot = DownloadDebianSysroot('arm64')
+        elif platform.machine() == 'x86_64':
+            sysroot = DownloadDebianSysroot('amd64')
+        else:
+            assert False, f'Unsupported platform: {platform.machine()}'
+
         sysroot_flag = f'--sysroot={sysroot}'
         env['CFLAGS'] += f' {sysroot_flag}'
         env['CXXFLAGS'] += f' {sysroot_flag}'

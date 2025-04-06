@@ -409,7 +409,7 @@ source_set("common") {
     ]
   }
 
-  if (is_mac || is_win || is_android || is_fuchsia || is_ios) {
+  if (is_mac || is_win || is_android || is_fuchsia || is_ios || is_ohos) {
     sources -= [ "font_list_fontconfig.cc" ]
   }
 
@@ -438,6 +438,10 @@ source_set("common") {
       "external_ipc_dumper.cc",
       "external_ipc_dumper.h",
     ]
+  }
+
+  if (is_ohos) {
+    sources += [ "font_list_fuchsia.cc" ]
   }
 
   if (is_fuchsia) {

@@ -454,7 +454,7 @@ V8GPUTextureFormat GPU::getPreferredCanvasFormat() {
 }
 
 wgpu::TextureFormat GPU::preferred_canvas_format() {
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   return wgpu::TextureFormat::RGBA8Unorm;
 #else
   return wgpu::TextureFormat::BGRA8Unorm;

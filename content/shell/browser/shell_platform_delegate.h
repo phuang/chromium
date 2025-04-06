@@ -140,7 +140,7 @@ class ShellPlatformDelegate {
                                    const input::NativeWebKeyboardEvent& event);
 #endif
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
   void ToggleFullscreenModeForTab(Shell* shell,
                                   WebContents* web_contents,
                                   bool enter_fullscreen);
@@ -149,7 +149,7 @@ class ShellPlatformDelegate {
                                    const WebContents* web_contents) const;
 #endif
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // Forwarded from WebContentsDelegate.
   void SetOverlayMode(Shell* shell, bool use_overlay_mode);
 
