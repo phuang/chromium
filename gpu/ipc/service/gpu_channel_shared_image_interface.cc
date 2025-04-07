@@ -21,6 +21,11 @@
 #include "gpu/command_buffer/service/stream_texture_shared_image_interface.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "gpu/command_buffer/service/ohos/shared_image_video_ohos.h"
+#include "gpu/command_buffer/service/stream_texture_shared_image_interface.h"
+#endif
+
 namespace gpu {
 
 namespace {
@@ -143,6 +148,52 @@ GpuChannelSharedImageInterface::CreateSharedImageForD3D11Video(
              ->gpu_channel_manager()
              ->shared_image_manager());
   shared_image_stub_->factory()->RegisterBacking(std::move(backing));
+
+  return base::WrapRefCounted<ClientSharedImage>(
+      new ClientSharedImage(mailbox, metadata, GenVerifiedSyncToken(), holder_,
+                            GL_TEXTURE_EXTERNAL_OES));
+}
+#endif
+
+
+#if BUILDFLAG(IS_OHOS)
+scoped_refptr<ClientSharedImage>
+GpuChannelSharedImageInterface::CreateSharedImageForOhosVideo(
+    const gfx::Size& size,
+    const gfx::ColorSpace& color_space,
+    scoped_refptr<StreamTextureSharedImageInterface> image) {
+  DCHECK_CALLED_ON_VALID_SEQUENCE(gpu_sequence_checker_);
+
+  if (!shared_image_stub_) {
+    return nullptr;
+  }
+
+  auto mailbox = Mailbox::Generate();
+
+  scoped_refptr<SharedContextState> shared_context =
+      shared_image_stub_->shared_context_state();
+
+  if (shared_context->context_lost()) {
+    return nullptr;
+  }
+
+  auto shared_image_ohos = gpu::SharedImageVideoOhos::Create(
+      mailbox, size, color_space, kTopLeft_GrSurfaceOrigin,
+      kPremul_SkAlphaType, std::move(image), std::move(shared_context));
+  SharedImageMetadata metadata{shared_image_ohos->format(),
+                               shared_image_ohos->size(),
+                               shared_image_ohos->color_space(),
+                               shared_image_ohos->surface_origin(),
+                               shared_image_ohos->alpha_type(),
+                               shared_image_ohos->usage()};
+
+  // Register it with shared image mailbox. This keeps |shared_image_ohos|
+  // around until its destruction cb is called.
+  DCHECK(shared_image_stub_->channel()
+             ->gpu_channel_manager()
+             ->shared_image_manager());
+  shared_image_stub_->factory()->RegisterBacking(
+      std::move(shared_image_ohos));
 
   return base::WrapRefCounted<ClientSharedImage>(
       new ClientSharedImage(mailbox, metadata, GenVerifiedSyncToken(), holder_,

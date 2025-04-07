@@ -80,7 +80,7 @@ class CONTENT_EXPORT MediaDevicesDispatcherHost
       override;
   void SetCaptureHandleConfig(
       blink::mojom::CaptureHandleConfigPtr config) override;
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   void CloseFocusWindowOfOpportunity(const std::string& label) override;
   void ProduceSubCaptureTargetId(
       media::mojom::SubCaptureTargetType type,

@@ -925,6 +925,7 @@ bool GpuProcessHost::Init() {
 void GpuProcessHost::OnProcessLaunched() {
   UMA_HISTOGRAM_TIMES("GPU.GPUProcessLaunchTime",
                       base::TimeTicks::Now() - init_start_time_);
+  LOG(ERROR) << "OnProcessLaunched() in_process_=" << in_process_;
   DCHECK(gpu_host_);
   if (in_process_) {
     // Don't set |process_id_| as it is publicly available through process_id().
@@ -952,6 +953,7 @@ void GpuProcessHost::OnProcessLaunchFailed(int error_code) {
 void GpuProcessHost::OnProcessCrashed(int exit_code) {
   // Record crash before doing anything that could start a new GPU process.
   LOG(ERROR) << "GPU process exited unexpectedly: exit_code=" << exit_code;
+  abort();
   RecordProcessCrash();
   gpu_host_->OnProcessCrashed();
   SendOutstandingReplies();

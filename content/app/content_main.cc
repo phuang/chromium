@@ -272,7 +272,7 @@ NO_STACK_PROTECTOR int RunContentProcess(
 
 // On Android setlocale() is not supported, and we don't override the signal
 // handlers so we can get a stack trace when crashing.
-#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_POSIX) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
     // Set C library locale to make sure CommandLine can parse
     // argument values in the correct encoding and to make sure
     // generated file names (think downloads) are in the file system's
@@ -358,7 +358,7 @@ NO_STACK_PROTECTOR int RunContentProcess(
     CommonSubprocessInit();
   exit_code = content_main_runner->Run();
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   content_main_runner->Shutdown();
 #endif
 

@@ -145,6 +145,13 @@ component("input") {
       "Foundation.framework",
     ]
   }
+  if (is_ohos && !use_aura) {
+    sources += [
+      "native_web_keyboard_event_ohos.cc",
+      "web_input_event_builders_ohos.cc",
+      "web_input_event_builders_ohos.h",
+    ]
+  }
 }
 
 mojom_component("mojom") {

@@ -494,7 +494,6 @@ void ResourceBundle::LoadTestResources(const base::FilePath& path,
                                        const base::FilePath& locale_path) {
   is_test_resources_ = true;
   // Use the given resource pak for both common and localized resources.
-
   if (!path.empty()) {
     const ResourceScaleFactor scale_factor =
         ui::GetSupportedResourceScaleFactors()[0];

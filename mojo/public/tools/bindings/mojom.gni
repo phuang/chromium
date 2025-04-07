@@ -774,6 +774,8 @@ template("mojom") {
       enabled_features += [ "is_linux" ]
     } else if (is_mac) {
       enabled_features += [ "is_mac" ]
+    } else if (is_ohos) {
+      enabled_features += [ "is_ohos" ]
     } else if (is_win) {
       enabled_features += [ "is_win" ]
     }

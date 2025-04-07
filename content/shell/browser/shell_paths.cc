@@ -36,6 +36,9 @@ bool GetDefaultUserDataDirectory(base::FilePath* result) {
 #elif BUILDFLAG(IS_ANDROID)
   CHECK(base::PathService::Get(base::DIR_ANDROID_APP_DATA, result));
   *result = result->Append(FILE_PATH_LITERAL("content_shell"));
+#elif BUILDFLAG(IS_OHOS)
+  CHECK(base::PathService::Get(base::DIR_OHOS_APP_DATA, result));
+  *result = result->Append(FILE_PATH_LITERAL("content_shell"));
 #elif BUILDFLAG(IS_FUCHSIA)
   *result = base::FilePath(base::kPersistedDataDirectoryPath)
                 .Append(FILE_PATH_LITERAL("content_shell"));

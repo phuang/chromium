@@ -22,7 +22,7 @@ group("resources") {
     "segmentation_internals:resources",
   ]
 
-  if (!is_android) {
+  if (!is_android && !is_ohos) {
     public_deps += [
       ":app_icon_resources",
       ":component_extension_resources",

@@ -192,7 +192,7 @@ class MODULES_EXPORT MediaDevices final
       ScriptPromiseResolverWithTracker<AudioOutputSelectionResult,
                                        MediaDeviceInfo>* resolver,
       mojom::blink::SelectAudioOutputResultPtr result);
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   // Manage the window of opportunity that occurs immediately after
   // display-capture starts. The application can call
   // CaptureController.setFocusBehavior() on the microtask where the

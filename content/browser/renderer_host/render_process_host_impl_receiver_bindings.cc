@@ -52,6 +52,10 @@
 #include "third_party/blink/public/mojom/webdatabase/web_database.mojom.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "content/browser/font_unique_name_lookup/font_unique_name_lookup_service.h"
+#endif
+
 #if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
 #include "components/services/font/public/mojom/font_service.mojom.h"  // nogncheck
 #include "content/browser/font_service.h"  // nogncheck
@@ -199,14 +203,14 @@ void RenderProcessHostImpl::RegisterMojoInterfaces() {
           {base::MayBlock(), base::TaskShutdownBehavior::SKIP_ON_SHUTDOWN,
            base::TaskPriority::USER_BLOCKING}));
 #if BUILDFLAG(USE_MINIKIN_HYPHENATION)
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
   hyphenation::HyphenationImpl::RegisterGetDictionary();
 #endif
   registry->AddInterface(
       base::BindRepeating(&hyphenation::HyphenationImpl::Create),
       hyphenation::HyphenationImpl::GetTaskRunner());
 #endif
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   if (base::FeatureList::IsEnabled(features::kFontSrcLocalMatching)) {
     registry->AddInterface(
         base::BindRepeating(&FontUniqueNameLookupService::Create),

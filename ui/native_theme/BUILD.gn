@@ -72,7 +72,7 @@ component("native_theme") {
     sources += [ "caption_style_win.cc" ]
   }
 
-  if (use_aura || toolkit_views) {
+  if (use_aura || toolkit_views || is_ohos) {
     sources += [
       "native_theme_aura.cc",
       "native_theme_aura.h",

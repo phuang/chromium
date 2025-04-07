@@ -57,7 +57,7 @@ if (is_win) {
 # - building it into both places temporarily
 # - updating a bunch of scripts in internal repositories.
 # - remove it from the default toolchain's outdir.
-if (is_ios || is_android || is_chromeos) {
+if (is_ios || is_android || is_chromeos || is_ohos) {
   _tests_launcher_toolchain = host_system_allocator_toolchain
   _tests_launcher_toolchain_has_exe_suffix = host_os == "win"
   _include_google_converter = true
@@ -648,7 +648,7 @@ if (is_ios) {
   }
 }
 
-if (is_linux || is_chromeos || is_android) {
+if (is_linux || is_chromeos || is_android || is_ohos) {
   if (current_toolchain == host_system_allocator_toolchain ||
       current_toolchain == default_system_allocator_toolchain) {
     executable("symupload") {

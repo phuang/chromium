@@ -431,6 +431,18 @@ PartitionAllocFunctionsInternal<base_alloc_flags, base_free_flags>::Free(
   }
 #endif  // PA_BUILDFLAG(IS_CAST_ANDROID)
 
+#if PA_BUILDFLAG(IS_OHOS)
+  if (!partition_alloc::IsManagedByPartitionAlloc(
+          reinterpret_cast<uintptr_t>(object)) &&
+      object) [[unlikely]] {
+    // A memory region allocated by the system allocator is passed in this
+    // function.  Forward the request to `free()`, which is `__real_free()`
+    // here.
+    // TODO: call real free in musl libc, and figure out why?
+    return;
+  }
+#endif  // PA_BUILDFLAG(IS_OHOS)
+
   partition_alloc::PartitionRoot::FreeInlineInUnknownRoot<base_free_flags>(
       object);
 }
@@ -730,7 +742,8 @@ const AllocatorDispatch AllocatorDispatch::default_dispatch =
 
 extern "C" {
 
-#if !PA_BUILDFLAG(IS_APPLE) && !PA_BUILDFLAG(IS_ANDROID)
+#if !PA_BUILDFLAG(IS_APPLE) && !PA_BUILDFLAG(IS_ANDROID) && \
+    !PA_BUILDFLAG(IS_OHOS)
 
 SHIM_ALWAYS_EXPORT void malloc_stats(void) __THROW {}
 

@@ -335,6 +335,14 @@ component("gl") {
     defines += [ "GL_SILENCE_DEPRECATION" ]
   }
 
+  if (is_ohos) {
+    sources += [
+      "ohos/ohos_native_image.cc",
+      "ohos/ohos_native_image.h",
+    ]
+    libs = [ "native_image" ]
+  }
+
   if (is_android) {
     sources += [
       "android/egl_fence_utils.cc",
@@ -366,7 +374,7 @@ component("gl") {
     ]
   }
 
-  if (is_android || is_chromeos || is_linux) {
+  if (is_android || is_chromeos || is_linux || is_ohos) {
     # Windows doesn't support base::FileDescriptor.
     # libsync isn't supported or needed on MacOSX.
     # Fuchsia is excluded due to a libsync dependency and because it's
@@ -382,6 +390,15 @@ component("gl") {
 
   if (is_linux || is_chromeos) {
     deps += [ "//third_party/angle:angle_gpu_info_util" ]
+  }
+
+  if (is_ohos) {
+    sources += [
+      "android/egl_fence_utils.cc",
+      "android/egl_fence_utils.h",
+    ]
+
+    libs += [ "native_window" ]
   }
 }
 

@@ -75,6 +75,7 @@ owners:
 # Skip the field if it's empty.
 supported_on:
 - android:106-
+- ohos:106-
 - chrome.*:105-
 - chrome_os:100-1001
 

@@ -134,7 +134,7 @@ bool UseExternalDataFetcher(const char* policy_name,
   if (policy_type == StringPolicyType::EXTERNAL)
     return true;
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   if (strcmp(policy_name, key::kWebAppInstallForceList) == 0)
     return true;
 #endif

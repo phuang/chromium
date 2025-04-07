@@ -433,7 +433,8 @@ TEST_F(AllocatorShimTest, InterceptLibcSymbols) {
   ASSERT_GE(aligned_allocs_intercepted_by_alignment[128], 1u);
   ASSERT_GE(aligned_allocs_intercepted_by_size[53], 1u);
 
-#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)
+#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID) && \
+    !PA_BUILDFLAG(IS_OHOS)
   void* pvalloc_ptr = pvalloc(67);
   ASSERT_NE(nullptr, pvalloc_ptr);
   ASSERT_EQ(0u, reinterpret_cast<uintptr_t>(pvalloc_ptr) % kPageSize);
@@ -472,7 +473,8 @@ TEST_F(AllocatorShimTest, InterceptLibcSymbols) {
   free(memalign_ptr);
   ASSERT_GE(frees_intercepted_by_addr[Hash(memalign_ptr)], 1u);
 
-#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)
+#if PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID) && \
+    !PA_BUILDFLAG(IS_OHOS)
   free(pvalloc_ptr);
   ASSERT_GE(frees_intercepted_by_addr[Hash(pvalloc_ptr)], 1u);
 #endif  // PA_BUILDFLAG(IS_POSIX) && !PA_BUILDFLAG(IS_ANDROID)

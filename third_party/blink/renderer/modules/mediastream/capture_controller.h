@@ -79,7 +79,7 @@ class MODULES_EXPORT CaptureController final
   void SourceChangedState() override {}
   void SourceChangedCaptureConfiguration() override {}
   void SourceChangedCaptureHandle() override {}
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   void SourceChangedZoomLevel(int) override;
 
   // Deliver a wheel event on the captured tab.

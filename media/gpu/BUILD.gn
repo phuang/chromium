@@ -185,6 +185,36 @@ component("gpu") {
     }
   }
 
+  if (is_ohos) {
+    import("//build/config/ohos/config.gni")
+
+    sources += [
+      "ohos/ohos_video_decoder.h",
+      "ohos/ohos_video_decoder.cc",
+      "ohos/codec_allocator.cc",
+      "ohos/codec_allocator.h",
+      "ohos/codec_buffer_wait_coordinator.cc",
+      "ohos/codec_buffer_wait_coordinator.h",
+      "ohos/codec_image.cc",
+      "ohos/codec_image.h",
+      "ohos/codec_output_buffer_renderer.cc",
+      "ohos/codec_output_buffer_renderer.h",
+      "ohos/codec_surface_bundle.cc",
+      "ohos/codec_surface_bundle.h",
+      "ohos/codec_wrapper.cc",
+      "ohos/codec_wrapper.h",
+      "ohos/direct_shared_image_video_provider.cc",
+      "ohos/direct_shared_image_video_provider.h",
+      "ohos/frame_info_helper.cc",
+      "ohos/frame_info_helper.h",
+      "ohos/shared_image_video_provider.cc",
+      "ohos/shared_image_video_provider.h",
+      "ohos/video_frame_factory.h",
+      "ohos/video_frame_factory_impl.cc",
+      "ohos/video_frame_factory_impl.h",
+    ]
+  }
+
   if (use_v4l2_codec) {
     public_deps += [ "//media/gpu/v4l2" ]
   }

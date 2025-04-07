@@ -382,6 +382,21 @@ component("capture_lib") {
       "//third_party/libyuv",
     ]
   }
+
+  # TODO support video capture
+  if (is_ohos && false) {
+    sources += [
+      "video/ohos/video_capture_device_factory_ohos.cc",
+      "video/ohos/video_capture_device_factory_ohos.h",
+      "video/ohos/video_capture_device_ohos.cc",
+      "video/ohos/video_capture_device_ohos.h",
+      "video/ohos/ohos_capture_delegate.cc",
+      "video/ohos/ohos_capture_delegate.h",
+      "video/ohos/video_capture_common_ohos.cc",
+      "video/ohos/video_capture_common_ohos.h",
+    ]
+    libs = ["ohcamera"]
+  }
 }
 
 source_set("capture_gpu_channel") {

@@ -374,7 +374,7 @@ void SetSuggestionLabelsForCard(
 
   // If the focused field is a card number field.
   if (trigger_field_type == CREDIT_CARD_NUMBER) {
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
     suggestion.labels = {{Suggestion::Text(
         credit_card.GetInfo(CREDIT_CARD_EXP_DATE_2_DIGIT_YEAR, app_locale))}};
 #else
@@ -430,7 +430,8 @@ void SetSuggestionLabelsForCard(
   // If the focused field is not a card number field AND the card number is NOT
   // empty.
 
-  if constexpr (BUILDFLAG(IS_IOS) || BUILDFLAG(IS_ANDROID)) {
+  if constexpr (BUILDFLAG(IS_IOS) || BUILDFLAG(IS_ANDROID) ||
+                BUILDFLAG(IS_OHOS)) {
     if (client.ShouldFormatForLargeKeyboardAccessory()) {
       suggestion.labels = {
           {Suggestion::Text(credit_card.CardNameAndLastFourDigits(

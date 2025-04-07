@@ -323,6 +323,29 @@ target(link_target_type, "gles2_sources") {
       "abstract_texture_android.cc",
       "abstract_texture_android.h",
     ]
+  } else if (is_ohos) {
+    sources += [
+      "abstract_texture_ohos.cc",
+      "abstract_texture_ohos.h",
+    ]
+  }
+
+  if (is_ohos) {
+    sources += [
+      "ohos/native_image_texture_gl_owner.cc",
+      "ohos/native_image_texture_gl_owner.h",
+      "ohos/native_image_texture_owner.cc",
+      "ohos/native_image_texture_owner.h",
+      "ohos/shared_image_backing_ohos.cc",
+      "ohos/shared_image_backing_ohos.h",
+      "ohos/shared_image_video_ohos_native_image.cc",
+      "ohos/shared_image_video_ohos_native_image.h",
+      "ohos/shared_image_video_ohos.cc",
+      "ohos/shared_image_video_ohos.h",
+      "ref_counted_lock.cc",
+      "ref_counted_lock.h",
+      "stream_texture_shared_image_interface.h",
+    ]
   }
 
   if (use_dawn) {
@@ -601,6 +624,21 @@ target(link_target_type, "gles2_sources") {
     if (enable_vulkan) {
       deps += [ "//gpu/vulkan" ]
     }
+  }
+
+  if (is_ohos) {
+    sources += [
+      "shared_image/android_image_backing.cc",
+      "shared_image/android_image_backing.h",
+      "shared_image/dawn_oh_native_buffer_image_representation.cc",
+      "shared_image/dawn_oh_native_buffer_image_representation.h",
+      "shared_image/oh_native_buffer_image_backing.cc",
+      "shared_image/oh_native_buffer_image_backing.h",
+      "shared_image/oh_native_buffer_image_backing_factory.cc",
+      "shared_image/oh_native_buffer_image_backing_factory.h",
+    ]
+
+    libs = [ "native_buffer" ]
   }
 
   if (is_win) {

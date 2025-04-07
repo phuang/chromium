@@ -125,6 +125,11 @@ Mailbox SharedImageInterfaceProxy::CreateSharedImage(
     gfx::BufferUsage buffer_usage,
     std::optional<SharedImagePoolId> pool_id,
     gfx::GpuMemoryBufferHandle* handle_to_populate) {
+  if (si_info.meta.format == viz::SinglePlaneFormat::kBGRA_8888 &&
+      si_info.meta.usage &
+          gpu::SharedImageUsage::SHARED_IMAGE_USAGE_WEBGPU_WRITE) {
+    DCHECK(false);
+  }
   // Create a GMB here first on IO thread via sync IPC. Then create a mailbox
   // from it.
   {
@@ -165,6 +170,11 @@ Mailbox SharedImageInterfaceProxy::CreateSharedImage(
 Mailbox SharedImageInterfaceProxy::CreateSharedImage(
     const SharedImageInfo& si_info,
     base::span<const uint8_t> pixel_data) {
+  if (si_info.meta.format == viz::SinglePlaneFormat::kBGRA_8888 &&
+      si_info.meta.usage &
+          gpu::SharedImageUsage::SHARED_IMAGE_USAGE_WEBGPU_WRITE) {
+    DCHECK(false);
+  }
   // Pixel data's size must fit into a uint32_t to be sent in
   // CreateSharedImageWithDataParams.
   if (!base::IsValueInRangeForNumericType<uint32_t>(pixel_data.size())) {

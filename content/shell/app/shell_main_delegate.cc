@@ -49,7 +49,7 @@
     content::RegisterIPCLogger(msg_id, logger)
 #endif
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
 #include "content/web_test/browser/web_test_browser_main_runner.h"  // nogncheck
 #include "content/web_test/browser/web_test_content_browser_client.h"  // nogncheck
 #include "content/web_test/renderer/web_test_content_renderer_client.h"  // nogncheck
@@ -189,8 +189,8 @@ void InitLogging(const base::CommandLine& command_line) {
 
   settings.delete_old = logging::DELETE_OLD_LOG_FILE;
   logging::InitLogging(settings);
-  logging::SetLogItems(true /* Process ID */, true /* Thread ID */,
-                       true /* Timestamp */, false /* Tick count */);
+  logging::SetLogItems(false /* Process ID */, false /* Thread ID */,
+                       false /* Timestamp */, false /* Tick count */);
 }
 
 }  // namespace
@@ -231,7 +231,7 @@ std::optional<int> ShellMainDelegate::BasicStartupComplete() {
 
   InitLogging(command_line);
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
   if (switches::IsRunWebTestsSwitchPresent()) {
     const bool browser_process =
         command_line.GetSwitchValueASCII(switches::kProcessType).empty();
@@ -292,7 +292,7 @@ absl::variant<int, MainFunctionParams> ShellMainDelegate::RunProcess(
   base::CurrentProcess::GetInstance().SetProcessType(
       base::CurrentProcessType::PROCESS_BROWSER);
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS) && !BUILDFLAG(IS_OHOS)
   if (switches::IsRunWebTestsSwitchPresent()) {
     // Web tests implement their own BrowserMain() replacement.
     web_test_runner_->RunBrowserMain(std::move(main_function_params));
@@ -304,7 +304,7 @@ absl::variant<int, MainFunctionParams> ShellMainDelegate::RunProcess(
   }
 #endif
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_IOS) || BUILDFLAG(IS_OHOS)
   // On Android and iOS, we defer to the system message loop when the stack
   // unwinds. So here we only create (and leak) a BrowserMainRunner. The
   // shutdown of BrowserMainRunner doesn't happen in Chrome Android/iOS and
@@ -440,7 +440,7 @@ ContentClient* ShellMainDelegate::CreateContentClient() {
 }
 
 ContentBrowserClient* ShellMainDelegate::CreateContentBrowserClient() {
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
   if (switches::IsRunWebTestsSwitchPresent()) {
     browser_client_ = std::make_unique<WebTestContentBrowserClient>();
     return browser_client_.get();
@@ -456,7 +456,7 @@ ContentGpuClient* ShellMainDelegate::CreateContentGpuClient() {
 }
 
 ContentRendererClient* ShellMainDelegate::CreateContentRendererClient() {
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
   if (switches::IsRunWebTestsSwitchPresent()) {
     renderer_client_ = std::make_unique<WebTestContentRendererClient>();
     return renderer_client_.get();

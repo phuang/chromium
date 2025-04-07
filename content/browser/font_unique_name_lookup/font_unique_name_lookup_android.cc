@@ -7,7 +7,7 @@
 #include <set>
 #include <vector>
 
-#include "base/android/build_info.h"
+// #include "base/android/build_info.h"
 #include "base/check.h"
 #include "base/containers/span_rust.h"
 #include "base/files/file.h"
@@ -33,7 +33,8 @@
 #include "third_party/icu/source/common/unicode/unistr.h"
 #include "third_party/rust/cxx/v1/cxx.h"
 
-static_assert(BUILDFLAG(IS_ANDROID), "This implementation only works safely "
+static_assert(BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS),
+              "This implementation only works safely "
               "on Android due to the way it assumes font files to be "
               "read-only and unmodifiable.");
 
@@ -48,8 +49,12 @@ const char kProtobufFilename[] = "font_unique_name_table.pb";
 // Memory-mapping these files avoids large RAM allocations.
 // DO NOT add directories here unless the files are guaranteed read-only.
 // Modifying these files typically requires a firmware or system update.
-static const char* const kAndroidFontPaths[] = {
-    "/system/fonts", "/vendor/fonts", "/product/fonts"};
+#if BUILDFLAG(IS_ANDROID)
+static const char* const kFontPaths[] = {"/system/fonts", "/vendor/fonts",
+                                         "/product/fonts"};
+#elif BUILDFLAG(IS_OHOS)
+static const char* const kFontPaths[] = {"/system/fonts"};
+#endif
 
 void IndexFile(blink::FontUniqueNameTable& font_table,
                std::string_view font_file_path,
@@ -240,18 +245,22 @@ base::FilePath FontUniqueNameLookup::TableCacheFilePath() {
 }
 
 std::string FontUniqueNameLookup::GetAndroidBuildFingerprint() const {
+#if BUILDFLAG(IS_ANDROID)
   return android_build_fingerprint_for_testing_.size()
              ? android_build_fingerprint_for_testing_
              : std::string(base::android::BuildInfo::GetInstance()
                                ->android_build_fp()) +
                    std::string(kFingerprintSuffixForceUpdateCache);
+#elif BUILDFLAG(IS_OHOS)
+  return std::string(kFingerprintSuffixForceUpdateCache);
+#endif
 }
 
 std::vector<base::FilePath> FontUniqueNameLookup::GetFontFilePaths() const {
   if (font_file_paths_for_testing_.size())
     return font_file_paths_for_testing_;
   std::vector<base::FilePath> font_files;
-  for (const char* font_dir_path : kAndroidFontPaths) {
+  for (const char* font_dir_path : kFontPaths) {
     base::FileEnumerator files_enumerator(
         base::MakeAbsoluteFilePath(base::FilePath(font_dir_path)), true,
         base::FileEnumerator::FILES);

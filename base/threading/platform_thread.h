@@ -355,7 +355,7 @@ class BASE_EXPORT PlatformThreadApple : public PlatformThreadBase {
 };
 #endif  // BUILDFLAG(IS_APPLE)
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 class ThreadTypeDelegate;
 using IsViaIPC = base::StrongAlias<class IsViaIPCTag, bool>;
 
@@ -452,7 +452,7 @@ class BASE_EXPORT PlatformThreadChromeOS : public PlatformThreadLinux {
 using PlatformThread = PlatformThreadApple;
 #elif BUILDFLAG(IS_CHROMEOS)
 using PlatformThread = PlatformThreadChromeOS;
-#elif BUILDFLAG(IS_LINUX)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 using PlatformThread = PlatformThreadLinux;
 #else
 using PlatformThread = PlatformThreadBase;
@@ -466,7 +466,7 @@ void SetCurrentThreadType(ThreadType thread_type,
 void SetCurrentThreadTypeImpl(ThreadType thread_type,
                               MessagePumpType pump_type_hint);
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 void SetThreadTypeLinux(ProcessId process_id,
                         PlatformThreadId thread_id,
                         ThreadType thread_type,
@@ -480,7 +480,7 @@ void SetThreadTypeChromeOS(ProcessId process_id,
 #endif
 #if BUILDFLAG(IS_CHROMEOS)
 inline constexpr auto SetThreadType = SetThreadTypeChromeOS;
-#elif BUILDFLAG(IS_LINUX)
+#elif BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_OHOS)
 inline constexpr auto SetThreadType = SetThreadTypeLinux;
 #endif
 

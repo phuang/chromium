@@ -283,7 +283,8 @@ size_t SysInfo::VMAllocationGranularity() {
 #if !BUILDFLAG(IS_APPLE)
 // static
 int SysInfo::NumberOfEfficientProcessorsImpl() {
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_OHOS)
   // Try to guess the CPU architecture and cores of each cluster by comparing
   // the maximum frequencies of the available (online and offline) cores.
   int num_cpus = SysInfo::NumberOfProcessors();

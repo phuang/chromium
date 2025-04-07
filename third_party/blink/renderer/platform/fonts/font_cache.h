@@ -55,7 +55,7 @@
 #include "third_party/skia/include/core/SkFontMgr.h"
 #include "third_party/skia/include/core/SkRefCnt.h"
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 #include "ui/gfx/font_fallback_linux.h"
 #endif
 
@@ -91,7 +91,7 @@ enum class AlternateFontName {
 extern const char kColorEmojiLocale[];
 extern const char kMonoEmojiLocale[];
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 extern const char kNotoColorEmojiCompat[];
 #endif
 
@@ -167,7 +167,7 @@ class PLATFORM_EXPORT FontCache final {
 
   static void MaybePreloadSystemFonts();
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
   // These are needed for calling QueryRenderStyleForStrike, since
   // gfx::GetFontRenderParams makes distinctions based on DSF.
   static float DeviceScaleFactor() { return device_scale_factor_; }
@@ -229,7 +229,7 @@ class PLATFORM_EXPORT FontCache final {
 
   static void AcceptLanguagesChanged(const String&);
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   static AtomicString GetGenericFamilyNameForScript(
       const AtomicString& family_name,
       const AtomicString& generic_family_name_fallback,
@@ -243,7 +243,7 @@ class PLATFORM_EXPORT FontCache final {
       const char* locale_family_name);
 #endif  // BUILDFLAG(IS_ANDROID)
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
   static bool GetFontForCharacter(UChar32,
                                   const char* preferred_locale,
                                   gfx::FallbackFontData*);
@@ -316,7 +316,8 @@ class PLATFORM_EXPORT FontCache final {
                                    const FontFaceCreationParams&,
                                    std::string& name);
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || \
+    BUILDFLAG(IS_OHOS)
   static AtomicString GetFamilyNameForCharacter(SkFontMgr*,
                                                 UChar32,
                                                 const FontDescription&,
@@ -353,7 +354,7 @@ class PLATFORM_EXPORT FontCache final {
   bool is_test_font_mgr_ = false;
 #endif  // BUILDFLAG(IS_WIN)
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
   static float device_scale_factor_;
 #endif
 
@@ -391,7 +392,7 @@ class PLATFORM_EXPORT FontCachePurgePreventer {
 
 AtomicString ToAtomicString(const SkString&);
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 // TODO(crbug.com/1241875) Can this be simplified?
 // static
 inline const char* FontCache::GetLocaleSpecificFamilyName(

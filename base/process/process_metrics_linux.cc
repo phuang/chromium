@@ -142,7 +142,8 @@ bool ProcessMetrics::GetCumulativeCPUUsagePerThread(
   return !cpu_per_thread.empty();
 }
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_OHOS)
 base::expected<ProcessMemoryInfo, ProcessUsageError>
 ProcessMetrics::GetMemoryInfo() const {
   StringPairs pairs;

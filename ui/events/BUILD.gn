@@ -451,6 +451,10 @@ component("keyboard_hook") {
   if (is_android) {
     sources += [ "android/keyboard_hook_android.cc" ]
   }
+
+  if (is_ohos) {
+    sources += [ "ohos/keyboard_hook_ohos.cc" ]
+  }
 }
 
 component("gesture_detection") {

@@ -25,6 +25,8 @@ namespace {
 String GetReducedNavigatorPlatform() {
 #if BUILDFLAG(IS_ANDROID)
   return "Linux armv81";
+#elif BUILDFLAG(IS_OHOS)
+  return "Linux armv81";
 #elif BUILDFLAG(IS_MAC)
   return "MacIntel";
 #elif BUILDFLAG(IS_WIN)

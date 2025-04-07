@@ -704,7 +704,7 @@ if (is_clang_or_gcc) {
         "partition_alloc_base/time/time_conversion_posix.cc",
       ]
 
-      if (is_linux || is_chromeos) {
+      if (is_linux || is_chromeos || is_ohos) {
         sources += [ "partition_alloc_base/debug/stack_trace_linux.cc" ]
       }
 
@@ -926,7 +926,7 @@ if (is_clang_or_gcc) {
         shim_sources +=
             [ "shim/allocator_shim_default_dispatch_to_apple_zoned_malloc.cc" ]
       }
-      if (is_chromeos || is_linux) {
+      if (is_chromeos || is_linux || is_ohos) {
         shim_sources += [ "shim/allocator_shim_default_dispatch_to_glibc.cc" ]
       }
       if (is_win) {
@@ -959,7 +959,7 @@ if (build_with_chromium) {
 
     sources = [ "partition_alloc_base/test/gtest_util.h" ]
 
-    if (is_linux || is_chromeos || is_android) {
+    if (is_linux || is_chromeos || is_android || is_ohos) {
       sources += [
         "partition_alloc_base/debug/proc_maps_linux.cc",
         "partition_alloc_base/debug/proc_maps_linux.h",
@@ -1099,7 +1099,7 @@ source_set("test_support") {
       "partition_alloc_base/threading/platform_thread_apple_for_testing.mm",
     ]
   }
-  if (is_linux || is_chromeos) {
+  if (is_linux || is_chromeos || is_ohos) {
     sources += [
       "partition_alloc_base/threading/platform_thread_linux_for_testing.cc",
     ]

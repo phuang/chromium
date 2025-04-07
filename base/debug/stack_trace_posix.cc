@@ -50,7 +50,7 @@
 // Surprisingly, uClibc defines __GLIBC__ in some build configs, but
 // execinfo.h and backtrace(3) are really only present in glibc and in macOS
 // libc.
-#if BUILDFLAG(IS_APPLE) || \
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OHOS) || \
     (defined(__GLIBC__) && !defined(__UCLIBC__) && !defined(__AIX))
 #define HAVE_BACKTRACE
 #include <execinfo.h>

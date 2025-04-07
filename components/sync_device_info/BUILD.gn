@@ -70,7 +70,7 @@ static_library("sync_device_info") {
     sources += [ "local_device_info_util_ios.mm" ]
   }
 
-  if (is_linux) {
+  if (is_linux || is_ohos) {
     sources += [ "local_device_info_util_linux.cc" ]
   }
 

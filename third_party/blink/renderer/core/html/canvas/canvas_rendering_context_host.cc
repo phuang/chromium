@@ -349,6 +349,7 @@ void CanvasRenderingContextHost::CreateCanvasResourceProvider2D(
 }
 
 SkAlphaType CanvasRenderingContextHost::GetRenderingContextAlphaType() const {
+  // XXX: OHOS
   return RenderingContext() ? RenderingContext()->GetAlphaType()
                             : kPremul_SkAlphaType;
 }
@@ -359,6 +360,7 @@ SkColorType CanvasRenderingContextHost::GetRenderingContextSkColorType() const {
 
 viz::SharedImageFormat CanvasRenderingContextHost::GetRenderingContextFormat()
     const {
+  // XXX: OHOS kN32_SkColorType?
   return RenderingContext() ? RenderingContext()->GetSharedImageFormat()
                             : GetN32FormatForCanvas();
 }

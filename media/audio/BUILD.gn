@@ -275,6 +275,22 @@ source_set("audio") {
     sources += [ "linux/audio_manager_linux.cc" ]
   }
 
+  if (is_ohos) {
+    sources += [
+      "ohos/ohos_audio_capturer_source.cc",
+      "ohos/ohos_audio_capturer_source.h",
+      "ohos/ohos_audio_input_stream.cc",
+      "ohos/ohos_audio_input_stream.h",
+      "ohos/ohos_audio_manager.cc",
+      "ohos/ohos_audio_manager.h",
+      "ohos/ohos_audio_output_stream.cc",
+      "ohos/ohos_audio_output_stream.h",
+    ]
+    libs += [
+      "ohaudio",
+    ]
+  }
+
   if (use_alsa) {
     libs += [ "asound" ]
     sources += [

@@ -970,7 +970,7 @@ void MediaStreamTrackImpl::SourceChangedCaptureHandle() {
   DispatchEvent(*Event::Create(event_type_names::kCapturehandlechange));
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 void MediaStreamTrackImpl::SourceChangedZoomLevel(int zoom_level) {
   DCHECK(IsMainThread());
   if (Ended()) {

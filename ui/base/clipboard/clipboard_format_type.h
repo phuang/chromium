@@ -167,7 +167,8 @@ class COMPONENT_EXPORT(UI_BASE_CLIPBOARD_TYPES) ClipboardFormatType {
   // FORMATETC:
   // https://docs.microsoft.com/en-us/windows/desktop/com/the-formatetc-structure
   CHROME_FORMATETC data_;
-#elif defined(USE_AURA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA)
+#elif defined(USE_AURA) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || \
+    BUILDFLAG(IS_OHOS)
   explicit ClipboardFormatType(std::string_view native_format);
   std::string data_;
 #elif BUILDFLAG(IS_APPLE)

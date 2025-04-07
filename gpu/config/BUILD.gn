@@ -241,10 +241,11 @@ source_set("config_sources") {
   if (is_ios) {
     sources += [ "gpu_info_collector_ios.mm" ]
   }
-  if (is_linux || is_chromeos) {
+  if (is_linux || is_chromeos || is_ohos) {
     sources += [ "gpu_info_collector_linux.cc" ]
   }
-  if (is_linux || is_chromeos || is_apple || is_fuchsia || is_android) {
+  if (is_linux || is_chromeos || is_apple || is_fuchsia || is_android ||
+      is_ohos) {
     deps += [ "//third_party/angle:angle_gpu_info_util" ]
   }
   if (use_ozone) {

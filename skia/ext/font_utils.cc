@@ -16,6 +16,10 @@
 #include "third_party/skia/include/ports/SkFontMgr_android.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "third_party/skia/src/ports/skia_ohos/SkFontMgr_ohos.h"
+#endif
+
 #if BUILDFLAG(IS_APPLE)
 #include "third_party/skia/include/ports/SkFontMgr_mac_ct.h"
 #endif
@@ -60,6 +64,8 @@ static sk_sp<SkFontMgr> fontmgr_factory() {
   }
 #if BUILDFLAG(IS_ANDROID)
   return SkFontMgr_New_Android(nullptr);
+#elif BUILDFLAG(IS_OHOS)
+  return SkFontMgr_New_OHOS(nullptr);
 #elif BUILDFLAG(IS_APPLE)
   return SkFontMgr_New_CoreText(nullptr);
 #elif BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_LINUX)

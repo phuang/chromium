@@ -1,0 +1,68 @@
+assert(is_ohos)
+
+template("ohos_shared_library") {
+  shared_library(target_name) {
+    forward_variables_from(invoker, "*")
+    if (!defined(libs)) {
+      libs = []
+    }
+    libs += [ "ace_napi.z" ]
+  }
+}
+
+template("ohos_hap") {
+  action("${target_name}_gen_solibs_json") {
+    print("${invoker.target_name}")
+    forward_variables_from(invoker, [ "deps" ])
+
+    script = "//hap_test/rules/ninja_parser.py"
+    output = "$target_gen_dir/solibs.json"
+    outputs = [ output ]
+
+    ninja_files = []
+    if (defined(deps)) {
+      foreach(dep, deps) {
+        dep_out_dir = get_label_info(dep, "target_out_dir")
+        name = get_label_info(dep, "name")
+        ninja_files +=
+            [ rebase_path("${dep_out_dir}/${name}.ninja", root_build_dir) ]
+      }
+    }
+
+    args = [
+      "--output",
+      rebase_path(output, root_build_dir),
+      "--input",
+      string_join(",", ninja_files),
+    ]
+  }
+
+  group("${target_name}_copy_solibs") {
+    solibs_json = get_label_info(":${invoker.target_name}_gen_solibs_json",
+                                 "target_gen_dir")
+    solibs_json = rebase_path("${solibs_json}/solibs.json", root_build_dir)
+    solibs = [ "@FileArg(${solibs_json}:solibs)" ]
+
+    # print(get_label_info(":${invoker.target_name}_gen_solibs_json", "outputs"))
+    print(solibs)
+
+    deps = [ ":${invoker.target_name}_gen_solibs_json" ]
+  }
+
+  generated_file("${target_name}_generated_file") {
+    forward_variables_from(invoker, [ "deps" ])
+    outputs = [ "$root_build_dir/my_files.json" ]
+    data_keys = [
+      "output_name",
+      "deps",
+    ]
+  }
+
+  group(target_name) {
+    data_deps = [
+      ":${target_name}_copy_solibs",
+      ":${target_name}_gen_solibs_json",
+      ":${target_name}_generated_file",
+    ]
+  }
+}

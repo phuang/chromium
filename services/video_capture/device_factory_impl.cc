@@ -90,7 +90,9 @@ DeviceFactoryImpl::DeviceFactoryImpl(
 DeviceFactoryImpl::DeviceFactoryImpl(
     std::unique_ptr<media::VideoCaptureSystem> capture_system)
     : capture_system_(std::move(capture_system)),
-      has_called_get_device_infos_(false) {}
+      has_called_get_device_infos_(false) {
+        CHECK(capture_system_);
+      }
 #endif  // BUILDFLAG(IS_CHROMEOS)
 
 DeviceFactoryImpl::~DeviceFactoryImpl() = default;

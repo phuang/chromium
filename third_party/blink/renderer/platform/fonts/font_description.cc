@@ -40,7 +40,8 @@
 #include "third_party/blink/renderer/platform/wtf/text/string_hash.h"
 #include "third_party/blink/renderer/platform/wtf/text/string_hasher.h"
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_ANDROID) || \
+    BUILDFLAG(IS_OHOS)
 #include "third_party/blink/renderer/platform/fonts/font_cache.h"
 #endif
 
@@ -149,14 +150,17 @@ bool FontDescription::operator==(const FontDescription& other) const {
 FontSelectionValue FontDescription::LighterWeight(FontSelectionValue weight) {
   DCHECK(weight >= FontSelectionValue(1) && weight <= FontSelectionValue(1000));
   // [1, 100) => No change
-  if (weight < FontSelectionValue(100))
+  if (weight < FontSelectionValue(100)) {
     return weight;
+  }
   // [100, 550) => 100
-  if (weight < FontSelectionValue(550))
+  if (weight < FontSelectionValue(550)) {
     return FontSelectionValue(100);
+  }
   // [550, 750) => 400
-  if (weight < FontSelectionValue(750))
+  if (weight < FontSelectionValue(750)) {
     return FontSelectionValue(400);
+  }
   // [750, 1000] => 700
   return FontSelectionValue(700);
 }
@@ -166,14 +170,17 @@ FontSelectionValue FontDescription::LighterWeight(FontSelectionValue weight) {
 FontSelectionValue FontDescription::BolderWeight(FontSelectionValue weight) {
   DCHECK(weight >= FontSelectionValue(1) && weight <= FontSelectionValue(1000));
   // [1, 350) => 400
-  if (weight < FontSelectionValue(350))
+  if (weight < FontSelectionValue(350)) {
     return FontSelectionValue(400);
+  }
   // [350, 550) => 700
-  if (weight < FontSelectionValue(550))
+  if (weight < FontSelectionValue(550)) {
     return FontSelectionValue(700);
+  }
   // [550, 900) => 900
-  if (weight < FontSelectionValue(900))
+  if (weight < FontSelectionValue(900)) {
     return FontSelectionValue(900);
+  }
   // [900, 1000] => No change
   return weight;
 }
@@ -254,8 +261,9 @@ FontDescription FontDescription::SizeAdjustedFontDescription(
   // See note in: https://www.w3.org/TR/css-fonts-5/#font-size-adjust-prop
   // When the font-size-adjust property is applied while a size-adjust
   // descriptor is set, the latter must not have an effect
-  if (HasSizeAdjust())
+  if (HasSizeAdjust()) {
     return *this;
+  }
 
   // size-adjust should be applied at most once.
   DCHECK(!fields_.has_size_adjust_descriptor_);
@@ -289,10 +297,11 @@ FontCacheKey FontDescription::CacheKey(
                          device_scale_factor_for_key, size_adjust_,
                          variation_settings_, font_palette_,
                          font_variant_alternates_, is_unique_match);
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   if (const LayoutLocale* locale = Locale()) {
-    if (FontCache::GetLocaleSpecificFamilyName(creation_params.Family()))
+    if (FontCache::GetLocaleSpecificFamilyName(creation_params.Family())) {
       cache_key.SetLocale(AtomicString(locale->LocaleForSkFontMgr()));
+    }
   }
 #endif  // BUILDFLAG(IS_ANDROID)
   return cache_key;
@@ -348,8 +357,9 @@ void FontDescription::UpdateTypesettingFeatures() {
     }
   }
 
-  if (VariantCaps() != kCapsNormal)
+  if (VariantCaps() != kCapsNormal) {
     fields_.typesetting_features_ |= blink::kCaps;
+  }
 }
 
 unsigned FontDescription::StyleHashWithoutFamilyList() const {
@@ -393,8 +403,9 @@ unsigned FontDescription::GetHash() const {
   unsigned hash = StyleHashWithoutFamilyList();
   for (const FontFamily* family = &family_list_; family;
        family = family->Next()) {
-    if (family->FamilyName().empty())
+    if (family->FamilyName().empty()) {
       continue;
+    }
     WTF::AddIntToHash(hash, family->FamilyIsGeneric());
     WTF::AddIntToHash(hash, WTF::GetHash(family->FamilyName()));
   }
@@ -502,10 +513,11 @@ void FontDescription::UpdateFromSkiaFontStyle(const SkFontStyle& font_style) {
       break;
   }
 
-  if (font_style.slant() == SkFontStyle::kOblique_Slant)
+  if (font_style.slant() == SkFontStyle::kOblique_Slant) {
     SetStyle(kItalicSlopeValue);
-  else
+  } else {
     SetStyle(kNormalSlopeValue);
+  }
 }
 
 int FontDescription::MinimumPrefixWidthToHyphenate() const {

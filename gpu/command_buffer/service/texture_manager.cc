@@ -529,7 +529,7 @@ void TexturePassthrough::MarkContextLost() {
   have_context_ = false;
 }
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 void TexturePassthrough::BindToServiceId(GLuint service_id) {
   if (service_id != 0 && service_id != service_id_) {
     service_id_ = service_id;
@@ -1698,7 +1698,7 @@ bool Texture::ClearLevel(DecoderContext* decoder, GLenum target, GLint level) {
   return true;
 }
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 void Texture::BindToServiceId(GLuint service_id) {
   SetStreamTextureServiceId(service_id);
   UpdateCanRenderCondition();

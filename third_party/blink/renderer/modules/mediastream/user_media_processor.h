@@ -105,7 +105,7 @@ class MODULES_EXPORT UserMediaProcessor
 
   bool HasActiveSources() const;
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
   void FocusCapturedSurface(const String& label, bool focus);
 #endif
 

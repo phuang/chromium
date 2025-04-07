@@ -43,6 +43,10 @@ component("clipboard_types") {
     sources += [ "clipboard_format_type_win.cc" ]
   }
 
+  if (is_ohos && !use_aura) {
+    sources += [ "clipboard_format_type_ohos.cc" ]
+  }
+
   if (use_aura && !is_win) {
     sources += [ "clipboard_format_type_aura.cc" ]
   }
@@ -181,6 +185,10 @@ component("clipboard") {
         "//ui/ozone",
       ]
     }
+  }
+
+  if (is_ohos) {
+    sources += [ "clipboard_factory_ohos.cc" ]
   }
 
   if (is_android) {

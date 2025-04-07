@@ -56,7 +56,7 @@ if (is_ios) {
   blink_core_sources_scroll += [ "scrollbar_theme_ios.cc" ]
 }
 
-if (use_aura) {
+if (use_aura || is_ohos) {
   blink_core_sources_scroll += [
     "scrollbar_theme_aura.cc",
     "scrollbar_theme_aura.h",

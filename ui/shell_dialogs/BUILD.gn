@@ -40,7 +40,7 @@ component("shell_dialogs") {
     "//url",
   ]
 
-  if (is_chromeos || is_castos) {
+  if (is_chromeos || is_castos || is_ohos) {
     sources += [ "shell_dialog_stub.cc" ]
   }
 

@@ -4,6 +4,8 @@
 
 #include "gpu/ipc/service/gpu_init.h"
 
+#include <pthread.h>
+
 #include <cstdlib>
 #include <cstring>
 #include <optional>

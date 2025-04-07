@@ -115,7 +115,8 @@ std::string JNI_AutofillTestHelper_AddCreditCardWithUseStats(
   DCHECK(count >= 0 && days_since_last_used >= 0);
 
   CreditCard card;
-  PersonalDataManagerAndroid::PopulateNativeCreditCardFromJava(jcard, env, &card);
+  PersonalDataManagerAndroid::PopulateNativeCreditCardFromJava(jcard, env,
+                                                               &card);
 
   card.usage_history().set_use_count(static_cast<size_t>(count));
   card.usage_history().set_use_date(AutofillClock::Now() -

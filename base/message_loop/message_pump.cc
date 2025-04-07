@@ -182,6 +182,12 @@ std::unique_ptr<MessagePump> MessagePump::Create(MessagePumpType type) {
         message_pump->set_is_type_ui(true);
         return message_pump;
       }
+#elif BUILDFLAG(IS_OHOS)
+      {
+        auto message_pump = std::make_unique<MessagePumpOHOS>();
+        message_pump->set_is_type_ui(true);
+        return message_pump;
+      }
 #else
       return std::make_unique<MessagePumpForUI>();
 #endif

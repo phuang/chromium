@@ -2318,7 +2318,7 @@ bool UserMediaProcessor::HasActiveSources() const {
   return !local_sources_.empty();
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 void UserMediaProcessor::FocusCapturedSurface(const String& label, bool focus) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
   GetMediaStreamDispatcherHost()->FocusCapturedSurface(label, focus);

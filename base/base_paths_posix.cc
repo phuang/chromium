@@ -39,7 +39,7 @@ bool PathProviderPosix(int key, FilePath* result) {
   switch (key) {
     case FILE_EXE:
     case FILE_MODULE: {  // TODO(evanm): is this correct?
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
       FilePath bin_dir;
       if (!ReadSymbolicLink(FilePath(kProcSelfExe), &bin_dir)) {
         NOTREACHED() << "Unable to resolve " << kProcSelfExe << ".";
@@ -86,14 +86,22 @@ bool PathProviderPosix(int key, FilePath* result) {
       return false;
     }
     case DIR_USER_DESKTOP:
+#if BUILDFLAG(IS_OHOS)
+      return false;
+#else
       *result = nix::GetXDGUserDirectory("DESKTOP", "Desktop");
       return true;
+#endif
     case DIR_CACHE: {
+#if BUILDFLAG(IS_OHOS)
+      return false;
+#else
       std::unique_ptr<Environment> env(Environment::Create());
       FilePath cache_dir(
           nix::GetXDGDirectory(env.get(), "XDG_CACHE_HOME", ".cache"));
       *result = cache_dir;
       return true;
+#endif
     }
   }
   return false;

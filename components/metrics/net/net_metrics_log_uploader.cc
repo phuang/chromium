@@ -361,10 +361,11 @@ std::string SerializeReportingInfo(
 bool EncryptString(const std::string& plaintext, std::string* encrypted) {
   encrypted_messages::EncryptedMessage encrypted_message;
   CHECK(encrypted_messages::EncryptSerializedMessage(
-          kServerPublicKey, kServerPublicKeyVersion, kEncryptedMessageLabel,
-          plaintext, &encrypted_message)) << "Error encrypting string.";
+      kServerPublicKey, kServerPublicKeyVersion, kEncryptedMessageLabel,
+      plaintext, &encrypted_message))
+      << "Error encrypting string.";
   CHECK(encrypted_message.SerializeToString(encrypted))
-    << "Error serializing encrypted string.";
+      << "Error serializing encrypted string.";
   return true;
 }
 

@@ -211,6 +211,8 @@ RenderProcessImpl::RenderProcessImpl()
   if (base::FeatureList::IsEnabled(features::kWebAssemblyTrapHandler)) {
     content::GetContentClient()->renderer()->SetUpWebAssemblyTrapHandler();
   }
+
+  SetV8FlagIfHasSwitch("jitless", "--jitless");
 }
 
 RenderProcessImpl::~RenderProcessImpl() {

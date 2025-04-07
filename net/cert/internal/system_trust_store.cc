@@ -39,7 +39,7 @@
 #include "third_party/boringssl/src/include/openssl/pool.h"
 #elif BUILDFLAG(IS_WIN)
 #include "net/cert/internal/trust_store_win.h"
-#elif BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 #include "net/cert/internal/trust_store_android.h"
 #endif
 
@@ -345,7 +345,7 @@ void InitializeTrustStoreWinSystem() {
       base::BindOnce(&InitializeTrustStoreForCRSOnWorkerThread));
 }
 
-#elif BUILDFLAG(IS_ANDROID)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 
 #if BUILDFLAG(CHROME_ROOT_STORE_SUPPORTED)
 

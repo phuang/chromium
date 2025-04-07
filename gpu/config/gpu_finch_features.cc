@@ -155,7 +155,8 @@ BASE_FEATURE(kAllowHardwareBufferUsageFlagsFromVulkanForScanout,
 BASE_FEATURE(kDefaultEnableGpuRasterization,
              "DefaultEnableGpuRasterization",
 #if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_CHROMEOS) || \
-    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_LINUX)
+    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_LINUX) || \
+    BUILDFLAG(IS_OHOS)
              base::FEATURE_ENABLED_BY_DEFAULT
 #else
              base::FEATURE_DISABLED_BY_DEFAULT
@@ -229,7 +230,7 @@ BASE_FEATURE(kEnableDrDc,
 // Enable WebGPU on gpu service side only. This is used with origin trial and
 // enabled by default on supported platforms.
 #if BUILDFLAG(IS_MAC) || BUILDFLAG(IS_WIN) || BUILDFLAG(IS_CHROMEOS) || \
-    BUILDFLAG(IS_ANDROID)
+    BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
 #define WEBGPU_ENABLED base::FEATURE_ENABLED_BY_DEFAULT
 #else
 #define WEBGPU_ENABLED base::FEATURE_DISABLED_BY_DEFAULT

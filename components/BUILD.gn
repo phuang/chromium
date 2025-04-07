@@ -101,7 +101,10 @@ disallowed_extension_deps_ = [
 test("components_unittests") {
   use_xvfb = use_xvfb_in_this_config
 
-  if (is_android || is_linux || is_chromeos || is_mac || is_win || is_fuchsia) {
+  assert(!is_ohos)
+
+  if (is_android || is_linux || is_chromeos || is_mac || is_win || is_fuchsia ||
+      is_ohos) {
     # Ideally these would be added to the specific :unit_tests targets they are
     # relevant for. Please try to do this rather than add to this list.
     data = [
@@ -704,7 +707,7 @@ test("components_unittests") {
   }
 
   # Desktop - only deps.
-  if (!is_android && !is_ios) {
+  if ((!is_android && !is_ios) || !is_ohos) {
     deps += [
       "//components/access_code_cast/common:unit_tests",
       "//components/headless/screen_info:unit_tests",
@@ -720,16 +723,17 @@ test("components_unittests") {
     deps += [ "//components/guest_view/browser:unit_tests" ]
   }
 
-  if (!is_android && !is_ios && (!is_fuchsia || !optimize_for_size)) {
+  if (!is_android && !is_ios && (!is_fuchsia || !optimize_for_size) &&
+      !is_ohos) {
     deps += [ "//components/autofill_ai/core/browser:unit_tests" ]
   }
 
-  if (!is_android) {
+  if (!is_android && !is_ohos) {
     deps += [ "//components/feedback:unit_tests" ]
     deps += [ "//components/feedback/redaction_tool:unit_tests" ]
   }
 
-  if (!is_android) {
+  if (!is_android && !is_ohos) {
     deps += [
       "//components/commerce/core:account_checker_unittests",
       "//components/commerce/core:commerce_heuristics_data_unittests",

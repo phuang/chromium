@@ -52,8 +52,10 @@ class GPU_GLES2_EXPORT StreamTextureSharedImageInterface
   // finished and it can be safely read from.
   // The buffer is guaranteed to be valid until the lifetime of the object
   // returned.
+  #if BUILDFLAG(IS_ANDROID)
   virtual std::unique_ptr<base::android::ScopedHardwareBufferFenceSync>
   GetAHardwareBuffer() = 0;
+  #endif
 
  protected:
   virtual ~StreamTextureSharedImageInterface() = default;

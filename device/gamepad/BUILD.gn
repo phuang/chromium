@@ -92,7 +92,7 @@ component("gamepad") {
     libs = [ "hid.lib" ]
   }
 
-  if (is_linux || is_chromeos) {
+  if (is_linux || is_chromeos || is_ohos) {
     sources += [
       "gamepad_standard_mappings_linux.cc",
       "hid_writer_linux.cc",

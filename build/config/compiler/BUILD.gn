@@ -124,7 +124,7 @@ declare_args() {
   # the space overhead is too great. We should use some mixture of profiles and
   # optimization settings to better tune the size increase.
   thin_lto_enable_optimizations =
-      (is_chromeos || is_android || is_win || is_linux || is_mac ||
+      (is_chromeos || is_android || is_win || is_linux || is_ohos || is_mac ||
        (is_ios && use_lld)) && is_official_build
 
   # Whether to enable thin lto incremental builds.
@@ -256,7 +256,7 @@ config("default_include_dirs") {
 # the executable they are loaded into, so they are unresolved at link-time.
 config("no_unresolved_symbols") {
   if (!using_sanitizer &&
-      (is_linux || is_chromeos || is_android || is_fuchsia)) {
+      (is_linux || is_chromeos || is_android || is_fuchsia || is_ohos)) {
     ldflags = [
       "-Wl,-z,defs",
       "-Wl,--as-needed",
@@ -300,6 +300,8 @@ config("compiler") {
     configs += [ "//build/config/ios:compiler" ]
   } else if (is_fuchsia) {
     configs += [ "//build/config/fuchsia:compiler" ]
+  } else if (is_ohos) {
+    configs += [ "//build/config/ohos:compiler" ]
   } else if (current_os == "aix") {
     configs += [ "//build/config/aix:compiler" ]
   } else if (current_os == "zos") {
@@ -497,7 +499,7 @@ config("compiler") {
 
   # Linux/Android/Fuchsia common flags setup.
   # ---------------------------------
-  if (is_linux || is_chromeos || is_android || is_fuchsia) {
+  if (is_linux || is_chromeos || is_android || is_fuchsia || is_ohos) {
     asmflags += [ "-fPIC" ]
     cflags += [ "-fPIC" ]
     ldflags += [ "-fPIC" ]
@@ -637,8 +639,8 @@ config("compiler") {
 
   # C11/C++11 compiler flags setup.
   # ---------------------------
-  if (is_linux || is_chromeos || is_android || (is_nacl && is_clang) ||
-      current_os == "aix") {
+  if (is_linux || is_chromeos || is_android || is_ohos ||
+      (is_nacl && is_clang) || current_os == "aix") {
     if (is_clang) {
       standard_prefix = "c"
 
@@ -1238,7 +1240,7 @@ config("compiler_cpu_abi") {
       }
     } else if (current_cpu == "arm64") {
       if (is_clang && !is_android && !is_nacl && !is_fuchsia &&
-          !is_chromeos_device) {
+          !is_chromeos_device && !is_ohos) {
         cflags += [ "--target=aarch64-linux-gnu" ]
         ldflags += [ "--target=aarch64-linux-gnu" ]
       }

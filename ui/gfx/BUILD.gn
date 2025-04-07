@@ -175,6 +175,12 @@ component("gfx") {
       "android/view_configuration.h",
     ]
   }
+  if (is_ohos) {
+    sources += [
+      "ohos/scoped_oh_native_window.cc",
+      "ohos/scoped_oh_native_window.h",
+    ]
+  }
   if (is_linux || is_chromeos) {
     sources += [
       "font_fallback_linux.cc",
@@ -367,14 +373,14 @@ component("gfx") {
   }
 
   if (use_blink) {
-    if (is_android || is_fuchsia || is_ios) {
+    if (is_android || is_fuchsia || is_ios || is_ohos) {
       sources += [
         "font_fallback_skia.cc",
         "font_render_params_skia.cc",
       ]
     }
 
-    if (is_android || is_fuchsia || is_win || is_apple) {
+    if (is_android || is_fuchsia || is_win || is_apple || is_ohos) {
       sources += [
         "font_fallback_skia_impl.cc",
         "font_fallback_skia_impl.h",

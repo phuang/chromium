@@ -162,7 +162,7 @@ source_set("test_support") {
     ]
   }
 
-  if (!is_android) {
+  if (!is_android && !is_ohos) {
     sources += [
       "extension_policy_test_base.cc",
       "extension_policy_test_base.h",
@@ -260,7 +260,7 @@ source_set("policy_specific_browser_tests") {
     ]
   }
 
-  if (!is_android) {
+  if (!is_android && !is_ohos) {
     sources += [
       "test/autofill_ai_policy_browsertest.cc",
       "test/autofill_policy_browsertest.cc",

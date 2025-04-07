@@ -211,7 +211,8 @@ struct ScopedDIRClose {
 // Automatically closes |DIR*|s.
 typedef std::unique_ptr<DIR, ScopedDIRClose> ScopedDIR;
 
-#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_AIX)
+#if BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_AIX) || \
+    BUILDFLAG(IS_OHOS)
 static const char kFDDir[] = "/proc/self/fd";
 #elif BUILDFLAG(IS_SOLARIS)
 static const char kFDDir[] = "/dev/fd";

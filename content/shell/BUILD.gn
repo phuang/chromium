@@ -56,7 +56,7 @@ config("content_shell_lib_warnings") {
 }
 
 # Web test support not built on android, but is everywhere else.
-support_web_tests = !is_android
+support_web_tests = !is_android && !is_ohos
 
 source_set("android_shell_descriptors") {
   testonly = true
@@ -606,6 +606,11 @@ if (is_android) {
   group("content_shell") {
     testonly = true
     deps = [ "//content/shell/android:content_shell_apk" ]
+  }
+} else if (is_ohos) {
+  group("content_shell") {
+    testonly = true
+    deps = [ "//content/shell/ohos:content_shell_hap" ]
   }
 } else if (is_mac) {
   tweak_info_plist("content_shell_plist") {

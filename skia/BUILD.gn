@@ -447,6 +447,11 @@ component("skia") {
     sources += skia_ports_fontmgr_android_sources
   }
 
+  if (is_ohos) {
+    sources += skia_ports_fontmgr_ohos_sources
+    deps += [ "//third_party/jsoncpp" ]
+  }
+
   if (is_fuchsia) {
     public += skia_ports_fontmgr_fuchsia_public
     sources += skia_ports_fontmgr_fuchsia_sources

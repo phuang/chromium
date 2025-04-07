@@ -73,7 +73,7 @@ inline uintptr_t& RegisterContextInstructionPointer(::CONTEXT* context) {
 #endif
 }
 
-#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS)
+#elif BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_LINUX) || BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
 
 inline uintptr_t& RegisterContextStackPointer(mcontext_t* context) {
 #if defined(ARCH_CPU_ARM_FAMILY) && defined(ARCH_CPU_32_BITS)

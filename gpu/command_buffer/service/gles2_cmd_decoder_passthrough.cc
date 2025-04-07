@@ -794,7 +794,9 @@ gpu::ContextResult GLES2DecoderPassthroughImpl::Initialize(
     const DisallowedFeatures& disallowed_features,
     const ContextCreationAttribs& attrib_helper) {
   TRACE_EVENT0("gpu", "GLES2DecoderPassthroughImpl::Initialize");
-  CHECK(gl::GetGLImplementation() == gl::kGLImplementationEGLANGLE)
+  LOG(ERROR) << "EEEE gl::GetGLImplementation()=" << (int)gl::GetGLImplementation();
+  LOG(ERROR) << "EEEE gl::kGLImplementationEGLANGLE=" << gl::kGLImplementationEGLANGLE;
+  CHECK_EQ(gl::GetGLImplementation(), gl::kGLImplementationEGLANGLE)
       << "Running WebGL through passthrough command decoder without ANGLE's "
       << "validation is a security risk";
   DCHECK(context->IsCurrent(surface.get()));

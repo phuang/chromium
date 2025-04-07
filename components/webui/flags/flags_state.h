@@ -48,8 +48,9 @@ enum {
   kOsIos = 1 << 6,
   kOsFuchsia = 1 << 7,
   kOsWebView = 1 << 8,
+  kOsOHOS = 1 << 9,
 
-  kDeprecated = 1 << 9,
+  kDeprecated = 1 << 10,
 
   // Flags marked with this are internal to the flags system. Never set this on
   // a manually-added flag.

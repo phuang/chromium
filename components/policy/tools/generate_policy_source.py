@@ -37,6 +37,7 @@ PLATFORM_STRINGS = {
     'webview_android': ['android'],
     'ios': ['ios'],
     'fuchsia': ['fuchsia'],
+    'android': ['ohos'],
     'chrome.win': ['win'],
     'chrome.linux': ['linux'],
     'chrome.mac': ['mac'],

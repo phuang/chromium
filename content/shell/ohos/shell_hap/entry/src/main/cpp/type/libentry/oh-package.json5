@@ -1,0 +1,6 @@
+{
+  "name": "libcontent_shell_content_view.so",
+  "types": "./tetrahedron_napi.d.ts",
+  "version": "",
+  "description": "Please describe the basic information."
+}

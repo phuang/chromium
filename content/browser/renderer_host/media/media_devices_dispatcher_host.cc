@@ -45,7 +45,7 @@
 #include "third_party/blink/public/common/mediastream/media_stream_request.h"
 #include "url/origin.h"
 
-#if !BUILDFLAG(IS_ANDROID)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
 #include "content/browser/media/capture/sub_capture_target_id_web_contents_helper.h"
 #endif
 
@@ -308,7 +308,7 @@ void MediaDevicesDispatcherHost::SetCaptureHandleConfig(
           render_frame_host_id_, std::move(config)));
 }
 
-#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS)
+#if !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_IOS) && !BUILDFLAG(IS_OHOS)
 void MediaDevicesDispatcherHost::CloseFocusWindowOfOpportunity(
     const std::string& label) {
   media_stream_manager_->SetCapturedDisplaySurfaceFocus(

@@ -1,0 +1,27 @@
+# Copyright 2024 The Chromium Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# This file contains common system config stuff for the OHOS build.
+import("//build/config/clang/clang.gni")
+import("//build/config/dcheck_always_on.gni")
+import("//build/config/sanitizers/sanitizers.gni")
+import("//build/toolchain/siso.gni")
+import("//build_overrides/build.gni")
+import("abi.gni")
+assert(is_ohos)
+
+assert(host_cpu == "x64" || host_cpu == "arm64",
+       "Need ohos toolchain support for your build CPU: ${host_cpu}")
+assert(host_os == "linux", "Need ohos toolchain support for your build OS")
+
+declare_args() {
+  ohos_native_root = "//third_party/ohos_sdk/native"
+  ohos_llvm_root = ""
+}
+
+ohos_sysroot = "${ohos_native_root}/sysroot"
+if (ohos_llvm_root == "") {
+  ohos_llvm_root = "${ohos_native_root}/llvm"
+}
+ohos_native_root = rebase_path(ohos_native_root, root_build_dir)

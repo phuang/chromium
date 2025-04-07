@@ -39,6 +39,8 @@ const char kOs[] =
     "fuchsia";
 #elif BUILDFLAG(IS_OPENBSD)
     "openbsd";
+#elif BUILDFLAG(IS_OHOS)
+    "ohos";
 #else
 #error "unknown os"
 #endif
