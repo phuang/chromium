@@ -342,8 +342,9 @@ OverlayCandidate::CandidateStatus OverlayCandidateFactory::FromDrawQuadResource(
     return CandidateStatus::kFailNotOverlay;
   }
 
-  if (quad->visible_rect.IsEmpty())
+  if (quad->visible_rect.IsEmpty()) {
     return CandidateStatus::kFailVisible;
+  }
 
   if (resource_id != kInvalidResourceId) {
     candidate.format = resource_provider_->GetSharedImageFormat(resource_id);
@@ -354,7 +355,7 @@ OverlayCandidate::CandidateStatus OverlayCandidateFactory::FromDrawQuadResource(
 
     if (!context_.is_delegated_context &&
         !base::Contains(kOverlayFormats, candidate.format)) {
-      return CandidateStatus::kFailBufferFormat;
+          return CandidateStatus::kFailBufferFormat;
     }
   }
 
@@ -365,7 +366,7 @@ OverlayCandidate::CandidateStatus OverlayCandidateFactory::FromDrawQuadResource(
   if (auto status =
           ApplyTransform(sqs->quad_to_target_transform, y_flipped, candidate);
       status != CandidateStatus::kSuccess) {
-    return status;
+        return status;
   }
 
   candidate.is_opaque =
@@ -637,8 +638,9 @@ OverlayCandidate::CandidateStatus OverlayCandidateFactory::FromTextureQuad(
     return CandidateStatus::kFailRoundedDisplayMasksNotSupported;
   }
 
-  if (quad->nearest_neighbor)
+  if (quad->nearest_neighbor) {
     return CandidateStatus::kFailNearFilter;
+  }
 
   if (context_.is_delegated_context) {
     // Always convey |background_color| even when transparent. This allows for

@@ -373,7 +373,7 @@ viz_component("service") {
     }
   }
 
-  if (is_android || use_ozone) {
+  if (is_android || use_ozone || is_ohos) {
     sources += [
       "display/overlay_combination_cache.cc",
       "display/overlay_combination_cache.h",
@@ -492,6 +492,19 @@ viz_component("service") {
       "display_embedder/output_presenter_fuchsia.cc",
       "display_embedder/output_presenter_fuchsia.h",
     ]
+  }
+
+  if (is_ohos) {
+    sources += [
+      "display_embedder/output_presenter_ohos.cc",
+      "display_embedder/output_presenter_ohos.h",
+      "display/overlay_processor_ohos.cc",
+      "display/overlay_processor_ohos.h",
+    ]
+
+    include_dirs = [ "//ohos/include" ]
+    lib_dirs = [ "//ohos/lib" ]
+    libs = [ "surface_control" ]
   }
 
   if (use_vaapi) {

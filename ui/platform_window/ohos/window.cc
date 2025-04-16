@@ -268,10 +268,7 @@ void Window::OnSurfaceCreated(OH_NativeXComponent* native_xcomponent,
   DCHECK(!window_);
   window_ = static_cast<OHNativeWindow*>(window);
   UpdateWindowBounds();
-  gfx::AcceleratedWidget surface_handle = gfx::kNullAcceleratedWidget;
-  int32_t result = OH_NativeWindow_GetSurfaceId(window_, &surface_handle);
-  DCHECK_EQ(result, 0);
-  delegate_->OnAcceleratedWidgetAvailable(surface_handle);
+  delegate_->OnAcceleratedWidgetAvailable(window_);
   delegate_->OnBoundsChanged({true});
 }
 

@@ -10,8 +10,7 @@ namespace ui {
 class ScopedOHNativeWindow {
  public:
   ScopedOHNativeWindow();
-  explicit ScopedOHNativeWindow(gfx::AcceleratedWidget accelerated_widget);
-  ScopedOHNativeWindow(OHNativeWindow* native_window);
+  explicit ScopedOHNativeWindow(OHNativeWindow* native_window);
 
   ~ScopedOHNativeWindow();
 

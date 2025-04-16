@@ -117,6 +117,7 @@ SkiaOutputSurfaceDependencyImpl::CreatePresenter() {
   auto presenter = gpu::ImageTransportSurface::CreatePresenter(
       context_state->display(), GetGpuDriverBugWorkarounds(),
       GetGpuFeatureInfo(), surface_handle_, dawn_context_provider);
+  LOG(ERROR) << "presenter=" << presenter.get();
   if (presenter &&
       base::FeatureList::IsEnabled(features::kHandleOverlaysSwapFailure)) {
     presenter->SetNotifyNonSimpleOverlayFailure();

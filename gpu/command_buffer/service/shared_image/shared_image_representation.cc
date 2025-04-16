@@ -815,6 +815,10 @@ std::unique_ptr<base::android::ScopedHardwareBufferFenceSync>
 OverlayImageRepresentation::GetAHardwareBufferFenceSync() {
   NOTREACHED();
 }
+#elif BUILDFLAG(IS_OHOS)
+OH_NativeBuffer* OverlayImageRepresentation::GetOHNativeBuffer() {
+  NOTREACHED();
+}
 #elif BUILDFLAG(IS_OZONE)
 scoped_refptr<gfx::NativePixmap> OverlayImageRepresentation::GetNativePixmap() {
   return backing()->GetNativePixmap();

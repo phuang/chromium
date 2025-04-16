@@ -34,15 +34,19 @@
 #include "url/gurl.h"
 
 #define ENABLE_GRAPHITE 1
-// #define URL "https://webkit.org/blog-files/3d-transforms/poster-circle.html"
-// #define URL "https://webkit.org/demos/webgpu/"
-// #define URL "https://webglsamples.org/"
-// #define URL "https://www.taobao.com/"
-// #define URL "https://browserbench.org/MotionMark1.3/"
-// #define URL "https://browserbench.org/MotionMark1.3/developer.html"
-// #define URL "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video"
-#define URL "https://www.youtube.com/watch?v=gsiAYjyiIBM"
-// #define URL "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4"
+
+// const char kURL[] = "https://webkit.org/blog-files/3d-transforms/poster-circle.html";
+// const char kURL[] = "https://webkit.org/demos/webgpu/";
+// const char kURL[] = "https://webglsamples.org/"
+// const char kURL[] = "https://webglsamples.org/aquarium/aquarium.html";
+// const char kURL[] = "https://www.taobao.com/";
+// const char kURL[] = "https://browserbench.org/MotionMark1.3/";
+// const char kURL[] = "https://browserbench.org/MotionMark1.3/developer.html";
+// const char kURL[] = "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video";
+// const char kURL[] = "https://www.youtube.com/watch?v=gsiAYjyiIBM";
+// const char kURL[] = "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v";
+const char kURL[] = "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4";
+// const char kURL[] = "https://webgpu.github.io/webgpu-samples/sample/texturedCube";
 
 namespace content::ohos {
 
@@ -250,7 +254,7 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
       "--enable-skia-graphite",
       "--skia-graphite-backend=dawn-vulkan",
 #endif
-      URL,
+    kURL,
     "--vmodule=shared_image_factory=2"
   };
   params.argv = args;

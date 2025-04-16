@@ -16,7 +16,6 @@
 #ifndef CONTENT_SHELL_OHOS_NAPI_MANAGER_H_
 #define CONTENT_SHELL_OHOS_NAPI_MANAGER_H_
 
-#define NODE_ADDON_API_DISABLE_DEPRECATED
 #include <napi/native_api.h>
 
 #include <string>

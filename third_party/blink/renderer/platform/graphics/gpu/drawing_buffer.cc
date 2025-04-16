@@ -205,8 +205,9 @@ scoped_refptr<DrawingBuffer> DrawingBuffer::Create(
   }
   bool discard_framebuffer_supported =
       extensions_util->SupportsExtension("GL_EXT_discard_framebuffer");
-  if (discard_framebuffer_supported)
+  if (discard_framebuffer_supported) {
     extensions_util->EnsureExtensionEnabled("GL_EXT_discard_framebuffer");
+  }
 
   bool texture_storage_enabled =
       extensions_util->IsExtensionEnabled("GL_EXT_texture_storage");
@@ -327,8 +328,9 @@ DrawingBuffer::ContextProviderWeakPtr() {
 }
 
 void DrawingBuffer::SetIsInHiddenPage(bool hidden) {
-  if (is_hidden_ == hidden)
+  if (is_hidden_ == hidden) {
     return;
+  }
   is_hidden_ = hidden;
   if (is_hidden_) {
     recycled_color_buffer_queue_.clear();
@@ -497,14 +499,16 @@ DrawingBuffer::CheckForDestructionAndChangeAndResolveIfNeeded(
   // switching scenarios, it seems that this can racily be called for
   // backgrounded tabs.
 
-  if (!contents_changed_)
+  if (!contents_changed_) {
     return kContentsUnchanged;
+  }
 
   // If the context is lost, we don't know if we should be producing GPU or
   // software frames, until we get a new context, since the compositor will
   // be trying to get a new context and may change modes.
-  if (gl_->GetGraphicsResetStatusKHR() != GL_NO_ERROR)
+  if (gl_->GetGraphicsResetStatusKHR() != GL_NO_ERROR) {
     return kDestroyedOrLost;
+  }
 
   TRACE_EVENT0("blink,rail", "DrawingBuffer::prepareMailbox");
 
@@ -524,8 +528,9 @@ DrawingBuffer::GetUnacceleratedStaticBitmapImage() {
   }
 
   SkBitmap bitmap;
-  if (!bitmap.tryAllocN32Pixels(size_.width(), size_.height()))
+  if (!bitmap.tryAllocN32Pixels(size_.width(), size_.height())) {
     return nullptr;
+  }
   ReadFramebufferIntoBitmapPixels(static_cast<uint8_t*>(bitmap.getPixels()));
   auto sk_image = SkImages::RasterFromBitmap(bitmap);
 
@@ -673,8 +678,9 @@ void DrawingBuffer::MailboxReleasedGpu(scoped_refptr<ColorBuffer> color_buffer,
 
   // If the mailbox has been returned by the compositor then it is no
   // longer being presented, and so is no longer the front buffer.
-  if (color_buffer == front_color_buffer_)
+  if (color_buffer == front_color_buffer_) {
     front_color_buffer_ = nullptr;
+  }
 
   if (destruction_in_progress_ || color_buffer->size != size_ ||
       color_buffer->format != color_buffer_format_ ||
@@ -691,8 +697,9 @@ void DrawingBuffer::MailboxReleasedGpu(scoped_refptr<ColorBuffer> color_buffer,
           gpu::SHARED_IMAGE_USAGE_SCANOUT)) {
     cache_limit = 4;
   }
-  while (recycled_color_buffer_queue_.size() >= cache_limit)
+  while (recycled_color_buffer_queue_.size() >= cache_limit) {
     recycled_color_buffer_queue_.TakeLast();
+  }
 
   recycled_color_buffer_queue_.push_front(color_buffer);
 }
@@ -730,12 +737,14 @@ scoped_refptr<StaticBitmapImage> DrawingBuffer::TransferToStaticBitmapImage() {
     // lost. We intentionally leave the transparent black image in legacy color
     // space.
     SkBitmap black_bitmap;
-    if (!black_bitmap.tryAllocN32Pixels(size_.width(), size_.height()))
+    if (!black_bitmap.tryAllocN32Pixels(size_.width(), size_.height())) {
       return nullptr;
+    }
     black_bitmap.eraseARGB(0, 0, 0, 0);
     sk_sp<SkImage> black_image = SkImages::RasterFromBitmap(black_bitmap);
-    if (!black_image)
+    if (!black_image) {
       return nullptr;
+    }
     return UnacceleratedStaticBitmapImage::Create(black_image);
   }
 
@@ -955,24 +964,28 @@ bool DrawingBuffer::Initialize(const gfx::Size& size, bool use_multisampling) {
       static_cast<int>(webgl_preferences.msaa_sample_count), max_sample_count);
   eqaa_storage_sample_count_ = webgl_preferences.eqaa_storage_sample_count;
   if (ContextProvider()->GetGpuFeatureInfo().IsWorkaroundEnabled(
-          gpu::USE_EQAA_STORAGE_SAMPLES_2))
+          gpu::USE_EQAA_STORAGE_SAMPLES_2)) {
     eqaa_storage_sample_count_ = 2;
+  }
   if (extensions_util_->SupportsExtension(
-          "GL_AMD_framebuffer_multisample_advanced"))
+          "GL_AMD_framebuffer_multisample_advanced")) {
     has_eqaa_support = true;
+  }
 
   state_restorer_->SetFramebufferBindingDirty();
   gl_->GenFramebuffers(1, &fbo_);
   gl_->BindFramebuffer(GL_FRAMEBUFFER, fbo_);
-  if (opengl_flip_y_extension_)
+  if (opengl_flip_y_extension_) {
     gl_->FramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_FLIP_Y_MESA, 1);
+  }
 
   if (WantExplicitResolve()) {
     gl_->GenFramebuffers(1, &multisample_fbo_);
     gl_->BindFramebuffer(GL_FRAMEBUFFER, multisample_fbo_);
     gl_->GenRenderbuffers(1, &multisample_renderbuffer_);
-    if (opengl_flip_y_extension_)
+    if (opengl_flip_y_extension_) {
       gl_->FramebufferParameteri(GL_FRAMEBUFFER, GL_FRAMEBUFFER_FLIP_Y_MESA, 1);
+    }
   }
 
   if (!ResizeFramebufferInternal(requested_format_, requested_alpha_type_,
@@ -1095,8 +1108,9 @@ bool DrawingBuffer::CopyToPlatformTexture(gpu::gles2::GLES2Interface* dst_gl,
                                           const gfx::Point& dst_texture_offset,
                                           const gfx::Rect& src_sub_rectangle,
                                           SourceDrawingBuffer src_buffer) {
-  if (!Extensions3DUtil::CanUseCopyTextureCHROMIUM(dst_texture_target))
+  if (!Extensions3DUtil::CanUseCopyTextureCHROMIUM(dst_texture_target)) {
     return false;
+  }
 
   auto copy_function =
       [&](scoped_refptr<gpu::ClientSharedImage> src_shared_image,
@@ -1164,8 +1178,9 @@ bool DrawingBuffer::CopyToVideoFrame(
   // Ensure that `frame_pool` has not experienced a context loss.
   // https://crbug.com/1269230
   auto* raster_interface = frame_pool->GetRasterInterface();
-  if (!raster_interface)
+  if (!raster_interface) {
     return false;
+  }
   auto copy_function =
       [&](scoped_refptr<gpu::ClientSharedImage> src_shared_image,
           const gpu::SyncToken& produce_sync_token, SkAlphaType src_alpha_type,
@@ -1213,8 +1228,9 @@ cc::Layer* DrawingBuffer::CcLayer() {
 }
 
 void DrawingBuffer::ClearCcLayer() {
-  if (layer_)
+  if (layer_) {
     layer_->ClearTexture();
+  }
 
   gl_->Flush();
 }
@@ -1228,17 +1244,21 @@ void DrawingBuffer::BeginDestruction() {
 
   // If the drawing buffer is being destroyed due to a real context loss these
   // calls will be ineffective, but won't be harmful.
-  if (multisample_fbo_)
+  if (multisample_fbo_) {
     gl_->DeleteFramebuffers(1, &multisample_fbo_);
+  }
 
-  if (fbo_)
+  if (fbo_) {
     gl_->DeleteFramebuffers(1, &fbo_);
+  }
 
-  if (multisample_renderbuffer_)
+  if (multisample_renderbuffer_) {
     gl_->DeleteRenderbuffers(1, &multisample_renderbuffer_);
+  }
 
-  if (depth_stencil_buffer_)
+  if (depth_stencil_buffer_) {
     gl_->DeleteRenderbuffers(1, &depth_stencil_buffer_);
+  }
 
   if (staging_texture_) {
     gl_->DeleteTextures(1, &staging_texture_);
@@ -1328,8 +1348,9 @@ bool DrawingBuffer::ReallocateDefaultFramebuffer(const gfx::Size& size,
     state_restorer_->SetRenderbufferBindingDirty();
     gl_->BindFramebuffer(GL_FRAMEBUFFER,
                          multisample_fbo_ ? multisample_fbo_ : fbo_);
-    if (!depth_stencil_buffer_)
+    if (!depth_stencil_buffer_) {
       gl_->GenRenderbuffers(1, &depth_stencil_buffer_);
+    }
     gl_->BindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer_);
     if (anti_aliasing_mode_ == kAntialiasingModeMSAAImplicitResolve) {
       gl_->RenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, sample_count_,
@@ -1354,8 +1375,10 @@ bool DrawingBuffer::ReallocateDefaultFramebuffer(const gfx::Size& size,
   if (WantExplicitResolve()) {
     state_restorer_->SetFramebufferBindingDirty();
     gl_->BindFramebuffer(GL_FRAMEBUFFER, multisample_fbo_);
-    if (gl_->CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    if (gl_->CheckFramebufferStatus(GL_FRAMEBUFFER) !=
+        GL_FRAMEBUFFER_COMPLETE) {
       return false;
+    }
   }
 
   state_restorer_->SetFramebufferBindingDirty();
@@ -1425,11 +1448,13 @@ gfx::Size DrawingBuffer::AdjustSize(const gfx::Size& desired_size,
 
   // Clamp if the desired size is greater than the maximum texture size for the
   // device.
-  if (adjusted_size.height() > max_texture_size)
+  if (adjusted_size.height() > max_texture_size) {
     adjusted_size.set_height(max_texture_size);
+  }
 
-  if (adjusted_size.width() > max_texture_size)
+  if (adjusted_size.width() > max_texture_size) {
     adjusted_size.set_width(max_texture_size);
+  }
 
   return adjusted_size;
 }
@@ -1517,8 +1542,9 @@ bool DrawingBuffer::ResizeFramebufferInternal(GLenum requested_format,
     recycled_color_buffer_queue_.clear();
     recycled_software_resources_.clear();
 
-    if (adjusted_size.IsEmpty())
+    if (adjusted_size.IsEmpty()) {
       return false;
+    }
   }
 
   ClearNewlyAllocatedFramebuffers(kClearAllFBOs);
@@ -1554,8 +1580,9 @@ bool DrawingBuffer::ResolveAndBindForReadAndDraw() {
     // Note that in rare situations on macOS the drawing buffer can be
     // destroyed during the resolve process, specifically during
     // automatic graphics switching. Guard against this.
-    if (destruction_in_progress_)
+    if (destruction_in_progress_) {
       return false;
+    }
   }
   gl_->BindFramebuffer(GL_FRAMEBUFFER, fbo_);
   return true;
@@ -1697,8 +1724,9 @@ bool DrawingBuffer::ReallocateMultisampleRenderbuffer(const gfx::Size& size) {
                                                 size.height());
   }
 
-  if (gl_->GetError() == GL_OUT_OF_MEMORY)
+  if (gl_->GetError() == GL_OUT_OF_MEMORY) {
     return false;
+  }
 
   gl_->FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_RENDERBUFFER, multisample_renderbuffer_);
@@ -1754,12 +1782,14 @@ sk_sp<SkData> DrawingBuffer::PaintRenderingResultsToDataArray(
 
   base::CheckedNumeric<size_t> num_rows = Size().height();
   base::CheckedNumeric<size_t> data_size = num_rows * row_bytes;
-  if (!data_size.IsValid())
+  if (!data_size.IsValid()) {
     return nullptr;
+  }
 
   sk_sp<SkData> dst_buffer = TryAllocateSkData(data_size.ValueOrDie());
-  if (!dst_buffer)
+  if (!dst_buffer) {
     return nullptr;
+  }
 
   GLuint fbo = 0;
   state_restorer_->SetFramebufferBindingDirty();
@@ -1839,8 +1869,9 @@ void DrawingBuffer::ReadBackFramebuffer(base::span<uint8_t> pixels,
   if (op == WebGLImageConversion::kAlphaDoPremultiply) {
     for (size_t i = 0; i < pixels.size(); i += 4) {
       uint8_t alpha = pixels[i + 3];
-      for (size_t j = 0; j < 3; j++)
+      for (size_t j = 0; j < 3; j++) {
         pixels[i + j] = (pixels[i + j] * alpha + 127) / 255;
+      }
     }
   } else if (op != WebGLImageConversion::kAlphaDoNothing) {
     NOTREACHED();
@@ -1848,8 +1879,9 @@ void DrawingBuffer::ReadBackFramebuffer(base::span<uint8_t> pixels,
 }
 
 void DrawingBuffer::ResolveAndPresentSwapChainIfNeeded() {
-  if (!contents_changed_)
+  if (!contents_changed_) {
     return;
+  }
 
   ScopedStateRestorer scoped_state_restorer(this);
   ResolveIfNeeded(kDiscardAllowed);
@@ -1917,8 +1949,9 @@ scoped_refptr<DrawingBuffer::ColorBuffer> DrawingBuffer::CreateColorBuffer(
                                    gpu::SHARED_IMAGE_USAGE_GLES2_WRITE |
                                    gpu::SHARED_IMAGE_USAGE_DISPLAY_READ |
                                    gpu::SHARED_IMAGE_USAGE_RASTER_READ;
-  if (initial_gpu_ == gl::GpuPreference::kHighPerformance)
+  if (initial_gpu_ == gl::GpuPreference::kHighPerformance) {
     usage |= gpu::SHARED_IMAGE_USAGE_HIGH_PERFORMANCE_GPU;
+  }
   GrSurfaceOrigin origin = opengl_flip_y_extension_
                                ? kTopLeft_GrSurfaceOrigin
                                : kBottomLeft_GrSurfaceOrigin;
@@ -1949,6 +1982,7 @@ scoped_refptr<DrawingBuffer::ColorBuffer> DrawingBuffer::CreateColorBuffer(
     back_buffer_shared_image = std::move(shared_images.back_buffer);
     front_buffer_shared_image = std::move(shared_images.front_buffer);
   } else {
+    LOG(ERROR) << "EEEE DB ShouldUseChromiumImage() = " << ShouldUseChromiumImage();
     // First see if creating a SharedImage that can be used as an overlay is
     // feasible.
     if (ShouldUseChromiumImage()) {
@@ -1976,6 +2010,13 @@ scoped_refptr<DrawingBuffer::ColorBuffer> DrawingBuffer::CreateColorBuffer(
       }
 #endif  // !BUILDFLAG(IS_ANDROID)
 
+      LOG(ERROR) << "EEEE DB color_buffer_format_ = "
+                 << color_buffer_format_.ToString();
+      LOG(ERROR) << "EEEE DB supported = "
+                 << gpu::IsImageFromGpuMemoryBufferFormatSupported(
+                        viz::SinglePlaneSharedImageFormatToBufferFormat(
+                            color_buffer_format_),
+                        ContextProvider()->GetCapabilities());
       if (gpu::IsImageFromGpuMemoryBufferFormatSupported(
               viz::SinglePlaneSharedImageFormatToBufferFormat(
                   color_buffer_format_),
@@ -2123,25 +2164,32 @@ DrawingBuffer::ScopedStateRestorer::~ScopedStateRestorer() {
   DCHECK_EQ(drawing_buffer_->state_restorer_, this);
   drawing_buffer_->state_restorer_ = previous_state_restorer_;
   Client* client = drawing_buffer_->client_;
-  if (!client)
+  if (!client) {
     return;
+  }
 
   if (clear_state_dirty_) {
     client->DrawingBufferClientRestoreScissorTest();
     client->DrawingBufferClientRestoreMaskAndClearValues();
   }
-  if (pixel_pack_parameters_dirty_)
+  if (pixel_pack_parameters_dirty_) {
     client->DrawingBufferClientRestorePixelPackParameters();
-  if (texture_binding_dirty_)
+  }
+  if (texture_binding_dirty_) {
     client->DrawingBufferClientRestoreTexture2DBinding();
-  if (renderbuffer_binding_dirty_)
+  }
+  if (renderbuffer_binding_dirty_) {
     client->DrawingBufferClientRestoreRenderbufferBinding();
-  if (framebuffer_binding_dirty_)
+  }
+  if (framebuffer_binding_dirty_) {
     client->DrawingBufferClientRestoreFramebufferBinding();
-  if (pixel_unpack_buffer_binding_dirty_)
+  }
+  if (pixel_unpack_buffer_binding_dirty_) {
     client->DrawingBufferClientRestorePixelUnpackBufferBinding();
-  if (pixel_pack_buffer_binding_dirty_)
+  }
+  if (pixel_pack_buffer_binding_dirty_) {
     client->DrawingBufferClientRestorePixelPackBufferBinding();
+  }
   client->DrawingBufferClientRestorePixelLocalStorage();
 }
 

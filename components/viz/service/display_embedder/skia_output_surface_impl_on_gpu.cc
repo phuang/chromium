@@ -136,6 +136,10 @@
 #include "components/viz/service/display_embedder/output_presenter_fuchsia.h"
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+#include "components/viz/service/display_embedder/output_presenter_ohos.h"
+#endif
+
 namespace viz {
 
 namespace {
@@ -2166,13 +2170,26 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForDawn() {
     output_device_ = std::move(output_device);
   }
   return true;
+#elif BUILDFLAG(IS_OHOS)
+  if (auto output_presenter = OutputPresenterOHOS::Create(dependency_.get())) {
+    output_device_ = std::make_unique<SkiaOutputDeviceBufferQueue>(
+        std::move(output_presenter), dependency_,
+        shared_image_representation_factory_.get(),
+        shared_gpu_deps_->memory_tracker(), GetDidSwapBuffersCompleteCallback(),
+        GetReleaseOverlaysCallback());
+  } else {
+    output_device_ = SkiaOutputDeviceDawn::Create(
+        context_state_, gfx::SurfaceOrigin::kTopLeft,
+        dependency_->GetSurfaceHandle(), shared_gpu_deps_->memory_tracker(),
+        GetDidSwapBuffersCompleteCallback());
+  }
+  return !!output_device_;
 
-#elif BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID) || \
-    BUILDFLAG(IS_CHROMEOS) || BUILDFLAG(IS_OHOS)
+#elif BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS)
   scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
   presenter_ = presenter.get();
 
-#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
+#if BUILDFLAG(IS_ANDROID)
   if (!presenter_) {
     output_device_ = SkiaOutputDeviceDawn::Create(
         context_state_, gfx::SurfaceOrigin::kTopLeft,

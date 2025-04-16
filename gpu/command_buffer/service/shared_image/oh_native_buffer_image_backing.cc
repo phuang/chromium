@@ -397,12 +397,51 @@ OHNativeBufferImageBacking::ProduceSkiaGanesh(
                                            this, tracker);
 }
 
+class OHNativeBufferImageRepresentation : public OverlayImageRepresentation {
+ public:
+  OHNativeBufferImageRepresentation(SharedImageManager* manager,
+                                    SharedImageBacking* backing,
+                                    MemoryTypeTracker* tracker)
+      : OverlayImageRepresentation(manager, backing, tracker) {}
+
+  ~OHNativeBufferImageRepresentation() override { EndReadAccess({}); }
+
+ private:
+  OHNativeBufferImageBacking* ohnb_backing() {
+    return static_cast<OHNativeBufferImageBacking*>(backing());
+  }
+
+  bool BeginReadAccess(gfx::GpuFenceHandle& acquire_fence) override {
+    base::ScopedFD fd_to_wait_on;
+    if (!ohnb_backing()->BeginRead(this, &fd_to_wait_on)) {
+      return false;
+    }
+
+    acquire_fence.Adopt(std::move(fd_to_wait_on));
+    is_reading_ = true;
+    return true;
+  }
+
+  void EndReadAccess(gfx::GpuFenceHandle release_fence) override {
+    if (is_reading_) {
+      ohnb_backing()->EndRead(this, release_fence.Release());
+      is_reading_ = false;
+    }
+  }
+
+  OH_NativeBuffer* GetOHNativeBuffer() override {
+    return ohnb_backing()->GetBuffer().buffer();
+  }
+
+  bool is_reading_ = false;
+};
+
 std::unique_ptr<OverlayImageRepresentation>
 OHNativeBufferImageBacking::ProduceOverlay(SharedImageManager* manager,
                                            MemoryTypeTracker* tracker) {
   AutoLock auto_lock(this);
-  NOTIMPLEMENTED();
-  return nullptr;
+  return std::make_unique<OHNativeBufferImageRepresentation>(manager, this,
+                                                             tracker);
 }
 
 std::unique_ptr<DawnImageRepresentation>

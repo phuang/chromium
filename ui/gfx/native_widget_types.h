@@ -262,8 +262,8 @@ constexpr AcceleratedWidget kNullAcceleratedWidget = 0;
 using AcceleratedWidget = ANativeWindow*;
 constexpr AcceleratedWidget kNullAcceleratedWidget = nullptr;
 #elif BUILDFLAG(IS_OHOS)
-using AcceleratedWidget = uint64_t;
-constexpr AcceleratedWidget kNullAcceleratedWidget = 0;
+using AcceleratedWidget = OHNativeWindow*;
+constexpr AcceleratedWidget kNullAcceleratedWidget = nullptr;
 #elif BUILDFLAG(IS_OZONE)
 using AcceleratedWidget = uint32_t;
 constexpr AcceleratedWidget kNullAcceleratedWidget = 0;

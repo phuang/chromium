@@ -760,6 +760,9 @@ bool SharedImageManager::SupportsScanoutImages() {
   return supports_overlays_on_ozone_;
 #elif BUILDFLAG(IS_WIN)
   return gl::DirectCompositionTextureSupported();
+#elif BUILDFLAG(IS_OHOS)
+  // To support OHOS SurfaceControl
+  return true;
 #else
   return false;
 #endif

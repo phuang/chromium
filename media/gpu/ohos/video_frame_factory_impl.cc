@@ -190,7 +190,8 @@ void VideoFrameFactoryImpl::CreateVideoFrame_OnImageReady(
 
   frame->metadata().copy_required = video_frame_copy_required;
 
-  frame->metadata().allow_overlay = false;
+  frame->metadata().allow_overlay = true;
+  frame->metadata().wants_promotion_hint = true;
   frame->metadata().texture_owner = is_texture_owner_backed;
   frame->SetReleaseMailboxCB(std::move(record.release_cb));
   std::move(output_cb).Run(std::move(frame));

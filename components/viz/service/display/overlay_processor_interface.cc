@@ -30,6 +30,8 @@
 #include "components/viz/service/display/overlay_processor_ozone.h"
 #include "ui/ozone/public/overlay_manager_ozone.h"
 #include "ui/ozone/public/ozone_platform.h"
+#elif BUILDFLAG(IS_OHOS)
+#include "components/viz/service/display/overlay_processor_ohos.h"
 #endif
 
 namespace viz {
@@ -182,6 +184,8 @@ OverlayProcessorInterface::CreateOverlayProcessor(
 
     return std::make_unique<OverlayProcessorAndroid>(display_controller);
   }
+#elif BUILDFLAG(IS_OHOS)
+  return std::make_unique<OverlayProcessorOHOS>();
 #else  // Default
   return std::make_unique<OverlayProcessorStub>();
 #endif
