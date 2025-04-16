@@ -171,7 +171,7 @@ BASE_FEATURE(kVizFrameSubmissionForWebView,
              "VizFrameSubmissionForWebView",
              base::FEATURE_DISABLED_BY_DEFAULT);
 
-#if BUILDFLAG(IS_FUCHSIA)
+#if BUILDFLAG(IS_FUCHSIA) || BUILDFLAG(IS_OHOS)
 // Enables SkiaOutputDeviceBufferQueue instead of Vulkan swapchain on Fuchsia.
 BASE_FEATURE(kUseSkiaOutputDeviceBufferQueue,
              "UseSkiaOutputDeviceBufferQueue",

@@ -224,8 +224,8 @@ std::vector<wgpu::FeatureName> GetRequiredFeatures(
 
   for (auto feature : kOptionalFeatures) {
     if (!adapter.HasFeature(feature)) {
-      LOG(ERROR) << "EEEE Feature " << dawn::native::GetFeatureInfo(feature)->name
-                   << " is not supported.";
+      // LOG(ERROR) << "EEEE Feature " << dawn::native::GetFeatureInfo(feature)->name
+      //              << " is not supported.";
       continue;
     }
     features.push_back(feature);

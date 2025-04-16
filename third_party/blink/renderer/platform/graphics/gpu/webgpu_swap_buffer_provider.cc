@@ -67,8 +67,9 @@ viz::SharedImageFormat WebGPUSwapBufferProvider::Format() const {
 }
 
 gfx::Size WebGPUSwapBufferProvider::Size() const {
-  if (current_swap_buffer_)
+  if (current_swap_buffer_) {
     return current_swap_buffer_->GetSharedImage()->size();
+  }
   return gfx::Size();
 }
 
@@ -373,8 +374,9 @@ void WebGPUSwapBufferProvider::MailboxReleased(
   // immediately destroy this buffer.
   swap_buffer->SetReleaseSyncToken(sync_token);
 
-  if (lost_resource)
+  if (lost_resource) {
     return;
+  }
 
   if (last_swap_buffer_) {
     swap_buffer_pool_->ReleaseImage(std::move(last_swap_buffer_));
@@ -418,6 +420,8 @@ WebGPUSwapBufferProvider::GetSharedImageUsagesForDisplay() {
     usage |= gpu::SHARED_IMAGE_USAGE_SCANOUT;
   }
   return usage;
+#elif BUILDFLAG(IS_OHOS)
+  return gpu::SHARED_IMAGE_USAGE_SCANOUT | gpu::SHARED_IMAGE_USAGE_DISPLAY_READ;
 #else
   // On other platforms we cannot assume and do not require that a SharedImage
   // created with WebGPU usage be backed by a native buffer.

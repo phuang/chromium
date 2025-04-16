@@ -312,9 +312,9 @@ SharedImageFactory::SharedImageFactory(
     factories_.push_back(std::move(ahb_factory));
   }
 #elif BUILDFLAG(IS_OHOS)
-  // auto ohnb_factory = std::make_unique<OHNativeBufferImageBackingFactory>(
-  //     feature_info.get(), gpu_preferences_);
-  // factories_.push_back(std::move(ohnb_factory));
+  auto ohnb_factory = std::make_unique<OHNativeBufferImageBackingFactory>(
+      feature_info.get(), gpu_preferences_);
+  factories_.push_back(std::move(ohnb_factory));
 #elif BUILDFLAG(IS_OZONE)
   // For all Ozone platforms - Desktop Linux, ChromeOS, Fuchsia, CastOS.
   if (ui::OzonePlatform::GetInstance()

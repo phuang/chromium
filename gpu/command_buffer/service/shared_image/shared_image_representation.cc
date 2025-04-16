@@ -815,6 +815,19 @@ std::unique_ptr<base::android::ScopedHardwareBufferFenceSync>
 OverlayImageRepresentation::GetAHardwareBufferFenceSync() {
   NOTREACHED();
 }
+#elif BUILDFLAG(IS_OHOS)
+OH_NativeBuffer* OverlayImageRepresentation::GetOHNativeBuffer() {
+  NOTREACHED();
+}
+void OverlayImageRepresentation::InUseByWindowServerInc() {
+  NOTREACHED();
+}
+void OverlayImageRepresentation::InUseByWindowServerDec() {
+  NOTREACHED();
+}
+bool OverlayImageRepresentation::IsInUseByWindowServer() const {
+  return false;
+}
 #elif BUILDFLAG(IS_OZONE)
 scoped_refptr<gfx::NativePixmap> OverlayImageRepresentation::GetNativePixmap() {
   return backing()->GetNativePixmap();
@@ -841,6 +854,9 @@ OverlayImageRepresentation::ScopedReadAccess::ScopedReadAccess(
       acquire_fence_(std::move(acquire_fence)) {}
 
 OverlayImageRepresentation::ScopedReadAccess::~ScopedReadAccess() {
+#if BUILDFLAG(IS_OHOS)
+  // CHECK(!IsInUseByWindowServer());
+#endif
   representation()->EndReadAccess(std::move(release_fence_));
 }
 

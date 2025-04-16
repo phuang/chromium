@@ -72,9 +72,9 @@ namespace gpu {
 namespace {
 
 constexpr viz::SharedImageFormat kSupportedFormats[]{
-    viz::SinglePlaneFormat::kRGBA_8888, viz::SinglePlaneFormat::kRGB_565,
-    viz::SinglePlaneFormat::kBGR_565, viz::SinglePlaneFormat::kRGBX_8888,
-    viz::SinglePlaneFormat::kRGBA_1010102};
+    viz::SinglePlaneFormat::kRGBA_8888, viz::SinglePlaneFormat::kBGRA_8888,
+    viz::SinglePlaneFormat::kRGB_565,   viz::SinglePlaneFormat::kBGR_565,
+    viz::SinglePlaneFormat::kRGBX_8888, viz::SinglePlaneFormat::kRGBA_1010102};
 
 // Returns whether the format is supported by OHNativeBuffer.
 // TODO(vikassoni): In future we will need to expose the set of formats and
@@ -95,6 +95,8 @@ OH_NativeBuffer_Format OHNativeBufferFormat(viz::SharedImageFormat format) {
 
   if (format == viz::SinglePlaneFormat::kRGBA_8888) {
     return NATIVEBUFFER_PIXEL_FMT_RGBA_8888;
+  } else if (format == viz::SinglePlaneFormat::kBGRA_8888) {
+    return NATIVEBUFFER_PIXEL_FMT_BGRA_8888;
   } else if (format == viz::SinglePlaneFormat::kRGB_565) {
     return NATIVEBUFFER_PIXEL_FMT_RGB_565;
   } else if (format == viz::SinglePlaneFormat::kBGR_565) {
@@ -112,11 +114,11 @@ constexpr SharedImageUsageSet kSupportedUsage =
     SHARED_IMAGE_USAGE_GLES2_READ | SHARED_IMAGE_USAGE_GLES2_WRITE |
     SHARED_IMAGE_USAGE_GLES2_FOR_RASTER_ONLY |
     SHARED_IMAGE_USAGE_DISPLAY_WRITE | SHARED_IMAGE_USAGE_DISPLAY_READ |
-    SHARED_IMAGE_USAGE_RASTER_READ | SHARED_IMAGE_USAGE_RASTER_WRITE |
+    SHARED_IMAGE_USAGE_SCANOUT | SHARED_IMAGE_USAGE_RASTER_READ |
+    SHARED_IMAGE_USAGE_RASTER_WRITE |
     SHARED_IMAGE_USAGE_RASTER_OVER_GLES2_ONLY |
-    SHARED_IMAGE_USAGE_OOP_RASTERIZATION | SHARED_IMAGE_USAGE_SCANOUT |
-    SHARED_IMAGE_USAGE_WEBGPU_READ | SHARED_IMAGE_USAGE_WEBGPU_WRITE |
-    SHARED_IMAGE_USAGE_VIDEO_DECODE |
+    SHARED_IMAGE_USAGE_OOP_RASTERIZATION | SHARED_IMAGE_USAGE_WEBGPU_READ |
+    SHARED_IMAGE_USAGE_WEBGPU_WRITE | SHARED_IMAGE_USAGE_VIDEO_DECODE |
     SHARED_IMAGE_USAGE_WEBGPU_SWAP_CHAIN_TEXTURE |
     SHARED_IMAGE_USAGE_HIGH_PERFORMANCE_GPU |
     SHARED_IMAGE_USAGE_WEBGPU_STORAGE_TEXTURE |
@@ -275,9 +277,6 @@ OHNativeBufferImageBackingFactory::MakeBacking(
   // flags based on the usage params in the current function call.
   ohnb_config.usage =
       NATIVEBUFFER_USAGE_HW_TEXTURE | NATIVEBUFFER_USAGE_HW_RENDER;
-  if (usage.Has(SHARED_IMAGE_USAGE_SCANOUT)) {
-    LOG(ERROR) << "EEEE SHARED_IMAGE_USAGE_SCANOUT is not implemented";
-  }
 
   // Add WRITE usage as we'll it need to upload data
   if (!pixel_data.empty()) {
@@ -293,7 +292,6 @@ OHNativeBufferImageBackingFactory::MakeBacking(
   base::ScopedFD initial_upload_fd;
   // Upload data if necessary
   if (!pixel_data.empty()) {
-    NOTIMPLEMENTED() << "EEEE ";
     // // Get description about buffer to obtain stride
     // OHNativeBuffer_Desc hwb_info;
     // base::AndroidHardwareBufferCompat::GetInstance().Describe(buffer,

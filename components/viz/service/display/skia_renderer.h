@@ -27,6 +27,13 @@
 #include "ui/gfx/geometry/rect.h"
 #include "ui/latency/latency_info.h"
 
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN) || \
+    BUILDFLAG(IS_OHOS)
+#define ENABLE_DELEGATED_COMPOSITION 1
+#else
+#define ENABLE_DELEGATED_COMPOSITION 0
+#endif
+
 class SkColorFilter;
 
 namespace viz {
@@ -301,7 +308,7 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
     gfx::Rect drawn_rect;
   };
 
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#if ENABLE_DELEGATED_COMPOSITION
   bool CanSkipRenderPassOverlay(
       AggregatedRenderPassId render_pass_id,
       const AggregatedRenderPassDrawQuad* rpdq,
@@ -400,7 +407,7 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
   // Specific for SkDDL.
   const raw_ptr<SkiaOutputSurface> skia_output_surface_;
 
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#if ENABLE_DELEGATED_COMPOSITION
   // Tracks RenderPassDrawQuad and render pass overlay backings that are
   // currently in use and available for re-using via mailboxes.
   // RenderPassBacking.generate_mipmap is not used.
@@ -409,7 +416,7 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
   // order.
   std::vector<RenderPassOverlayParams> in_flight_render_pass_overlay_backings_;
   std::vector<RenderPassOverlayParams> available_render_pass_overlay_backings_;
-#endif  // BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#endif  // ENABLE_DELEGATED_COMPOSITION
 
   // Lock set for resources that are used for the current frame. All resources
   // in this set will be unlocked with a sync token when the frame is done in
@@ -418,7 +425,7 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
   // It is only used with DDL.
   DisplayResourceProviderSkia::LockSetForExternalUse lock_set_for_external_use_;
 
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#if ENABLE_DELEGATED_COMPOSITION
   // A reference to an entry in |in_flight_render_pass_overlay_backings_|. If
   // this is the last reference, the backing will be moved to
   // |available_render_pass_overlay_backings_| on destruction.
@@ -448,15 +455,15 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
     // The mailbox of the |RenderPassOverlayParams|'s backing.
     gpu::Mailbox mailbox_;
   };
-#endif  // BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#endif  // ENABLE_DELEGATED_COMPOSITION
 
   struct OverlayLock {
     OverlayLock(DisplayResourceProvider* resource_provider,
                 ResourceId resource_id);
 
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#if ENABLE_DELEGATED_COMPOSITION
     OverlayLock(SkiaRenderer* renderer, const gpu::Mailbox& mailbox);
-#endif  // BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#endif  // ENABLE_DELEGATED_COMPOSITION
 
     ~OverlayLock();
 
@@ -467,11 +474,11 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
     OverlayLock& operator=(const OverlayLock&) = delete;
 
     const gpu::Mailbox& mailbox() const {
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#if ENABLE_DELEGATED_COMPOSITION
       if (render_pass_lock.has_value()) {
         return render_pass_lock->mailbox();
       }
-#endif  // BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#endif  // ENABLE_DELEGATED_COMPOSITION
 
       DCHECK(resource_lock.has_value());
       return resource_lock->mailbox();
@@ -500,9 +507,9 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
     std::optional<DisplayResourceProviderSkia::ScopedReadLockSharedImage>
         resource_lock;
 
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#if ENABLE_DELEGATED_COMPOSITION
     std::optional<ScopedInFlightRenderPassOverlayBackingRef> render_pass_lock;
-#endif  // BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_WIN)
+#endif  // ENABLE_DELEGATED_COMPOSITION
   };
 
   // Locks for overlays that are pending for SwapBuffers().
@@ -516,7 +523,7 @@ class VIZ_SERVICE_EXPORT SkiaRenderer : public DirectRenderer {
   base::circular_deque<std::vector<OverlayLock>>
       read_lock_release_fence_overlay_locks_;
 
-#if BUILDFLAG(IS_APPLE)
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OHOS)
   struct OverlayLockHash {
     using is_transparent = void;
     std::size_t operator()(const OverlayLock& o) const;

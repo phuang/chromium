@@ -69,7 +69,7 @@ run:
 	${HDC} shell hilog -b D -T chromium
 	# ${HDC} shell hilog -r
 	${HDC} shell aa start -b ${APP_BUNDLE_NAME} -a EntryAbility
-	${HDC} shell hilog -T chromium,Faultlogger | tee log
+	# ${HDC} shell hilog -T chromium,Faultlogger | tee log
 	# ${HDC} hilog | tee log
 	# ${HDC} shell "hilog -r && hilog -p off && hilog -b F && hilog -b E -T chromium && hilog -b I -T Faultlogger && hilog"
 
@@ -77,6 +77,7 @@ libs .libs.stamp: ${OUT}/libcontent_shell_content_view.so ${OUT}/libtest_trace_p
 	${MKDIR} entry/libs/arm64-v8a
 	cp ${OUT}/libcontent_shell_content_view.so entry/libs/arm64-v8a
 	cp ${OUT}/libtest_trace_processor.so entry/libs/arm64-v8a
+	cp /home/penghuang/sources/helloxcomponent/entry/build/default/intermediates/stripped_native_libs/default/arm64-v8a/libsurface_control.so entry/libs/arm64-v8a
 	touch .libs.stamp
 
 resfile .resfile.stamp:

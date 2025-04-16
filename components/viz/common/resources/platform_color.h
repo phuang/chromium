@@ -15,9 +15,9 @@ class PlatformColor {
  private:
   // Returns the most efficient supported format.
   static SharedImageFormat BestSupportedFormat(bool supports_bgra) {
-    if (supports_bgra && !SK_B32_SHIFT) {
-      return SinglePlaneFormat::kBGRA_8888;
-    }
+    // if (supports_bgra && !SK_B32_SHIFT) {
+    //   return SinglePlaneFormat::kBGRA_8888;
+    // }
 
     return SinglePlaneFormat::kRGBA_8888;
   }

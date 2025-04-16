@@ -20,7 +20,7 @@ import content_view from 'libcontent_shell_content_view.so';
 @Component
 struct Index {
   @State shaftRotation: string = '';
-  private url: string = 'https://webkit.org/demos/webgpu/';
+  private url: string = 'https://amazon.ca';
   private xComponentAttrs : XComponentAttrs = {
     id: 'content_view',
     type: XComponentType.SURFACE,

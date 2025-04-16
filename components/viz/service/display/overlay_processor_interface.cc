@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "base/command_line.h"
 #include "base/memory/ptr_util.h"
 #include "base/metrics/histogram_macros.h"
 #include "build/build_config.h"
@@ -30,6 +31,8 @@
 #include "components/viz/service/display/overlay_processor_ozone.h"
 #include "ui/ozone/public/overlay_manager_ozone.h"
 #include "ui/ozone/public/ozone_platform.h"
+#elif BUILDFLAG(IS_OHOS)
+#include "components/viz/service/display/overlay_processor_ohos.h"
 #endif
 
 namespace viz {
@@ -118,8 +121,9 @@ OverlayProcessorInterface::CreateOverlayProcessor(
   // If we are offscreen, we don't have overlay support.
   // TODO(vasilyt): WebView would have a kNullSurfaceHandle. Make sure when
   // overlay for WebView is enabled, this check still works.
-  if (surface_handle == gpu::kNullSurfaceHandle)
+  if (surface_handle == gpu::kNullSurfaceHandle) {
     return std::make_unique<OverlayProcessorStub>();
+  }
 
 #if BUILDFLAG(IS_APPLE)
   DCHECK(capabilities.supports_surfaceless);
@@ -143,8 +147,9 @@ OverlayProcessorInterface::CreateOverlayProcessor(
 #if !BUILDFLAG(IS_CASTOS)
   // In tests and Ozone/X11, we do not expect surfaceless surface support.
   // For CastOS, we always need OverlayProcessorOzone.
-  if (!capabilities.supports_surfaceless)
+  if (!capabilities.supports_surfaceless) {
     return std::make_unique<OverlayProcessorStub>();
+  }
 #endif  // #if !BUILDFLAG(IS_CASTOS)
 
   std::unique_ptr<OverlayProcessorOzone::PixmapProvider> pixmap_provider;
@@ -177,10 +182,18 @@ OverlayProcessorInterface::CreateOverlayProcessor(
     // native window backed GLSurface, the overlay processing code will
     // incorrectly assume these resources can be overlaid. So we disable all
     // overlay processing for this OutputSurface.
-    if (capabilities.android_surface_control_feature_enabled)
+    if (capabilities.android_surface_control_feature_enabled) {
       return std::make_unique<OverlayProcessorStub>();
+    }
 
     return std::make_unique<OverlayProcessorAndroid>(display_controller);
+  }
+#elif BUILDFLAG(IS_OHOS)
+  if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+          "enable-delegated-compositing")) {
+    return std::make_unique<OverlayProcessorOHOS>();
+  } else {
+    return std::make_unique<OverlayProcessorStub>();
   }
 #else  // Default
   return std::make_unique<OverlayProcessorStub>();

@@ -45,7 +45,7 @@ bool AndroidImageBacking::BeginWrite(base::ScopedFD* fd_to_wait_on) {
   }
   if (!allow_concurrent_read_write() &&
       (!active_readers_.empty() || is_overlay_accessing_)) {
-    LOG(ERROR)
+    LOG(FATAL)
         << "BeginWrite should only be called when there are no other readers";
     return false;
   }

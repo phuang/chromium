@@ -57,6 +57,10 @@ class VulkanImplementation;
 extern "C" typedef struct AHardwareBuffer AHardwareBuffer;
 #endif
 
+#if BUILDFLAG(IS_OHOS)
+extern "C" typedef struct OH_NativeBuffer OH_NativeBuffer;
+#endif
+
 #if BUILDFLAG(IS_WIN)
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -946,6 +950,19 @@ class GPU_GLES2_EXPORT OverlayImageRepresentation
     GetAHardwareBufferFenceSync() {
       return representation()->GetAHardwareBufferFenceSync();
     }
+#elif BUILDFLAG(IS_OHOS)
+    OH_NativeBuffer* GetOHNativeBuffer() {
+      return representation()->GetOHNativeBuffer();
+    }
+    void InUseByWindowServerInc() {
+      representation()->InUseByWindowServerInc();
+    }
+    void InUseByWindowServerDec() {
+      representation()->InUseByWindowServerDec();
+    }
+    bool IsInUseByWindowServer() const {
+      return representation()->IsInUseByWindowServer();
+    }
 #elif BUILDFLAG(IS_OZONE)
     scoped_refptr<gfx::NativePixmap> GetNativePixmap() {
       return representation()->GetNativePixmap();
@@ -999,6 +1016,11 @@ class GPU_GLES2_EXPORT OverlayImageRepresentation
   virtual AHardwareBuffer* GetAHardwareBuffer();
   virtual std::unique_ptr<base::android::ScopedHardwareBufferFenceSync>
   GetAHardwareBufferFenceSync();
+#elif BUILDFLAG(IS_OHOS)
+  virtual OH_NativeBuffer* GetOHNativeBuffer();
+  virtual void InUseByWindowServerInc();
+  virtual void InUseByWindowServerDec();
+  virtual bool IsInUseByWindowServer() const;
 #elif BUILDFLAG(IS_OZONE)
   scoped_refptr<gfx::NativePixmap> GetNativePixmap();
 #elif BUILDFLAG(IS_WIN)

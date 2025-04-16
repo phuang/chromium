@@ -192,7 +192,7 @@ class VIZ_SERVICE_EXPORT OverlayCandidate {
   bool possible_video_fullscreen_letterboxing = false;
 #endif
 
-#if BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_OHOS)
   // Is video using SurfaceView-like architecture. It's currently actually uses
   // `DialogOverlay` in browser instead of actual SurfaceView. But "SurfaceView"
   // is used throughout the code so is used here as well for consistency.

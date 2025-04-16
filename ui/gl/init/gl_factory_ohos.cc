@@ -133,14 +133,9 @@ scoped_refptr<GLSurface> CreateViewGLSurface(GLDisplay* display,
     case kGLImplementationEGLGLES2:
     case kGLImplementationEGLANGLE:
       if (widget != gfx::kNullAcceleratedWidget) {
-        OHNativeWindow* window = nullptr;
-        int32_t result =
-            OH_NativeWindow_CreateNativeWindowFromSurfaceId(widget, &window);
-        DCHECK_EQ(result, 0);
-        DCHECK(window);
         return InitializeGLSurface(new NativeViewGLSurfaceEGL(
             display->GetAs<gl::GLDisplayEGL>(),
-            ui::ScopedOHNativeWindow(window), nullptr));
+            ui::ScopedOHNativeWindow(widget), nullptr));
       } else {
         return InitializeGLSurface(new GLSurfaceStub());
       }

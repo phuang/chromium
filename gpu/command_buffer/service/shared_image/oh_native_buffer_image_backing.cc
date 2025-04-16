@@ -18,9 +18,6 @@
 #include <utility>
 #include <vector>
 
-// #include "base/android/android_hardware_buffer_compat.h"
-// #include "base/android/scoped_hardware_buffer_fence_sync.h"
-// #include "base/android/scoped_hardware_buffer_handle.h"
 #include "base/containers/flat_set.h"
 #include "base/logging.h"
 #include "base/memory/raw_ptr.h"
@@ -397,12 +394,61 @@ OHNativeBufferImageBacking::ProduceSkiaGanesh(
                                            this, tracker);
 }
 
+class OHNativeBufferImageRepresentation : public OverlayImageRepresentation {
+ public:
+  OHNativeBufferImageRepresentation(SharedImageManager* manager,
+                                    SharedImageBacking* backing,
+                                    MemoryTypeTracker* tracker)
+      : OverlayImageRepresentation(manager, backing, tracker) {}
+
+  ~OHNativeBufferImageRepresentation() override { EndReadAccess({}); }
+
+ private:
+  OHNativeBufferImageBacking* ohnb_backing() {
+    return static_cast<OHNativeBufferImageBacking*>(backing());
+  }
+
+  bool BeginReadAccess(gfx::GpuFenceHandle& acquire_fence) override {
+    base::ScopedFD fd_to_wait_on;
+    if (!ohnb_backing()->BeginRead(this, &fd_to_wait_on)) {
+      return false;
+    }
+
+    acquire_fence.Adopt(std::move(fd_to_wait_on));
+    is_reading_ = true;
+    return true;
+  }
+
+  void EndReadAccess(gfx::GpuFenceHandle release_fence) override {
+    if (is_reading_) {
+      ohnb_backing()->EndRead(this, release_fence.Release());
+      is_reading_ = false;
+    }
+  }
+
+  OH_NativeBuffer* GetOHNativeBuffer() override {
+    return ohnb_backing()->GetBuffer().buffer();
+  }
+
+  void InUseByWindowServerInc() override { ++in_use_count_; }
+
+  void InUseByWindowServerDec() override {
+    DCHECK(in_use_count_ != 0);
+    --in_use_count_;
+  }
+
+  bool IsInUseByWindowServer() const override { return in_use_count_ > 0; }
+
+  bool is_reading_ = false;
+  std::atomic<uint32_t> in_use_count_ = 0;
+};
+
 std::unique_ptr<OverlayImageRepresentation>
 OHNativeBufferImageBacking::ProduceOverlay(SharedImageManager* manager,
                                            MemoryTypeTracker* tracker) {
   AutoLock auto_lock(this);
-  NOTIMPLEMENTED();
-  return nullptr;
+  return std::make_unique<OHNativeBufferImageRepresentation>(manager, this,
+                                                             tracker);
 }
 
 std::unique_ptr<DawnImageRepresentation>

@@ -16,8 +16,8 @@
 #include "content/shell/ohos/napi_manager.h"
 
 #include <ace/xcomponent/native_interface_xcomponent.h>
-
 #include <dlfcn.h>
+#include <stdio.h>
 
 #include <cstdint>
 #include <cstdio>
@@ -26,6 +26,7 @@
 #include "base/functional/callback_helpers.h"
 #include "base/logging.h"
 #include "base/message_loop/message_pump_ohos.h"
+#include "base/strings/string_split.h"
 #include "content/public/app/content_main.h"
 #include "content/public/app/content_main_runner.h"
 #include "content/shell/browser/shell.h"
@@ -34,22 +35,88 @@
 #include "url/gurl.h"
 
 #define ENABLE_GRAPHITE 1
-// #define URL "https://webkit.org/blog-files/3d-transforms/poster-circle.html"
-// #define URL "https://webkit.org/demos/webgpu/"
-// #define URL "https://webglsamples.org/"
-// #define URL "https://www.taobao.com/"
-// #define URL "https://browserbench.org/MotionMark1.3/"
-// #define URL "https://browserbench.org/MotionMark1.3/developer.html"
-// #define URL "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video"
-#define URL "https://www.youtube.com/watch?v=gsiAYjyiIBM"
-// #define URL "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4"
 
 namespace content::ohos {
+namespace {
+
+// clang-format off
+// const char* kURLs[] = {
+//     "https://webkit.org/blog-files/3d-transforms/poster-circle.html",
+//     "https://webkit.org/demos/webgpu",
+//     "https://webglsamples.org",
+//     "https://webglsamples.org/aquarium/aquarium.html",
+//     "https://www.taobao.com",
+//     "https://www.amazon.ca",
+//     "https://www.cnn.com",
+//     "https://browserbench.org/MotionMark1.3/",
+//     "https://browserbench.org/MotionMark1.3/developer.html",
+//     "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/video",
+//     "https://www.youtube.com/watch?v=gsiAYjyiIBM",
+//     "https://download.blender.org/peach/bigbuckbunny_movies/BigBuckBunny_640x360.m4v",
+//     "https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/1080/Big_Buck_Bunny_1080_10s_30MB.mp4",
+//     "https://webgpu.github.io/webgpu-samples/sample/texturedCube",
+//     "https://zh.wikipedia.org/wiki/%E5%8D%8E%E4%B8%BA",
+// };
+
+// const char* kArgs[] = {
+//     "content_shell",
+//     "--single-process",
+//     "--no-sandbox",
+//     // Disable v8 jit
+//     // "--jitless",
+//     "--enable-unsafe-webgpu",
+//     // "--force-device-scale-factor=1.5",
+//     // TODO: support video capture on OHOS
+//     "--use-fake-device-for-media-stream",
+// #if (ENABLE_GRAPHITE)
+//     "--enable-skia-graphite",
+//     "--skia-graphite-backend=dawn-vulkan",
+// #endif
+//     // kURLs[0],
+//     // "--vmodule=shared_image_factory=2",
+//     // Enable delegated compositing
+//     // "--enable-delegated-compositing",
+//     // "--enable-delegated-compositing-debugging",
+// };
+// clang-format on
+
+const char kDefaultCommandLine[] =
+    "--enable-delegated-compositing http://www.amazon.ca";
 
 enum class ContextType {
   APP_LIFECYCLE = 0,
   JS_PAGE_LIFECYCLE,
 };
+
+const char kCommandLineParam[] = "chromium.content_shell.commandline";
+
+std::string param_get(const char* name, const char* default_value) {
+  std::string command = "param get ";
+  command += name;
+  FILE* pipe = popen(command.c_str(), "r");
+  if (!pipe) {
+    return default_value;
+  }
+
+  char buffer[128];
+  std::string result;
+  while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+    result.append(buffer);
+  }
+  pclose(pipe);
+
+  // Remote spaces and tabs before and after the string
+  result.erase(0, result.find_first_not_of(" \t\n"));
+  result.erase(result.find_last_not_of(" \t\n") + 1);
+
+  if (result.empty()) {
+    return default_value;
+  }
+
+  return result;
+}
+
+}  // namespace
 
 // static
 NapiManager* NapiManager::GetInstance() {
@@ -222,14 +289,29 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
     return true;
   }
 
-  // void* handle = dlopen("/system/lib64/chipset-pub-sdk/libhitrace_meter.so", RTLD_LAZY);
-  // LOG(ERROR) << "EEEE libhitrace_meter.so handle: " << handle;
-  // using SetTraceDisabledFn = void (*)(bool);
-  // auto* setTraceDisabled = reinterpret_cast<SetTraceDisabledFn>(dlsym(handle, "SetTraceDisabled"));
-  // LOG(ERROR) << "EEEE setTraceDisabled: " << setTraceDisabled;
-  // if (setTraceDisabled) {
-  //   setTraceDisabled(true);
-  // }
+  std::vector<const char*> args = {
+      "content_shell",
+      "--single-process",
+      "--no-sandbox",
+      // Disable v8 jit
+      // "--jitless",
+      "--enable-unsafe-webgpu",
+      // "--force-device-scale-factor=1.5",
+      // TODO: support video capture on OHOS
+      "--use-fake-device-for-media-stream",
+#if (ENABLE_GRAPHITE)
+      "--enable-skia-graphite",
+      "--skia-graphite-backend=dawn-vulkan",
+#endif
+  };
+
+  auto command_line = param_get(kCommandLineParam, kDefaultCommandLine);
+  std::vector<std::string> command_line_args = base::SplitString(
+      command_line, " ", base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
+
+  for (const auto& arg : command_line_args) {
+    args.push_back(arg.c_str());
+  }
 
   base::MessagePumpOHOS::SetNapiEnv(env_);
   content_main_delegate_ =
@@ -237,24 +319,8 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
   content_main_runner_ = ContentMainRunner::Create();
 
   ContentMainParams params(content_main_delegate_.get());
-  const char* args[] = {
-      "content_shell",
-      "--single-process",
-      "--no-sandbox",
-      // "--jitless",
-      "--enable-unsafe-webgpu",
-      // "--force-device-scale-factor=1",
-      // TODO: support video capture on OHOS
-      "--use-fake-device-for-media-stream",
-#if (ENABLE_GRAPHITE)
-      "--enable-skia-graphite",
-      "--skia-graphite-backend=dawn-vulkan",
-#endif
-      URL,
-    "--vmodule=shared_image_factory=2"
-  };
-  params.argv = args;
-  params.argc = std::size(args);
+  params.argv = args.data();
+  params.argc = args.size();
   RunContentProcess(std::move(params), content_main_runner_.get());
 
   DCHECK(!Shell::windows().empty());
@@ -269,13 +335,12 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
 void NapiManager::SetAddressBarURL(const GURL& url) {
   auto controller = controller_.Value();
   if (!controller.IsObject()) {
-    LOG(ERROR) << "EEEE No controller";
     return;
   }
 
   auto callback = controller.Get("onAddressChanged");
   if (!callback.IsFunction()) {
-    LOG(ERROR) << "EEE controller.onAddressChanged is not a function";
+    LOG(ERROR) << "controller.onAddressChanged is not a function";
     return;
   }
 

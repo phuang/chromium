@@ -1,0 +1,5 @@
+.hvigor
+*.hap
+.*.stamp
+shell_hap/AppScope/resources/resfile/*
+shell_hap/entry/libs/*

@@ -92,6 +92,14 @@ class SkiaOutputDeviceBufferQueue::OverlayData {
       return false;
     }
     return scoped_read_access_->IsInUseByWindowServer();
+#elif BUILDFLAG(IS_OHOS)
+    // The root render pass buffers are managed by SkiaRenderer so we don't care
+    // if they're in use by the window server.
+    if (is_root_render_pass_) {
+      return false;
+    }
+    return scoped_read_access_ ? scoped_read_access_->IsInUseByWindowServer()
+                               : false;
 #else
     return false;
 #endif
@@ -182,8 +190,9 @@ SkiaOutputDeviceBufferQueue::SkiaOutputDeviceBufferQueue(
   // This will keep compositing in double buffered mode assuming |buffer_queue|
   // allocates at most one additional buffer.
   base::CommandLine* command_line = base::CommandLine::ForCurrentProcess();
-  if (command_line->HasSwitch(switches::kDoubleBufferCompositing))
+  if (command_line->HasSwitch(switches::kDoubleBufferCompositing)) {
     capabilities_.number_of_buffers = 2;
+  }
   capabilities_.pending_swap_params.max_pending_swaps =
       capabilities_.number_of_buffers - 1;
 #if BUILDFLAG(IS_ANDROID)
@@ -193,7 +202,7 @@ SkiaOutputDeviceBufferQueue::SkiaOutputDeviceBufferQueue(
     if (::features::Use90HzSwapChainCountFor72fps()) {
       capabilities_.pending_swap_params.max_pending_swaps_72hz = 3;
     } else {
-       capabilities_.pending_swap_params.max_pending_swaps_72hz = 2;
+      capabilities_.pending_swap_params.max_pending_swaps_72hz = 2;
     }
     capabilities_.pending_swap_params.max_pending_swaps_90hz = 3;
     capabilities_.pending_swap_params.max_pending_swaps_120hz = 4;
@@ -211,8 +220,9 @@ SkiaOutputDeviceBufferQueue::SkiaOutputDeviceBufferQueue(
 
   presenter_->InitializeCapabilities(&capabilities_);
 
-  if (capabilities_.supports_post_sub_buffer)
+  if (capabilities_.supports_post_sub_buffer) {
     capabilities_.supports_target_damage = true;
+  }
 
 #if BUILDFLAG(IS_MAC)
   presenter_->SetMaxPendingSwaps(
@@ -238,8 +248,9 @@ const SkiaOutputDeviceBufferQueue::OverlayData*
 SkiaOutputDeviceBufferQueue::GetOrCreateOverlayData(const gpu::Mailbox& mailbox,
                                                     bool is_root_render_pass,
                                                     bool* is_existing) {
-  if (is_existing)
+  if (is_existing) {
     *is_existing = false;
+  }
 
   if (mailbox.IsZero()) {
     return nullptr;
@@ -252,8 +263,9 @@ SkiaOutputDeviceBufferQueue::GetOrCreateOverlayData(const gpu::Mailbox& mailbox,
     // replaced by a new frame.
     it->Ref();
     it->OnReuse();
-    if (is_existing)
+    if (is_existing) {
       *is_existing = true;
+    }
     return &*it;
   }
 
@@ -307,7 +319,7 @@ void SkiaOutputDeviceBufferQueue::ScheduleOverlays(
     if (overlay.is_solid_color) {
       DCHECK(overlay.color.has_value());
       DCHECK(capabilities_.supports_non_backed_solid_color_overlays ||
-        capabilities_.supports_single_pixel_buffer);
+             capabilities_.supports_single_pixel_buffer);
       presenter_->ScheduleOverlayPlane(overlay, nullptr);
       continue;
     }
@@ -391,7 +403,7 @@ void SkiaOutputDeviceBufferQueue::DoFinishSwapBuffers(
 
     // macOS needs to signal to SkiaRenderer that render pass overlay resources
     // can be unlocked and returned.
-#if BUILDFLAG(IS_APPLE)
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OHOS)
     // The root render pass buffers are managed by SkiaRenderer so we don't need
     // to explicitly return them via callback.
     if (!overlay.IsRootRenderPass()) {
@@ -459,7 +471,7 @@ void SkiaOutputDeviceBufferQueue::ReleaseOverlays() {
 
     // SkiaRenderer wants to unlock resources for these released overlays as
     // well, so store their mailboxes here.
-#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE)
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_OZONE) || BUILDFLAG(IS_OHOS)
     // The root render pass buffers are managed by SkiaRenderer so we don't need
     // to explicitly return them via callback.
     released_overlays.push_back(overlay.mailbox());
