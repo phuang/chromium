@@ -202,9 +202,15 @@ void OverlayProcessorOHOS::CheckOverlaySupportImpl(
 
 void OverlayProcessorOHOS::AdjustOutputSurfaceOverlay(
     std::optional<OutputSurfaceOverlayPlane>* output_surface_plane) {
+  if (!output_surface_plane->has_value()) {
+    // No output surface plane to adjust.
+    return;
+  }
   // For surface control, we should always have a valid |output_surface_plane|
   // here.
-  DCHECK(output_surface_plane && output_surface_plane->has_value());
+  CHECK(output_surface_plane);
+  CHECK(output_surface_plane->has_value());
+  // DCHECK(output_surface_plane && output_surface_plane->has_value());
 
   OutputSurfaceOverlayPlane& plane = output_surface_plane->value();
   // DCHECK(gfx::OHOS::SupportsColorSpace(plane.color_space))
