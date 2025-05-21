@@ -324,17 +324,117 @@ OHNativeBufferImageBacking::ProduceGLTexture(SharedImageManager* manager,
       manager, this, tracker, std::move(egl_image), std::move(texture));
 }
 
+class OHNativeBufferImageBacking::GLPassthroughRepresentation
+    : public GLTexturePassthroughImageRepresentation {
+ public:
+  GLPassthroughRepresentation(SharedImageManager* manager,
+                              SharedImageBacking* backing,
+                              MemoryTypeTracker* tracker,
+                              gl::ScopedEGLImage egl_image,
+                              scoped_refptr<gles2::TexturePassthrough> texture)
+      : GLTexturePassthroughImageRepresentation(manager, backing, tracker),
+        egl_image_(std::move(egl_image)),
+        texture_(std::move(texture)) {}
+
+  ~GLPassthroughRepresentation() override { EndAccess(); }
+
+  GLPassthroughRepresentation(const GLPassthroughRepresentation&) = delete;
+  GLPassthroughRepresentation& operator=(const GLPassthroughRepresentation&) =
+      delete;
+
+  const scoped_refptr<gles2::TexturePassthrough>& GetTexturePassthrough(
+      int plane_index) override {
+    DCHECK_EQ(plane_index, 0);
+    return texture_;
+  }
+
+  bool BeginAccess(GLenum mode) override {
+    bool read_only_mode = (mode == GL_SHARED_IMAGE_ACCESS_MODE_READ_CHROMIUM);
+    bool read_write_mode =
+        (mode == GL_SHARED_IMAGE_ACCESS_MODE_READWRITE_CHROMIUM);
+    DCHECK(read_only_mode || read_write_mode);
+
+    if (read_only_mode) {
+      base::ScopedFD write_sync_fd;
+      if (!ohnb_backing()->BeginRead(this, &write_sync_fd)) {
+        return false;
+      }
+      if (!gl::InsertEglFenceAndWait(std::move(write_sync_fd))) {
+        return false;
+      }
+    } else {
+      base::ScopedFD sync_fd;
+      if (!ohnb_backing()->BeginWrite(&sync_fd)) {
+        return false;
+      }
+
+      if (!gl::InsertEglFenceAndWait(std::move(sync_fd))) {
+        return false;
+      }
+    }
+
+    if (read_only_mode) {
+      mode_ = RepresentationAccessMode::kRead;
+    } else {
+      mode_ = RepresentationAccessMode::kWrite;
+    }
+
+    return true;
+  }
+
+  void EndAccess() override {
+    if (mode_ == RepresentationAccessMode::kNone) {
+      return;
+    }
+
+    base::ScopedFD sync_fd = gl::CreateEglFenceAndExportFd();
+
+    // Pass this fd to its backing.
+    if (mode_ == RepresentationAccessMode::kRead) {
+      ohnb_backing()->EndRead(this, std::move(sync_fd));
+    } else if (mode_ == RepresentationAccessMode::kWrite) {
+      ohnb_backing()->EndWrite(std::move(sync_fd));
+    }
+
+    mode_ = RepresentationAccessMode::kNone;
+  }
+
+ private:
+  OHNativeBufferImageBacking* ohnb_backing() {
+    return static_cast<OHNativeBufferImageBacking*>(backing());
+  }
+
+  gl::ScopedEGLImage egl_image_;
+  scoped_refptr<gles2::TexturePassthrough> texture_;
+  RepresentationAccessMode mode_ = RepresentationAccessMode::kNone;
+};
+
 std::unique_ptr<GLTexturePassthroughImageRepresentation>
 OHNativeBufferImageBacking::ProduceGLTexturePassthrough(
     SharedImageManager* manager,
     MemoryTypeTracker* tracker) {
-  AutoLock auto_lock(this);
   // Use same texture for all the texture representations generated from same
   // backing.
-  DCHECK(buffer_.is_valid());
-  NOTIMPLEMENTED();
 
-  return nullptr;
+  DCHECK(buffer_.is_valid());
+  auto egl_image = CreateEGLImageFromOHNativeBuffer(buffer_);
+  if (!egl_image.is_valid()) {
+    LOG(ERROR) << "Failed to create EGLImage from OHNativeBuffer";
+    return nullptr;
+  }
+
+  GLFormatDesc gl_format_desc =
+      gl_format_caps_.ToGLFormatDescOverrideHalfFloatType(format(),
+                                                          /*plane_index=*/0);
+  GLuint service_id =
+      CreateAndBindTexture(egl_image.get(), gl_format_desc.target);
+
+  auto texture = base::MakeRefCounted<gles2::TexturePassthrough>(
+      service_id, gl_format_desc.target);
+  texture->SetEstimatedSize(GetEstimatedSize());
+
+  return std::make_unique<GLPassthroughRepresentation>(
+      manager, this, tracker, std::move(egl_image), std::move(texture));
 }
 
 std::unique_ptr<SkiaGraphiteImageRepresentation>
@@ -384,8 +484,6 @@ OHNativeBufferImageBacking::ProduceSkiaGanesh(
   }
 
   if (!gl_representation) {
-    LOG(ERROR) << "EEEE Unable produce gl texture! use_passthrough_="
-               << use_passthrough_;
     return nullptr;
   }
 

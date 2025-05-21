@@ -77,6 +77,7 @@ class OHNativeBufferImageBacking : public AndroidImageBacking {
 
  protected:
   class GLRepresentation;
+  class GLPassthroughRepresentation;
   class DrawRepresentation;
 
   std::unique_ptr<GLTextureImageRepresentation> ProduceGLTexture(
