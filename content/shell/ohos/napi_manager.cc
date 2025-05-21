@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include <fstream>
 #include <string>
 
 #include "base/functional/callback_helpers.h"
@@ -57,62 +58,47 @@ namespace {
 //     "https://webgpu.github.io/webgpu-samples/sample/texturedCube",
 //     "https://zh.wikipedia.org/wiki/%E5%8D%8E%E4%B8%BA",
 // };
-
-// const char* kArgs[] = {
-//     "content_shell",
-//     "--single-process",
-//     "--no-sandbox",
-//     // Disable v8 jit
-//     // "--jitless",
-//     "--enable-unsafe-webgpu",
-//     // "--force-device-scale-factor=1.5",
-//     // TODO: support video capture on OHOS
-//     "--use-fake-device-for-media-stream",
-// #if (ENABLE_GRAPHITE)
-//     "--enable-skia-graphite",
-//     "--skia-graphite-backend=dawn-vulkan",
-// #endif
-//     // kURLs[0],
-//     // "--vmodule=shared_image_factory=2",
-//     // Enable delegated compositing
-//     // "--enable-delegated-compositing",
-//     // "--enable-delegated-compositing-debugging",
-// };
 // clang-format on
-
-const char kDefaultCommandLine[] =
-    "--enable-delegated-compositing http://www.amazon.ca";
 
 enum class ContextType {
   APP_LIFECYCLE = 0,
   JS_PAGE_LIFECYCLE,
 };
 
-const char kCommandLineParam[] = "chromium.content_shell.commandline";
+const char kCommandLinePath[] = "/dev/shm/commandline.txt";
 
-std::string param_get(const char* name, const char* default_value) {
-  std::string command = "param get ";
-  command += name;
-  FILE* pipe = popen(command.c_str(), "r");
-  if (!pipe) {
-    return default_value;
+std::vector<std::string> read_command_line() {
+  std::ifstream file(kCommandLinePath);
+  if (!file.is_open()) {
+    LOG(ERROR) << "Failed to open command line file: " << kCommandLinePath;
+    return {};
   }
 
-  char buffer[128];
-  std::string result;
-  while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
-    result.append(buffer);
+  std::vector<std::string> result;
+  std::string line;
+  while (std::getline(file, line)) {
+    if (!line.empty()) {
+      // Remove characters after '#'
+      size_t pos = line.find('#');
+      if (pos != std::string::npos) {
+        line.erase(pos);
+      }
+      // Remote spaces and tabs before and after the string
+      line.erase(0, line.find_first_not_of(" \t\n"));
+      line.erase(line.find_last_not_of(" \t\n") + 1);
+
+      // Skip empty lines
+      if (line.empty()) {
+        continue;
+      }
+
+      auto args = base::SplitString(line, " \t", base::TRIM_WHITESPACE,
+                                    base::SPLIT_WANT_NONEMPTY);
+      // append args to result
+      result.insert(result.end(), std::make_move_iterator(args.begin()),
+                    std::make_move_iterator(args.end()));
+    }
   }
-  pclose(pipe);
-
-  // Remote spaces and tabs before and after the string
-  result.erase(0, result.find_first_not_of(" \t\n"));
-  result.erase(result.find_last_not_of(" \t\n") + 1);
-
-  if (result.empty()) {
-    return default_value;
-  }
-
   return result;
 }
 
@@ -299,17 +285,10 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
       // "--force-device-scale-factor=1.5",
       // TODO: support video capture on OHOS
       "--use-fake-device-for-media-stream",
-#if (ENABLE_GRAPHITE)
-      "--enable-skia-graphite",
-      "--skia-graphite-backend=dawn-vulkan",
-#endif
   };
 
-  auto command_line = param_get(kCommandLineParam, kDefaultCommandLine);
-  std::vector<std::string> command_line_args = base::SplitString(
-      command_line, " ", base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY);
-
-  for (const auto& arg : command_line_args) {
+  auto param_args = read_command_line();
+  for (const auto& arg : param_args) {
     args.push_back(arg.c_str());
   }
 
