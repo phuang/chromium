@@ -1,0 +1,22 @@
+# /dev/shm/commandline.txt
+
+# Device scale factor 1, 1.2, 1.5 or 2
+--force-device-scale-factor=1
+
+# Enable skia graphite
+--enable-skia-graphite
+--skia-graphite-backend=dawn-vulkan
+
+# Enable delegated compositing
+--enable-delegated-compositing
+
+# Use validating command decoder
+# --use-cmd-decoder=validating
+
+# Use  passthrough command decoder with ANGLE's Vulkan backend
+# ANGLE's GLES backend doesn't work yet.
+--use-cmd-decoder=passthrough
+--enable-features=DefaultANGLEVulkan
+
+# URL
+https://www.amazon.ca
