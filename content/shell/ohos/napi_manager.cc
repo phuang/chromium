@@ -75,6 +75,7 @@ std::vector<std::string> read_command_line() {
   }
 
   std::vector<std::string> result;
+
   std::string line;
   while (std::getline(file, line)) {
     if (!line.empty()) {
@@ -83,11 +84,12 @@ std::vector<std::string> read_command_line() {
       if (pos != std::string::npos) {
         line.erase(pos);
       }
-      // Remote spaces and tabs before and after the string
-      line.erase(0, line.find_first_not_of(" \t\n"));
-      line.erase(line.find_last_not_of(" \t\n") + 1);
 
-      // Skip empty lines
+      // Remote spaces and tabs before and after the string
+      line.erase(0, line.find_first_not_of(" \t\r"));
+      line.erase(line.find_last_not_of(" \t") + 1);
+
+      // skip empty line
       if (line.empty()) {
         continue;
       }
