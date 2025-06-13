@@ -30,9 +30,12 @@
 #include "base/strings/string_split.h"
 #include "content/public/app/content_main.h"
 #include "content/public/app/content_main_runner.h"
+#include "content/public/browser/gpu_data_manager.h"
+#include "content/public/browser/gpu_data_manager_observer.h"
 #include "content/shell/browser/shell.h"
 #include "content/shell/ohos/shell_main_delegate.h"
 #include "content/shell/ohos/web_contents_observer.h"
+#include "gpu/config/gpu_info.h"
 #include "url/gurl.h"
 
 #define ENABLE_GRAPHITE 1
@@ -66,6 +69,7 @@ enum class ContextType {
 };
 
 const char kCommandLinePath[] = "/dev/shm/commandline.txt";
+const char kGPUInfoPath[] = "/dev/shm/gpuinfo.txt";
 
 std::vector<std::string> read_command_line() {
   std::ifstream file(kCommandLinePath);
@@ -105,6 +109,61 @@ std::vector<std::string> read_command_line() {
 }
 
 }  // namespace
+
+class NapiManager::GpuDataManagerObserverImpl
+    : public content::GpuDataManagerObserver {
+ public:
+  GpuDataManagerObserverImpl() {
+    content::GpuDataManager::GetInstance()->AddObserver(this);
+  }
+
+  ~GpuDataManagerObserverImpl() override {
+    content::GpuDataManager::GetInstance()->RemoveObserver(this);
+  }
+
+  void OnGpuInfoUpdate() override {
+    LOG(ERROR) << "EEEE OnGpuInfoUpdate";
+    auto* manager = content::GpuDataManager::GetInstance();
+    auto gpu_info = manager->GetGPUInfo();
+    // auto gpu_feature_info = manager->GetGpuFeatureInfo();
+
+    std::ofstream file(kGPUInfoPath);
+    if (!file.is_open()) {
+      LOG(ERROR) << "Failed to open GPU info file: " << kGPUInfoPath;
+      return;
+    }
+
+    const char* FeatureName[] = {
+        "GPU_FEATURE_TYPE_ACCELERATED_2D_CANVAS",
+        "GPU_FEATURE_TYPE_ACCELERATED_WEBGL",
+        "GPU_FEATURE_TYPE_ACCELERATED_VIDEO_DECODE",
+        "GPU_FEATURE_TYPE_ACCELERATED_VIDEO_ENCODE",
+        "GPU_FEATURE_TYPE_GPU_TILE_RASTERIZATION",
+        "GPU_FEATURE_TYPE_ACCELERATED_WEBGL2",
+        "GPU_FEATURE_TYPE_ANDROID_SURFACE_CONTROL",
+        "GPU_FEATURE_TYPE_ACCELERATED_GL",
+        "GPU_FEATURE_TYPE_VULKAN",
+        "GPU_FEATURE_TYPE_ACCELERATED_WEBGPU",
+        "GPU_FEATURE_TYPE_SKIA_GRAPHITE",
+        "GPU_FEATURE_TYPE_WEBNN",
+    };
+
+    file << "GPU Feature Info:\n";
+    for (size_t i = 0; i < std::size(FeatureName); i++) {
+      bool enabled =
+          manager->GetFeatureStatus(static_cast<gpu::GpuFeatureType>(i)) ==
+          gpu::GpuFeatureStatus::kGpuFeatureStatusEnabled;
+      file << "  " << FeatureName[i] << ": "
+           << (enabled ? "Enabled" : "Disabled") << "\n";
+    }
+
+    file << "GL Info:\n";
+    file << "  Vendor: " << gpu_info.gl_vendor << "\n";
+    file << "  Renderer: " << gpu_info.gl_renderer << "\n";
+    file << "  Version: " << gpu_info.gl_version << "\n";
+    file << "  Extensions: " << gpu_info.gl_extensions << "\n";
+  }
+};
 
 // static
 NapiManager* NapiManager::GetInstance() {
@@ -303,6 +362,9 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
   params.argv = args.data();
   params.argc = args.size();
   RunContentProcess(std::move(params), content_main_runner_.get());
+
+  gpu_data_manager_observer_impl_ =
+      std::make_unique<GpuDataManagerObserverImpl>();
 
   DCHECK(!Shell::windows().empty());
   auto* shell = Shell::windows()[0];

@@ -82,6 +82,9 @@ class NapiManager {
   std::unique_ptr<ContentMainRunner> content_main_runner_;
   std::unique_ptr<WebContentsObserver> web_contents_observer_;
 
+  class GpuDataManagerObserverImpl;
+  std::unique_ptr<GpuDataManagerObserverImpl> gpu_data_manager_observer_impl_;
+
   // Hold a weak reference of the controller
   Napi::Reference<Napi::Object> controller_;
 };

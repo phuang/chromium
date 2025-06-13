@@ -19,4 +19,5 @@
 --enable-features=DefaultANGLEVulkan
 
 # URL
-https://www.amazon.ca
+# https://www.amazon.ca
+https://red.bikeshed.com/
