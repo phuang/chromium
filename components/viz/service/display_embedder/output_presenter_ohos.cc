@@ -5,7 +5,6 @@
 #include "components/viz/service/display_embedder/output_presenter_ohos.h"
 
 #include <native_buffer/native_buffer.h>
-#include <surface_control.h>
 
 #include <algorithm>
 #include <bitset>
@@ -21,6 +20,7 @@
 #include "components/viz/common/features.h"
 #include "components/viz/common/gpu/vulkan_context_provider.h"
 #include "components/viz/service/display_embedder/skia_output_surface_dependency.h"
+#include "components/viz/service/display_embedder/surface_control_api.h"
 #include "gpu/command_buffer/service/external_semaphore.h"
 #include "ui/gfx/geometry/rect_conversions.h"
 #include "ui/gfx/gpu_fence_handle.h"
@@ -29,12 +29,13 @@
 namespace viz {
 namespace {
 
-constexpr uint32_t kBorderWidth = 4;
-constexpr std::array<float, 4> kColorRed = {1.0f, 0.0f, 0.0f, 1.0f};
-constexpr std::array<float, 4> kColorRedTint = {1.0f, 0.0f, 0.0f, 0.3f};
-constexpr std::array<float, 4> kColorBlueTint = {0.0f, 0.0f, 1.0f, 0.3f};
-constexpr std::array<float, 4> kColorGreenTint = {0.0f, 1.0f, 0.0f, 0.3f};
-constexpr std::array<float, 4> kColorTransparent = {0.0f, 0.0f, 0.0f, 0.0f};
+constexpr uint32_t kDebugBorderWidth = 4;
+using Color4f = std::array<float, 4>;
+constexpr Color4f kColorRed = {1.0f, 0.0f, 0.0f, 1.0f};
+constexpr Color4f kColorRedTint = {1.0f, 0.0f, 0.0f, 0.3f};
+constexpr Color4f kColorBlueTint = {0.0f, 0.0f, 1.0f, 0.3f};
+constexpr Color4f kColorGreenTint = {0.0f, 1.0f, 0.0f, 0.3f};
+constexpr Color4f kColorTransparent = {0.0f, 0.0f, 0.0f, 0.0f};
 constexpr float kDepthGap = 50.0f;
 
 bool IsDelegatedCompositingEnabled() {
@@ -52,28 +53,119 @@ bool IsDebugEnabled() {
   return enabled;
 }
 
+gfx::Size GetRotatedSize(const gfx::Size size,
+                         gfx::OverlayTransform transform) {
+  switch (transform) {
+    case gfx::OVERLAY_TRANSFORM_ROTATE_CLOCKWISE_90:
+    case gfx::OVERLAY_TRANSFORM_ROTATE_CLOCKWISE_270:
+    case gfx::OVERLAY_TRANSFORM_FLIP_VERTICAL_CLOCKWISE_90:
+    case gfx::OVERLAY_TRANSFORM_FLIP_VERTICAL_CLOCKWISE_270:
+      return gfx::Size(size.height(), size.width());
+    default:
+      return size;
+  }
+}
+
+int32_t FromGfxOverlayTransform(gfx::OverlayTransform transform) {
+  switch (transform) {
+    case gfx::OVERLAY_TRANSFORM_NONE:
+      return OH_TRANSFORM_ROTATE_NONE;
+    case gfx::OVERLAY_TRANSFORM_ROTATE_CLOCKWISE_90:
+      return OH_TRANSFORM_ROTATE_90;
+    case gfx::OVERLAY_TRANSFORM_ROTATE_CLOCKWISE_180:
+      return OH_TRANSFORM_ROTATE_180;
+    case gfx::OVERLAY_TRANSFORM_ROTATE_CLOCKWISE_270:
+      return OH_TRANSFORM_ROTATE_270;
+    default:
+      NOTREACHED();
+  }
+}
+
 }  // namespace
+
 class OutputPresenterOHOS::SurfaceControl {
  public:
   using ReleaseCallback =
       base::OnceCallback<void(base::ScopedFD release_fence_fd)>;
 
-  explicit SurfaceControl(SurfaceControl* parent) : parent_(parent->surface_) {}
-  explicit SurfaceControl(OHNativeWindow* window) {
-    surface_ = OH_SurfaceControl_FromNativeWindow(window, "root_surface");
+  explicit SurfaceControl(SurfaceControl* parent)
+      : name_("delegate_child"), parent_(parent ? parent->surface_ : nullptr) {}
+  explicit SurfaceControl(OHNativeWindow* window)
+      : name_("delegate_container") {
+    const auto& api = SurfaceControlAPI::GetInstance();
+    surface_ = api.SurfaceControl_FromNativeWindow(window, name_.c_str());
   }
 
   ~SurfaceControl() {
+    DCHECK(destroyed_);
     DCHECK(dirty_bits_.none());
     if (surface_) {
-      OH_SurfaceControl_Release(surface_);
+      const auto& api = SurfaceControlAPI::GetInstance();
+      api.SurfaceControl_Release(surface_);
     }
   }
 
-  void SetSurface(OH_SurfaceControl* surface) {
+  void Destroy(OH_SurfaceTransaction* transaction) {
+    DCHECK(!destroyed_);
+    destroyed_ = true;
+    const auto& api = SurfaceControlAPI::GetInstance();
+    api.SurfaceTransaction_Reparent(transaction, surface_, nullptr);
+    api.SurfaceTransaction_SetVisibility(transaction, surface_, OH_SURFACE_TRANSACTION_VISIBILITY_HIDE);
+  }
+
+  void SetSurface(SurfaceControl* surface) {
     DCHECK(!surface_);
-    surface_ = surface;
-    dirty_bits_.set();
+    surface_ = surface->ReleaseSurface();
+
+    DCHECK(surface->dirty_bits_.none());
+    if (name_ != surface->name_) {
+      dirty_bits_.set(kName);
+    }
+    if (z_order_ != surface->z_order_) {
+      dirty_bits_.set(kZOrder);
+    }
+    if (bounds_ != surface->bounds_) {
+      dirty_bits_.set(kBounds);
+    }
+    if (frame_ != surface->frame_) {
+      dirty_bits_.set(kFrame);
+    }
+    if (frame_gravity_ != surface->frame_gravity_) {
+      dirty_bits_.set(kFrameGravity);
+    }
+    if (scale_ != surface->scale_) {
+      dirty_bits_.set(kScale);
+    }
+    if (visible_ != surface->visible_) {
+      dirty_bits_.set(kVisible);
+    }
+    if (translate_ != surface->translate_) {
+      dirty_bits_.set(kTranslate);
+    }
+    if (pivot_ != surface->pivot_) {
+      dirty_bits_.set(kPivot);
+    }
+    if (border_width_ != surface->border_width_) {
+      dirty_bits_.set(kBorderWidth);
+    }
+    if (border_color_ != surface->border_color_) {
+      dirty_bits_.set(kBorderColor);
+    }
+    if (border_style_ != surface->border_style_) {
+      dirty_bits_.set(kBorderStyle);
+    }
+    if (foreground_color_ != surface->foreground_color_) {
+      dirty_bits_.set(kForegroundColor);
+    }
+    if (background_color_ != surface->background_color_) {
+      dirty_bits_.set(kBackgroundColor);
+    }
+    if (alpha_ != surface->alpha_) {
+      dirty_bits_.set(kAlpha);
+    }
+    if (buffer_transform_ != surface->buffer_transform_) {
+      dirty_bits_.set(kBufferTransform);
+    }
   }
 
   OH_SurfaceControl* ReleaseSurface() {
@@ -83,7 +175,12 @@ class OutputPresenterOHOS::SurfaceControl {
     return surface;
   }
 
-  void SetZOrder(int32_t z_order) { z_order_ = z_order; }
+  void SetZOrder(int32_t z_order) {
+    if (z_order_ != z_order) {
+      z_order_ = z_order;
+      dirty_bits_.set(kZOrder);
+    }
+  }
 
   void SetVisible(bool visible) {
     if (visible_ != visible) {
@@ -103,6 +200,13 @@ class OutputPresenterOHOS::SurfaceControl {
     if (frame_ != frame) {
       frame_ = frame;
       dirty_bits_.set(kFrame);
+    }
+  }
+
+  void SetFrameGravity(int32_t frame_gravity) {
+    if (frame_gravity_ != frame_gravity) {
+      frame_gravity_ = frame_gravity;
+      dirty_bits_.set(kFrameGravity);
     }
   }
 
@@ -158,6 +262,13 @@ class OutputPresenterOHOS::SurfaceControl {
     }
   }
 
+  void SetBackgroundColor(const std::array<float, 4>& color) {
+    if (background_color_ != color) {
+      background_color_ = color;
+      dirty_bits_.set(kBackgroundColor);
+    }
+  }
+
   void SetAlpha(float alpha) {
     if (alpha_ != alpha) {
       alpha_ = alpha;
@@ -178,64 +289,101 @@ class OutputPresenterOHOS::SurfaceControl {
     dirty_bits_.set(kBuffer);
   }
 
+  void SetBufferTransform(int32_t transform) {
+    if (buffer_transform_ != transform) {
+      buffer_transform_ = transform;
+      dirty_bits_.set(kBufferTransform);
+    }
+  }
+
   void Sync(OH_SurfaceTransaction* transaction) {
+    DCHECK(!destroyed_);
+    const auto& api = SurfaceControlAPI::GetInstance();
+
     if (!surface_) {
-      surface_ = OH_SurfaceControl_Create("child_surface");
-      OH_SurfaceTransaction_Reparent(transaction, surface_, parent_);
-      OH_SurfaceTransaction_SetVisibility(
-          transaction, surface_, OH_SURFACE_TRANSACTION_VISIBILITY_SHOW);
+      surface_ = api.SurfaceControl_Create(name_.c_str());
+      api.SurfaceTransaction_SetHardwareEnableHint(transaction, surface_, true);
+      api.SurfaceTransaction_Reparent(transaction, surface_, parent_);
+      api.SurfaceTransaction_SetVisibility(
+          transaction, surface_,
+          visible_ ? OH_SURFACE_TRANSACTION_VISIBILITY_SHOW
+                   : OH_SURFACE_TRANSACTION_VISIBILITY_HIDE);
+      api.SurfaceTransaction_SetZOrder(transaction, surface_, z_order_);
+      dirty_bits_.reset(kVisible);
+      dirty_bits_.reset(kName);
+      dirty_bits_.reset(kZOrder);
     }
 
-    // Always set zorder
-    OH_SurfaceTransaction_SetZOrder(transaction, surface_, z_order_);
-
+    if (dirty_bits_.test(kName)) {
+      api.SurfaceTransaction_SetName(transaction, surface_, name_.c_str());
+    }
+    if (dirty_bits_.test(kVisible)) {
+      api.SurfaceTransaction_SetVisibility(
+          transaction, surface_,
+          visible_ ? OH_SURFACE_TRANSACTION_VISIBILITY_SHOW
+                   : OH_SURFACE_TRANSACTION_VISIBILITY_HIDE);
+    }
+    if (dirty_bits_.test(kZOrder)) {
+      api.SurfaceTransaction_SetZOrder(transaction, surface_, z_order_);
+    }
     if (dirty_bits_.test(kBounds)) {
-      OH_SurfaceTransaction_SetBounds(transaction, surface_, bounds_.x(),
-                                      bounds_.y(), bounds_.width(),
-                                      bounds_.height());
+      api.SurfaceTransaction_SetBounds(transaction, surface_, bounds_.x(),
+                                       bounds_.y(), bounds_.width(),
+                                       bounds_.height());
     }
 
     if (dirty_bits_.test(kFrame)) {
-      OH_SurfaceTransaction_SetFrame(transaction, surface_, frame_.x(),
-                                     frame_.y(), frame_.width(),
-                                     frame_.height());
+      api.SurfaceTransaction_SetFrame(transaction, surface_, frame_.x(),
+                                      frame_.y(), frame_.width(),
+                                      frame_.height());
     }
-
+    if (dirty_bits_.test(kFrameGravity)) {
+      api.SurfaceTransaction_SetFrameGravity(transaction, surface_,
+                                             frame_gravity_);
+    }
     if (dirty_bits_.test(kScale)) {
-      OH_SurfaceTransaction_SetScale(transaction, surface_, scale_[0],
-                                     scale_[1], 1.0);
+      api.SurfaceTransaction_SetScale(transaction, surface_, scale_[0],
+                                      scale_[1], 1.0);
     }
     if (dirty_bits_.test(kTranslate)) {
-      OH_SurfaceTransaction_SetTranslate(transaction, surface_, translate_[0],
-                                         translate_[1], translate_[2]);
+      api.SurfaceTransaction_SetTranslate(transaction, surface_, translate_[0],
+                                          translate_[1], translate_[2]);
     }
-
     if (dirty_bits_.test(kPivot)) {
-      OH_SurfaceTransaction_SetPivot(transaction, surface_, pivot_[0],
-                                     pivot_[1]);
+      api.SurfaceTransaction_SetPivot(transaction, surface_, pivot_[0],
+                                      pivot_[1]);
     }
     if (dirty_bits_.test(kBorderWidth)) {
-      OH_SurfaceTransaction_SetBorderWidth(transaction, surface_, border_width_,
-                                           border_width_, border_width_,
-                                           border_width_);
+      api.SurfaceTransaction_SetBorderWidth(transaction, surface_,
+                                            border_width_, border_width_,
+                                            border_width_, border_width_);
     }
     if (dirty_bits_.test(kBorderColor)) {
-      OH_SurfaceTransaction_SetBorderColor(transaction, surface_,
-                                           border_color_[0], border_color_[1],
-                                           border_color_[2], border_color_[3]);
+      api.SurfaceTransaction_SetBorderColor(transaction, surface_,
+                                            border_color_[0], border_color_[1],
+                                            border_color_[2], border_color_[3]);
     }
     if (dirty_bits_.test(kBorderStyle)) {
-      OH_SurfaceTransaction_SetBorderStyle(transaction, surface_, border_style_,
-                                           border_style_, border_style_,
-                                           border_style_);
+      api.SurfaceTransaction_SetBorderStyle(transaction, surface_,
+                                            border_style_, border_style_,
+                                            border_style_, border_style_);
     }
     if (dirty_bits_.test(kForegroundColor)) {
-      OH_SurfaceTransaction_SetForegroundColor(
+      api.SurfaceTransaction_SetForegroundColor(
           transaction, surface_, foreground_color_[0], foreground_color_[1],
           foreground_color_[2], foreground_color_[3]);
     }
+    if (dirty_bits_.test(kBackgroundColor)) {
+      api.SurfaceTransaction_SetBackgroundColor(
+          transaction, surface_, background_color_[0], background_color_[1],
+          background_color_[2], background_color_[3]);
+    }
     if (dirty_bits_.test(kAlpha)) {
-      OH_SurfaceTransaction_SetBufferAlpha(transaction, surface_, alpha_);
+      api.SurfaceTransaction_SetBufferAlpha(transaction, surface_, alpha_);
+    }
+    if (dirty_bits_.test(kBufferTransform)) {
+      api.SurfaceTransaction_SetBufferTransform(transaction, surface_,
+                                                buffer_transform_);
     }
 
     if (dirty_bits_.test(kBuffer)) {
@@ -243,7 +391,7 @@ class OutputPresenterOHOS::SurfaceControl {
           release_callback_
               ? std::make_unique<ReleaseCallback>(std::move(release_callback_))
               : std::unique_ptr<ReleaseCallback>();
-      OH_SurfaceTransaction_SetBuffer(
+      api.SurfaceTransaction_SetBuffer(
           transaction, surface_, buffer_, fence_fd_.release(),
           context.release(), [](void* context, int32_t release_fence_fd) {
             std::unique_ptr<ReleaseCallback> callback(
@@ -254,7 +402,7 @@ class OutputPresenterOHOS::SurfaceControl {
           });
       OH_Rect rect = {damage_rect_.x(), damage_rect_.y(), damage_rect_.width(),
                       damage_rect_.height()};
-      OH_SurfaceTransaction_SetDamageRegion(transaction, surface_, &rect, 1);
+      api.SurfaceTransaction_SetDamageRegion(transaction, surface_, &rect, 1);
     }
     dirty_bits_.reset();
   }
@@ -268,38 +416,49 @@ class OutputPresenterOHOS::SurfaceControl {
 
  private:
   enum DirtyBits {
+    kName,
     kVisible,
     kBounds,
     kFrame,
+    kFrameGravity,
     kScale,
     kTranslate,
     kPivot,
     kBuffer,
+    kBufferTransform,
     kBorderWidth,
     kBorderColor,
     kBorderStyle,
     kForegroundColor,
+    kBackgroundColor,
     kAlpha,
+    kZOrder,
     kCount,
   };
   std::bitset<kCount> dirty_bits_;
 
+  std::string name_;
   OH_SurfaceControl* parent_ = nullptr;
   OH_SurfaceControl* surface_ = nullptr;
+  bool destroyed_ = false;
   int32_t z_order_ = -1;
   bool visible_ = true;
   gfx::RectF bounds_;
   gfx::RectF frame_;
+  int32_t frame_gravity_ = OH_FRAME_GRAVITY_RESIZE;
+
   std::array<float, 2> scale_ = {1.0, 1.0};
   std::array<float, 3> translate_ = {0.0, 0.0, 0.0};
   std::array<float, 2> pivot_ = {0.5, 0.5};
-  std::array<float, 4> border_color_ = {0.0, 0.0, 0.0, 0.0};
+  Color4f border_color_ = {0.0, 0.0, 0.0, 0.0};
   int32_t border_width_ = 0;
   int32_t border_style_ = OH_SURFACE_TRANSACTION_BORDER_STYLE_SOLID;
-  std::array<float, 4> foreground_color_ = {0.0, 0.0, 0.0, 0.0};
+  Color4f foreground_color_ = kColorTransparent;
+  Color4f background_color_ = kColorTransparent;
   float alpha_ = 1.0f;
 
   OH_NativeBuffer* buffer_ = nullptr;
+  int32_t buffer_transform_ = OH_TRANSFORM_ROTATE_NONE;
   base::ScopedFD fence_fd_;
   gfx::Rect damage_rect_;
   ReleaseCallback release_callback_;
@@ -318,7 +477,8 @@ std::unique_ptr<OutputPresenterOHOS> OutputPresenterOHOS::Create(
 OutputPresenterOHOS::OutputPresenterOHOS(SkiaOutputSurfaceDependency* deps)
     : dependency_(deps),
       task_runner_(base::SequencedTaskRunner::GetCurrentDefault()),
-      transaction_(OH_SurfaceTransaction_Create()) {
+      transaction_(
+          SurfaceControlAPI::GetInstance().SurfaceTransaction_Create()) {
   root_surface_ = std::make_unique<SurfaceControl>(
       reinterpret_cast<OHNativeWindow*>(deps->GetSurfaceHandle()));
   auto callback = base::BindRepeating(&OutputPresenterOHOS::OnComplete,
@@ -326,7 +486,7 @@ OutputPresenterOHOS::OutputPresenterOHOS(SkiaOutputSurfaceDependency* deps)
 
   callback = base::BindPostTask(task_runner_, std::move(callback));
   on_complete_callback_ = std::make_unique<OnCompleteCallback>(callback);
-  OH_SurfaceTransaction_SetOnComplete(
+  SurfaceControlAPI::GetInstance().SurfaceTransaction_SetOnComplete(
       transaction_, on_complete_callback_.get(),
       [](void* context, uint64_t timestamp) {
         auto* callback = reinterpret_cast<OnCompleteCallback*>(context);
@@ -335,8 +495,9 @@ OutputPresenterOHOS::OutputPresenterOHOS(SkiaOutputSurfaceDependency* deps)
 }
 
 OutputPresenterOHOS::~OutputPresenterOHOS() {
-  OH_SurfaceTransaction_SetOnComplete(transaction_, nullptr, nullptr);
-  OH_SurfaceTransaction_Delete(transaction_);
+  const auto& api = SurfaceControlAPI::GetInstance();
+  api.SurfaceTransaction_SetOnComplete(transaction_, nullptr, nullptr);
+  api.SurfaceTransaction_Delete(transaction_);
 }
 
 void OutputPresenterOHOS::InitializeCapabilities(
@@ -372,38 +533,44 @@ void OutputPresenterOHOS::Present(SwapCompletionCallback completion_callback,
                const std::unique_ptr<SurfaceControl>& b) {
               return a->z_order() < b->z_order();
             });
-  // LOG(ERROR) << "EEEE pending_frame_.size() = " << pending_frame_.size();
-  // LOG(ERROR) << "EEEE pending_frame_.front()->z_order() = "
-  //            << pending_frame_.front()->z_order();
+
+  int32_t first_surface_z_order =
+      pending_frame_.empty() ? 0 : pending_frame_.front()->z_order();
+
+  // Remove reused item (nullptr) from previous_frame_.
+  auto it =
+      std::remove(previous_frame_.begin(), previous_frame_.end(), nullptr);
+  previous_frame_.erase(it, previous_frame_.end());
 
   for (auto& surface : pending_frame_) {
     // Try reuse OH_SurfaceControl from previous frame.
-    if (!surface->has_surface() && !previous_frame_.empty()) {
-      surface->SetSurface(previous_frame_.front()->ReleaseSurface());
+    if (!surface->has_surface() && !previous_frame_.empty() &&
+        surface->buffer()) {
+      surface->SetSurface(previous_frame_.front().get());
       previous_frame_.pop_front();
+    }
+    if (first_surface_z_order < 0) {
+      // Make sure z order is non-negative.
+      surface->SetZOrder(surface->z_order() - first_surface_z_order);
     }
     // surface->SetTranslate(0.0f, 0.0f, depth);
     surface->Sync(transaction_);
   }
 
   // Clear all unused surface from previous frame.
-  while (!previous_frame_.empty()) {
-    auto surface = std::move(previous_frame_.front());
-    DCHECK(surface->has_surface());
-    previous_frame_.pop_front();
-    surface->SetVisible(false);
-    surface->Sync(transaction_);
-    // Reusing SurfaceControl cause junk
-    // avaliable_surfaces_.push_back(std::move(surface));
+  for (auto& surface : previous_frame_) {
+    surface->Destroy(transaction_);
     surface.reset();
   }
+  previous_frame_.clear();
 
-  OH_SurfaceTransaction_Commit(transaction_);
+  const auto& api = SurfaceControlAPI::GetInstance();
+  api.SurfaceTransaction_Commit(transaction_);
+  std::swap(previous_frame_, pending_frame_);
 
-  previous_frame_ = std::move(pending_frame_);
-
-  completion_callbacks_.emplace(std::move(completion_callback));
-  presentation_callbacks_.emplace(std::move(presentation_callback));
+  completion_datas_.emplace_back(std::move(completion_callback), root_overlay_access_);
+  root_overlay_access_ = nullptr;
+  presentation_callbacks_.emplace_back(std::move(presentation_callback));
 }
 
 void OutputPresenterOHOS::ScheduleOverlayPlane(
@@ -412,164 +579,258 @@ void OutputPresenterOHOS::ScheduleOverlayPlane(
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
 
   const bool is_root = overlay_plane.is_root_render_pass;
-  OH_NativeBuffer* buffer = access ? access->GetOHNativeBuffer() : nullptr;
 
-  // if (is_root) {
-  //   LOG(ERROR) << "EEEE Schedule Root OverlayPlane buffer=" << buffer;
-  // } else {
+  DCHECK_EQ(overlay_plane.is_solid_color, access == nullptr)
+      << "access and is_solid_color don't match";
 
-  // }
-  // LOG(ERROR) << "EEEE Schedule OverlayPlane overlay_plane.is_solid_color="
-  //            << overlay_plane.is_solid_color;
-  // LOG(ERROR) << "EEEE Schedule OverlayPlane overlay_plane.is_opaque = "
-  //            << overlay_plane.is_opaque;
-  if (buffer == nullptr) {
-    // TODO: need to set null buffer to surface
-    return;
-  }
+  // display_rect which is in the display (ArkWeb area) coordinate.
+  const gfx::RectF& display_rect = overlay_plane.display_rect;
 
-  SurfaceControl* surface = nullptr;
-  bool buffer_changed = false;
+  gfx::RectF bounds;
+  gfx::RectF frame;
+  float x_scale = 1.0;
+  float y_scale = 1.0;
 
-  // Find surface with same buffer in previous frame first.
-  auto it = std::find_if(previous_frame_.begin(), previous_frame_.end(),
-                         [&](const std::unique_ptr<SurfaceControl>& surface) {
-                           return surface->buffer() == buffer;
-                         });
-  buffer_changed = (it == previous_frame_.end());
-  if (buffer_changed) {
-    // Find surface with same display rect in previous frame.
-    it = std::find_if(previous_frame_.begin(), previous_frame_.end(),
-                      [&](const std::unique_ptr<SurfaceControl>& surface) {
-                        return surface->bounds() == overlay_plane.display_rect;
-                      });
-  }
-
-  if (it != previous_frame_.end()) {
-    // Reuse surface from previous frame.
-    surface = it->get();
-    pending_frame_.push_back(std::move(*it));
-    previous_frame_.erase(it);
+  if (is_root) {
+    CHECK(!root_overlay_access_);
+    root_overlay_access_ = access;
+    bounds = display_rect;
+    frame = gfx::RectF(GetRotatedSize(size_, transform_));
   } else {
-    if (!avaliable_surfaces_.empty()) {
-      // Reuse a surface from avaliable_surfaces_.
-      pending_frame_.push_back(std::move(avaliable_surfaces_.front()));
-      pending_frame_.back()->SetVisible(true);
-      avaliable_surfaces_.pop_front();
+    if (overlay_plane.is_solid_color) {
+      // For solid color quad.
+      bounds = display_rect;
+      frame = gfx::RectF(display_rect.size());
     } else {
-      pending_frame_.push_back(
+      // TODO: figure out how to use overlay_plane.clip_rect
+      // For texture quad.
+
+      // Buffer size in pixels
+      const gfx::SizeF buffer_size(overlay_plane.resource_size_in_pixels);
+
+      // Caculate source rect based on the uv_rect which coordinates are between
+      // [0.0, 1.0].
+      gfx::RectF src_rect = gfx::ScaleRect(overlay_plane.uv_rect, buffer_size);
+
+      // When the video is being scrolled offscreen DisplayCompositor will crop
+      // it to only visible portion and adjust uv_rect accordingly. When the
+      // video is smaller than the surface is can lead to the crop rect being
+      // less than a pixel in size. This adjusts the crop rect size to at least
+      // 1 pixel as we want to stretch last visible pixel line/column in this
+      // case. Note: We will do it even if crop_rect width/height is exact 0.0f.
+      // In reality this should never happen and there is no way to display
+      // video with empty crop rect, so display compositor should not request
+      // this.
+      if (src_rect.width() == 0) {
+        src_rect.set_width(1);
+        if (src_rect.right() > buffer_size.width()) {
+          src_rect.set_x(buffer_size.width() - 1);
+        }
+      }
+      if (src_rect.height() == 0) {
+        src_rect.set_height(1);
+        if (src_rect.bottom() > buffer_size.height()) {
+          src_rect.set_y(buffer_size.height() - 1);
+        }
+      }
+      // Make sure src_rect is insize of the buffer.
+      src_rect.Intersect(gfx::RectF(buffer_size));
+      DCHECK_GT(src_rect.width(), 0);
+      DCHECK_GT(src_rect.height(), 0);
+
+      // Caculate scales based on src_rect (on the buffer in pixels) and
+      // display_rect (the final rect on screen)
+      x_scale = display_rect.width() / src_rect.width();
+      y_scale = display_rect.height() / src_rect.height();
+
+      bounds = gfx::RectF(display_rect.origin(), src_rect.size());
+      frame = gfx::RectF(
+          display_rect.origin() - src_rect.origin().OffsetFromOrigin(),
+          buffer_size);
+    }
+  }
+
+  OH_NativeBuffer* const buffer =
+      access ? access->GetOHNativeBuffer() : nullptr;
+  SurfaceControl* surface = nullptr;
+
+  if (buffer) {
+    // For plane with buffer.
+    DCHECK(!overlay_plane.is_solid_color);
+
+    // Find surface with same buffer in previous frame first.
+    auto it = std::find_if(previous_frame_.begin(), previous_frame_.end(),
+                           [&](const std::unique_ptr<SurfaceControl>& surface) {
+                             return surface && surface->buffer() == buffer;
+                           });
+    if (it == previous_frame_.end()) {
+      // Find surface with same display rect in previous frame.
+      it = std::find_if(previous_frame_.begin(), previous_frame_.end(),
+                        [&](const std::unique_ptr<SurfaceControl>& surface) {
+                          return surface && surface->bounds() == bounds;
+                        });
+    }
+
+    if (it != previous_frame_.end()) {
+      // Found a surface with same buffer or bounds
+      pending_frame_.push_back(std::move(*it));
+    } else {
+      DCHECK(root_surface_);
+      // Cannot find a surface with same buffer or bounds, so create a new one.
+      pending_frame_.emplace_back(
           std::make_unique<SurfaceControl>(root_surface_.get()));
     }
-  }
-  surface = pending_frame_.back().get();
 
-  if (buffer_changed) {
-    base::ScopedFD fence_fd = access->TakeAcquireFence().Release();
+    surface = pending_frame_.back().get();
 
-    auto callback = base::BindOnce(&OutputPresenterOHOS::OnOverlayReleased,
-                                   weak_factory_.GetWeakPtr(),
-                                   base::UnsafeDangling(access), is_root);
+    if (surface->buffer() != buffer) {
+      base::ScopedFD fence_fd = access->TakeAcquireFence().Release();
+      auto callback = base::BindOnce(&OutputPresenterOHOS::OnOverlayReleased,
+                                     weak_factory_.GetWeakPtr(),
+                                     base::UnsafeDangling(access), is_root);
 
-    // Make sure OnOverlayReleased() is called on GPU main thread.
-    callback = base::BindPostTask(task_runner_, std::move(callback));
+      // Make sure OnOverlayReleased() is called on GPU main thread.
+      callback = base::BindPostTask(task_runner_, std::move(callback));
 
-    if (!is_root) {
+      // We need track buffer which are being used by RS. For root surface,
+      // the buffer is considered being released when OnComplete is called.
       access->InUseByWindowServerInc();
+
+      auto damage_rect = overlay_plane.damage_rect.IsEmpty()
+                             ? gfx::Rect(overlay_plane.resource_size_in_pixels)
+                             : ToEnclosingRect(overlay_plane.damage_rect);
+      surface->SetBuffer(buffer, std::move(fence_fd), damage_rect,
+                         std::move(callback));
     }
-    surface->SetBuffer(buffer, std::move(fence_fd),
-                       ToEnclosingRect(overlay_plane.damage_rect),
-                       std::move(callback));
-    surface->SetAlpha(overlay_plane.opacity);
+  } else {
+    // For a solid plane.
+    DCHECK(overlay_plane.is_solid_color);
+
+    // Find a surface with the same bounds.
+    auto it = std::find_if(previous_frame_.begin(), previous_frame_.end(),
+                           [&](const std::unique_ptr<SurfaceControl>& surface) {
+                             if (!surface) {
+                               return false;
+                             }
+                             if (surface->buffer()) {
+                               return false;
+                             }
+                             return surface->bounds() == bounds;
+                           });
+
+    // If cannot find a surface with the same bounds, try to find a surface for
+    // any solid color plane.
+    if (it == previous_frame_.end()) {
+      it = std::find_if(previous_frame_.begin(), previous_frame_.end(),
+                        [&](const std::unique_ptr<SurfaceControl>& surface) {
+                          return surface && surface->buffer() == nullptr;
+                        });
+    }
+
+    if (it != previous_frame_.end()) {
+      pending_frame_.push_back(std::move(*it));
+    } else {
+      DCHECK(root_surface_);
+      pending_frame_.emplace_back(
+          std::make_unique<SurfaceControl>(root_surface_.get()));
+    }
+
+    surface = pending_frame_.back().get();
+  }
+
+  // Make sure surface is visible.
+  surface->SetVisible(true);
+  surface->SetBounds(bounds);
+  surface->SetFrame(frame);
+  surface->SetScale(x_scale, y_scale);
+  surface->SetZOrder(overlay_plane.plane_z_order);
+  surface->SetAlpha(overlay_plane.opacity);
+
+  // Only root buffer is always in hardware physical direction(portrait), so it
+  // need to be rotated to the current screen logic rotation direction.
+  auto transform =
+      is_root ? FromGfxOverlayTransform(transform_) : OH_TRANSFORM_ROTATE_NONE;
+
+  surface->SetBufferTransform(transform);
+
+  // Set surface's background color.
+  if (overlay_plane.color.has_value()) {
+    surface->SetBackgroundColor(
+        {overlay_plane.color->fR, overlay_plane.color->fG,
+         overlay_plane.color->fB, overlay_plane.color->fA});
   }
 
   if (IsDebugEnabled()) {
-    surface->SetBorderWidth(kBorderWidth);
-    surface->SetBorderColor(kColorRed);
     surface->SetBorderStyle(OH_SURFACE_TRANSACTION_BORDER_STYLE_SOLID);
-    if (overlay_plane.is_opaque) {
-      surface->SetForegroundColor(kColorRedTint);
-    } else {
-      surface->SetForegroundColor(kColorGreenTint);
+    surface->SetBorderWidth(kDebugBorderWidth);
+    surface->SetBorderColor(kColorRed);
+    if (!overlay_plane.is_solid_color) {
+      if (overlay_plane.is_opaque) {
+        surface->SetForegroundColor(kColorRedTint);
+      } else {
+        surface->SetForegroundColor(kColorGreenTint);
+      }
     }
   }
 
-  if (is_root) {
-    surface->SetBounds(gfx::RectF(size_));
-    surface->SetFrame(gfx::RectF(size_));
-    surface->SetZOrder(0);
-  } else {
-    // TODO: figure outt how to use overlay_plane.clip_rect
-
-    gfx::SizeF buffer_size(overlay_plane.resource_size_in_pixels);
-
-    // source rect which is in the source buffer coordinate
-    gfx::RectF src_rect = gfx::ScaleRect(overlay_plane.uv_rect, buffer_size);
-
-    // display rect which is in the display coordinate.
-    const gfx::RectF& display_rect = overlay_plane.display_rect;
-
-    // When the video is being scrolled offscreen DisplayCompositor will crop it
-    // to only visible portion and adjust uv_rect accordingly. When the video
-    // is smaller than the surface is can lead to the crop rect being less than
-    // a pixel in size. This adjusts the crop rect size to at least 1 pixel as
-    // we want to stretch last visible pixel line/column in this case.
-    // Note: We will do it even if crop_rect width/height is exact 0.0f. In
-    // reality this should never happen and there is no way to display video
-    // with empty crop rect, so display compositor should not request this.
-    if (src_rect.width() == 0) {
-      src_rect.set_width(1);
-      if (src_rect.right() > buffer_size.width()) {
-        src_rect.set_x(buffer_size.width() - 1);
-      }
-    }
-    if (src_rect.height() == 0) {
-      src_rect.set_height(1);
-      if (src_rect.bottom() > buffer_size.height()) {
-        src_rect.set_y(buffer_size.height() - 1);
-      }
-    }
-
-    src_rect.Intersect(gfx::RectF(buffer_size));
-    DCHECK(src_rect.width() > 0);
-    DCHECK(src_rect.height() > 0);
-
-    float scale_x = display_rect.width() / src_rect.width();
-    float scale_y = display_rect.height() / src_rect.height();
-    surface->SetPivot(0, 0);
-    surface->SetScale(scale_x, scale_y);
-
-    gfx::RectF bounds_rect = gfx::RectF(display_rect.origin(), src_rect.size());
-
-    gfx::RectF frame_rect = gfx::RectF(display_rect.origin(), buffer_size);
-    frame_rect.Offset(-src_rect.x(), -src_rect.y());
-
-    surface->SetBounds(bounds_rect);
-    surface->SetFrame(frame_rect);
-
-    CHECK_GT(overlay_plane.plane_z_order, 0);
-    surface->SetZOrder(overlay_plane.plane_z_order);
+// TODO it is for debugging, remove it before landing the change.
+#if 0
+  std::stringstream name;
+  name << (is_root ? "delegate_root" : "delegate_child");
+  if (buffer) {
+    name << "_buffer";
   }
+  if (overlay_plane.is_solid_color) {
+    name << "_color";
+  }
+  if (overlay_plane.color.has_value()) {
+    name << "_RGBA(" << overlay_plane.color->fR << ","
+         << overlay_plane.color->fG << "," << overlay_plane.color->fB << ","
+         << overlay_plane.color->fA << ")";
+  }
+  surface->SetName(name.str());
+#endif
 }
 
 void OutputPresenterOHOS::OnComplete(uint64_t timestamp) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
-
-  DCHECK(!completion_callbacks_.empty());
+  DCHECK(!completion_datas_.empty());
   DCHECK(!presentation_callbacks_.empty());
 
+  for (auto& data : completion_datas_) {
+    if (!data.completed) {
+      data.completed = true;
+      TriggerOnCompleteCallbacks();
+      break;
+    }
+  }
+}
+
+void OutputPresenterOHOS::TriggerOnCompleteCallbacks() {
   gfx::SwapCompletionResult swap_result(gfx::SwapResult::SWAP_ACK);
   gfx::PresentationFeedback feedback(base::TimeTicks::Now(), base::TimeDelta(),
                                      /*flags=*/0);
-  task_runner_->PostTask(
-      FROM_HERE, base::BindOnce(std::move(completion_callbacks_.front()),
-                                std::move(swap_result)));
+  // Trigger completed callbacks.
+  for (auto& data : completion_datas_) {
+    // Delay trigger complete callbacks, until data.access is set to nullptr.
+    // TODO(penghuang): remove the logic when RS supports transaction complete
+    // callback natively.
+    if (data.access || !data.completed) {
+      break;
+    }
+    auto completion_callback = std::move(data.callback);
+    completion_datas_.pop_front();
+    task_runner_->PostTask(
+        FROM_HERE,
+        base::BindOnce(std::move(completion_callback), std::move(swap_result)));
 
-  task_runner_->PostTask(
-      FROM_HERE, base::BindOnce(std::move(presentation_callbacks_.front()),
-                                std::move(feedback)));
+    auto presentation_callback = std::move(presentation_callbacks_.front());
+    presentation_callbacks_.pop_front();
 
-  completion_callbacks_.pop();
-  presentation_callbacks_.pop();
+    task_runner_->PostTask(
+        FROM_HERE,
+        base::BindOnce(std::move(presentation_callback), std::move(feedback)));
+  }
 }
 
 void OutputPresenterOHOS::OnOverlayReleased(
@@ -577,15 +838,29 @@ void OutputPresenterOHOS::OnOverlayReleased(
     bool is_root,
     base::ScopedFD release_fence_fd) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
-
-  if (release_fence_fd.is_valid() && !is_root) {
+  // Below code will crash for root overlay.
+  // TODO(penghuang): figure out how to handle it properly
+  // Probably it causes the artifacts on screen.
+  if (release_fence_fd.is_valid()) {
     gfx::GpuFenceHandle fence_handle;
     fence_handle.Adopt(std::move(release_fence_fd));
     access->SetReleaseFence(std::move(fence_handle));
   }
-  if (!is_root) {
-    access->InUseByWindowServerDec();
+
+  // Decrease in use count, when count is 0, viz will return the buffer to
+  // render, so the buffer can be reused or released.
+  access->InUseByWindowServerDec();
+
+  if (is_root) {
+    for (auto& data : completion_datas_) {
+      if (data.access == access) {
+        data.access = nullptr;
+        TriggerOnCompleteCallbacks();
+        break;
+      }
+    }
   }
 }
+
 
 }  // namespace viz

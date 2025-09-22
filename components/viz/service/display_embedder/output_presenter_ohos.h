@@ -49,6 +49,7 @@ class VIZ_SERVICE_EXPORT OutputPresenterOHOS : public OutputPresenter {
   class SurfaceControl;
 
   void OnComplete(uint64_t timestamp);
+  void TriggerOnCompleteCallbacks();
   void OnOverlayReleased(MayBeDangling<ScopedOverlayAccess> access,
                          bool is_root,
                          base::ScopedFD release_fence_fd);
@@ -59,6 +60,7 @@ class VIZ_SERVICE_EXPORT OutputPresenterOHOS : public OutputPresenter {
   OH_SurfaceTransaction* const transaction_ ;
 
   gfx::Size size_;
+  gfx::OverlayTransform transform_ = gfx::OVERLAY_TRANSFORM_NONE;
 
   // The root surface.
   std::unique_ptr<SurfaceControl> root_surface_;
@@ -70,9 +72,16 @@ class VIZ_SERVICE_EXPORT OutputPresenterOHOS : public OutputPresenter {
   // reused.
   std::deque<std::unique_ptr<SurfaceControl>> avaliable_surfaces_;
 
+  ScopedOverlayAccess* root_overlay_access_ = nullptr;
+
   // Callbacks from Present() call.
-  base::queue<SwapCompletionCallback> completion_callbacks_;
-  base::queue<BufferPresentedCallback> presentation_callbacks_;
+  struct CompletionData {
+    SwapCompletionCallback callback;
+    ScopedOverlayAccess* access = nullptr;
+    bool completed = false;
+  };
+  base::circular_deque<CompletionData> completion_datas_;
+  base::circular_deque<BufferPresentedCallback> presentation_callbacks_;
 
   // on complete callback for OH_SurfaceTransaction.
   using OnCompleteCallback = base::RepeatingCallback<void(uint64_t timestamp)>;

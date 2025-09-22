@@ -39,7 +39,8 @@ using display::Display;
 using display::DisplayList;
 
 DisplayManager::DisplayManager(OH_NativeXComponent* native_xcomponent)
-    : native_xcomponent_(native_xcomponent) {
+    : native_xcomponent_(native_xcomponent),
+      task_runner_(base::SingleThreadTaskRunner::GetCurrentDefault()) {
   DCHECK(thread_checker_.CalledOnValidThread());
   auto result =
       OH_NativeDisplayManager_GetDefaultDisplayId(&default_display_id_);
@@ -96,7 +97,6 @@ bool DisplayManager::IsWindowUnderCursor(gfx::NativeWindow window) {
 }
 
 void DisplayManager::UpdateDisplay(uint64_t display_id) {
-  DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK_EQ(default_display_id_, display_id);
   NativeDisplayManager_ErrorCode result;
 
@@ -146,7 +146,9 @@ void DisplayManager::UpdateDisplay(uint64_t display_id) {
   display.SetScaleAndBounds(scaled_density, gfx::Rect(0, 0, width, height));
   display.set_rotation(ToRotation(rotation));
 
-  ProcessDisplayChanged(display, /*is_primary=*/true);
+  task_runner_->PostTask(
+      FROM_HERE, base::BindOnce(&DisplayManager::ProcessDisplayChanged,
+                                weak_ptr_factory_.GetWeakPtr(), display, /*is_primary=*/true));
 }
 
 // static

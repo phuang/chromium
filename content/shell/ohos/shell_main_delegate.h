@@ -19,7 +19,7 @@ class ShellMainDelegate : public content::ShellMainDelegate {
 
  protected:
   // ContentMainDelegate:
-  std::optional<int> PreBrowserMain() override;
+  std::optional<int> PostEarlyInitialization(InvokedIn invoked_in) override;
 
  private:
   OH_NativeXComponent* const native_xcomponent_;

@@ -9,8 +9,8 @@ ShellMainDelegate::ShellMainDelegate(OH_NativeXComponent* native_xcomponent)
 
 ShellMainDelegate::~ShellMainDelegate() = default;
 
-std::optional<int> ShellMainDelegate::PreBrowserMain() {
-  auto ret = Base::PreBrowserMain();
+std::optional<int> ShellMainDelegate::PostEarlyInitialization(InvokedIn invoked_in) {
+  auto ret = Base::PostEarlyInitialization(invoked_in);
 
   // Create DisplayManager in PreBrowserMain(), becasue DisplayManager cannot be
   // created until the UI message loop is initialized.
@@ -22,5 +22,6 @@ std::optional<int> ShellMainDelegate::PreBrowserMain() {
 
   return ret;
 }
+
 
 }  // namespace content::ohos

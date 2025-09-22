@@ -10,9 +10,15 @@
 #include <optional>
 
 #include "base/threading/thread_checker.h"
+#include "base/memory/weak_ptr.h"
 #include "ui/display/screen_base.h"
 #include "ui/gfx/geometry/size.h"
 #include "ui/ohos/ui_ohos_export.h"
+
+namespace base {
+class SingleThreadTaskRunner;
+}  // namespace base
+
 
 namespace ui::ohos {
 
@@ -47,8 +53,10 @@ class UI_OHOS_EXPORT DisplayManager : public display::ScreenBase {
 
   base::ThreadChecker thread_checker_;
   OH_NativeXComponent* const native_xcomponent_;
+  scoped_refptr<base::SingleThreadTaskRunner> task_runner_;
   uint64_t default_display_id_;
   uint32_t callback_listner_index_;
+  base::WeakPtrFactory<DisplayManager> weak_ptr_factory_{this};
 };
 
 }  // namespace ui::ohos
