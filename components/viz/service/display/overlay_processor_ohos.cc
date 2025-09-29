@@ -93,8 +93,6 @@ void OverlayProcessorOHOS::ProcessForOverlays(
       resource_provider, render_passes, &surface_damage_rect_list,
       output_surface_plane, candidates, content_bounds);
 
-  // LOG(ERROR) << "EEEE OverlayProcessorOHOS::ProcessForOverlays() candidates->size() = " << candidates->size();
-
   DCHECK(candidates->empty() || success);
 
   if (success) {
@@ -127,9 +125,6 @@ void OverlayProcessorOHOS::CheckOverlaySupportImpl(
     const OverlayProcessorInterface::OutputSurfaceOverlayPlane* primary_plane,
     OverlayCandidateList* candidates) {
   DCHECK(!candidates->empty());
-
-  // LOG(ERROR) << "EEEE CheckOverlaySupportImpl() candidates->size()=" <<
-  // candidates->size();
 
   for (auto& candidate : *candidates) {
     if (auto override_color_space = GetOverrideColorSpace()) {

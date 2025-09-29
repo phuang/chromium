@@ -14,7 +14,7 @@ const SurfaceControlAPI& SurfaceControlAPI::GetInstance() {
 
 SurfaceControlAPI::SurfaceControlAPI() {
   const char kLibRenderServiceClient[] =
-      "/system/lib64/librenderservice_client.so";
+      "/system/lib64/librender_service_client.z.so";
   handle_ = dlopen(kLibRenderServiceClient, RTLD_LAZY);
   if (!handle_) {
     LOG(ERROR) << "Failed to open librenderservice_client.so: " << dlerror();

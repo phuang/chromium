@@ -380,8 +380,8 @@ bool SharedImageFactory::CreateSharedImage(
 
   DVLOG_IF(1, !!backing) << "CreateSharedImage[" << backing->GetName()
                          << "] size=" << size.ToString()
-                         << " usage=" << CreateLabelForSharedImageUsage(usage)
-                         << " format=" << format.ToString();
+             << " usage=" << CreateLabelForSharedImageUsage(usage)
+             << " format=" << format.ToString();
 
   return RegisterBacking(std::move(backing), std::move(pool_id));
 }
@@ -446,9 +446,9 @@ bool SharedImageFactory::CreateSharedImage(const Mailbox& mailbox,
 
     if (backing) {
       LOG(ERROR) << "CreateSharedImageBackedByBuffer[" << backing->GetName()
-               << "] size=" << size.ToString()
-               << " usage=" << CreateLabelForSharedImageUsage(usage)
-               << " format=" << format.ToString();
+                 << "] size=" << size.ToString()
+                 << " usage=" << CreateLabelForSharedImageUsage(usage)
+                 << " format=" << format.ToString();
     }
   } else {
     // If native buffers are not supported, try to create shared memory based
@@ -499,9 +499,9 @@ bool SharedImageFactory::CreateSharedImage(const Mailbox& mailbox,
 
       if (backing) {
         LOG(ERROR) << "CreateSharedImageBackedByBuffer[" << backing->GetName()
-                 << "] size=" << size.ToString()
-                 << " usage=" << CreateLabelForSharedImageUsage(usage)
-                 << " format=" << format.ToString();
+                   << "] size=" << size.ToString()
+                   << " usage=" << CreateLabelForSharedImageUsage(usage)
+                   << " format=" << format.ToString();
       }
     }
   }
@@ -536,9 +536,9 @@ bool SharedImageFactory::CreateSharedImage(const Mailbox& mailbox,
       IsSharedBetweenThreads(usage), data);
   if (backing) {
     LOG(ERROR) << "CreateSharedImagePixels[" << backing->GetName()
-             << "] with pixels size=" << size.ToString()
-             << " usage=" << CreateLabelForSharedImageUsage(usage)
-             << " format=" << format.ToString();
+               << "] with pixels size=" << size.ToString()
+               << " usage=" << CreateLabelForSharedImageUsage(usage)
+               << " format=" << format.ToString();
   }
   return RegisterBacking(std::move(backing));
 }
@@ -595,10 +595,10 @@ bool SharedImageFactory::CreateSharedImage(
 
   if (backing) {
     LOG(ERROR) << "CreateSharedImageWithBuffer[" << backing->GetName()
-             << "] size=" << size.ToString()
-             << " usage=" << CreateLabelForSharedImageUsage(usage)
-             << " format=" << format.ToString()
-             << " gmb_type=" << GmbTypeToString(gmb_type);
+               << "] size=" << size.ToString()
+               << " usage=" << CreateLabelForSharedImageUsage(usage)
+               << " format=" << format.ToString()
+               << " gmb_type=" << GmbTypeToString(gmb_type);
   }
   return RegisterBacking(std::move(backing), std::move(pool_id));
 }

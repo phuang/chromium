@@ -1,7 +1,7 @@
 # /dev/shm/commandline.txt
 
 # Device scale factor 1, 1.2, 1.5 or 2
---force-device-scale-factor=1
+--force-device-scale-factor=1.5
 
 # Enable skia graphite
 --enable-skia-graphite
@@ -15,9 +15,9 @@
 
 # Use  passthrough command decoder with ANGLE's Vulkan backend
 # ANGLE's GLES backend doesn't work yet.
---use-cmd-decoder=passthrough
---enable-features=DefaultANGLEVulkan
+# --use-cmd-decoder=passthrough
+# --enable-features=DefaultANGLEVulkan
 
 # URL
-# https://www.amazon.ca
-https://red.bikeshed.com/
+https://www.amazon.ca
+# https://phuang.github.io/video

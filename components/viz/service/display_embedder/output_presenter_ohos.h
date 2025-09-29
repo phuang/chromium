@@ -49,7 +49,6 @@ class VIZ_SERVICE_EXPORT OutputPresenterOHOS : public OutputPresenter {
   class SurfaceControl;
 
   void OnComplete(uint64_t timestamp);
-  void TriggerOnCompleteCallbacks();
   void OnOverlayReleased(MayBeDangling<ScopedOverlayAccess> access,
                          bool is_root,
                          base::ScopedFD release_fence_fd);
@@ -74,13 +73,7 @@ class VIZ_SERVICE_EXPORT OutputPresenterOHOS : public OutputPresenter {
 
   ScopedOverlayAccess* root_overlay_access_ = nullptr;
 
-  // Callbacks from Present() call.
-  struct CompletionData {
-    SwapCompletionCallback callback;
-    ScopedOverlayAccess* access = nullptr;
-    bool completed = false;
-  };
-  base::circular_deque<CompletionData> completion_datas_;
+  base::circular_deque<SwapCompletionCallback> completion_callbacks_;
   base::circular_deque<BufferPresentedCallback> presentation_callbacks_;
 
   // on complete callback for OH_SurfaceTransaction.

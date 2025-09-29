@@ -110,7 +110,8 @@ class OutputPresenterOHOS::SurfaceControl {
     destroyed_ = true;
     const auto& api = SurfaceControlAPI::GetInstance();
     api.SurfaceTransaction_Reparent(transaction, surface_, nullptr);
-    api.SurfaceTransaction_SetVisibility(transaction, surface_, OH_SURFACE_TRANSACTION_VISIBILITY_HIDE);
+    api.SurfaceTransaction_SetVisibility(
+        transaction, surface_, OH_SURFACE_TRANSACTION_VISIBILITY_HIDE);
   }
 
   void SetSurface(SurfaceControl* surface) {
@@ -276,6 +277,13 @@ class OutputPresenterOHOS::SurfaceControl {
     }
   }
 
+  void SetName(const std::string& name) {
+    if (name_ != name) {
+      name_ = name;
+      dirty_bits_.set(kName);
+    }
+  }
+
   void SetBuffer(OH_NativeBuffer* buffer,
                  base::ScopedFD fence_fd,
                  const gfx::Rect& damage_rect,
@@ -387,17 +395,18 @@ class OutputPresenterOHOS::SurfaceControl {
     }
 
     if (dirty_bits_.test(kBuffer)) {
-      auto context =
-          release_callback_
-              ? std::make_unique<ReleaseCallback>(std::move(release_callback_))
-              : std::unique_ptr<ReleaseCallback>();
+      std::unique_ptr<ReleaseCallback> callback_ptr;
+      if (release_callback_) {
+        callback_ptr =
+            std::make_unique<ReleaseCallback>(std::move(release_callback_));
+      }
       api.SurfaceTransaction_SetBuffer(
           transaction, surface_, buffer_, fence_fd_.release(),
-          context.release(), [](void* context, int32_t release_fence_fd) {
-            std::unique_ptr<ReleaseCallback> callback(
-                reinterpret_cast<ReleaseCallback*>(context));
-            if (callback) {
-              std::move(*callback).Run(base::ScopedFD(release_fence_fd));
+          callback_ptr.release(), [](void* data, int32_t release_fence_fd) {
+            std::unique_ptr<ReleaseCallback> callback_ptr(
+                reinterpret_cast<ReleaseCallback*>(data));
+            if (callback_ptr) {
+              std::move(*callback_ptr).Run(base::ScopedFD(release_fence_fd));
             }
           });
       OH_Rect rect = {damage_rect_.x(), damage_rect_.y(), damage_rect_.width(),
@@ -507,6 +516,10 @@ void OutputPresenterOHOS::InitializeCapabilities(
   capabilities->supports_post_sub_buffer = true;
   capabilities->supports_surfaceless = true;
 
+  capabilities->number_of_buffers = 5;
+  capabilities->supports_dynamic_frame_buffer_allocation = true;
+  capabilities->renderer_allocates_images = true;
+
   capabilities->sk_color_type_map[SinglePlaneFormat::kRGBA_8888] =
       kRGBA_8888_SkColorType;
   capabilities->sk_color_type_map[SinglePlaneFormat::kBGRA_8888] =
@@ -568,7 +581,7 @@ void OutputPresenterOHOS::Present(SwapCompletionCallback completion_callback,
   api.SurfaceTransaction_Commit(transaction_);
   std::swap(previous_frame_, pending_frame_);
 
-  completion_datas_.emplace_back(std::move(completion_callback), root_overlay_access_);
+  completion_callbacks_.emplace_back(std::move(completion_callback));
   root_overlay_access_ = nullptr;
   presentation_callbacks_.emplace_back(std::move(presentation_callback));
 }
@@ -694,7 +707,9 @@ void OutputPresenterOHOS::ScheduleOverlayPlane(
 
       // We need track buffer which are being used by RS. For root surface,
       // the buffer is considered being released when OnComplete is called.
-      access->InUseByWindowServerInc();
+      if (!is_root) {
+        access->InUseByWindowServerInc();
+      }
 
       auto damage_rect = overlay_plane.damage_rect.IsEmpty()
                              ? gfx::Rect(overlay_plane.resource_size_in_pixels)
@@ -794,43 +809,15 @@ void OutputPresenterOHOS::ScheduleOverlayPlane(
 
 void OutputPresenterOHOS::OnComplete(uint64_t timestamp) {
   DCHECK_CALLED_ON_VALID_THREAD(thread_checker_);
-  DCHECK(!completion_datas_.empty());
+  DCHECK(!completion_callbacks_.empty());
   DCHECK(!presentation_callbacks_.empty());
-
-  for (auto& data : completion_datas_) {
-    if (!data.completed) {
-      data.completed = true;
-      TriggerOnCompleteCallbacks();
-      break;
-    }
-  }
-}
-
-void OutputPresenterOHOS::TriggerOnCompleteCallbacks() {
   gfx::SwapCompletionResult swap_result(gfx::SwapResult::SWAP_ACK);
   gfx::PresentationFeedback feedback(base::TimeTicks::Now(), base::TimeDelta(),
                                      /*flags=*/0);
-  // Trigger completed callbacks.
-  for (auto& data : completion_datas_) {
-    // Delay trigger complete callbacks, until data.access is set to nullptr.
-    // TODO(penghuang): remove the logic when RS supports transaction complete
-    // callback natively.
-    if (data.access || !data.completed) {
-      break;
-    }
-    auto completion_callback = std::move(data.callback);
-    completion_datas_.pop_front();
-    task_runner_->PostTask(
-        FROM_HERE,
-        base::BindOnce(std::move(completion_callback), std::move(swap_result)));
-
-    auto presentation_callback = std::move(presentation_callbacks_.front());
-    presentation_callbacks_.pop_front();
-
-    task_runner_->PostTask(
-        FROM_HERE,
-        base::BindOnce(std::move(presentation_callback), std::move(feedback)));
-  }
+  std::move(completion_callbacks_.front()).Run(std::move(swap_result));
+  completion_callbacks_.pop_front();
+  std::move(presentation_callbacks_.front()).Run(std::move(feedback));
+  presentation_callbacks_.pop_front();
 }
 
 void OutputPresenterOHOS::OnOverlayReleased(
@@ -850,17 +837,6 @@ void OutputPresenterOHOS::OnOverlayReleased(
   // Decrease in use count, when count is 0, viz will return the buffer to
   // render, so the buffer can be reused or released.
   access->InUseByWindowServerDec();
-
-  if (is_root) {
-    for (auto& data : completion_datas_) {
-      if (data.access == access) {
-        data.access = nullptr;
-        TriggerOnCompleteCallbacks();
-        break;
-      }
-    }
-  }
 }
-
 
 }  // namespace viz

@@ -285,7 +285,7 @@ OHNativeBufferImageBackingFactory::MakeBacking(
 
   ScopedOHNativeBuffer buffer(OH_NativeBuffer_Alloc(&ohnb_config));
   if (!buffer.is_valid()) {
-    LOG(ERROR) << "EEEE OH_NativeBuffer_Alloc() failed";
+    LOG(ERROR) << "OH_NativeBuffer_Alloc() failed";
     return nullptr;
   }
 

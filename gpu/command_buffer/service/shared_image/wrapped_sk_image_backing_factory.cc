@@ -37,7 +37,7 @@ constexpr SharedImageUsageSet kSupportedUsage =
     SHARED_IMAGE_USAGE_MIPMAP;
 
 SharedImageUsageSet GetSupportedUsage(const SharedContextState* context_state) {
-#if BUILDFLAG(SKIA_USE_DAWN) && !BUILDFLAG(IS_ANDROID)
+#if BUILDFLAG(SKIA_USE_DAWN) && !BUILDFLAG(IS_ANDROID) && !BUILDFLAG(IS_OHOS)
   // We support WebGL and WebGPU fallback when using Graphite Dawn Vulkan or
   // D3D12. Except on Android where AHardwareBufferImageBackingFactory is used
   // for interop with WebGL and WebGPU.

@@ -349,8 +349,10 @@ bool NapiManager::RunContentMain(OH_NativeXComponent* native_xcomponent) {
   };
 
   auto param_args = read_command_line();
+  LOG(ERROR) << "EEEE  param_args.size(): " << param_args.size();
   for (const auto& arg : param_args) {
     args.push_back(arg.c_str());
+    LOG(ERROR) << "EEEE  arg: " << arg;
   }
 
   base::MessagePumpOHOS::SetNapiEnv(env_);
