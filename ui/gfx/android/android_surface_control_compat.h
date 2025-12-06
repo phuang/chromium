@@ -159,6 +159,14 @@ class COMPONENT_EXPORT(GFX) SurfaceControl {
     void SetBuffer(const Surface& surface,
                    AHardwareBuffer* buffer,
                    base::ScopedFD fence_fd);
+    using OnBufferReleasedCb =
+        base::OnceCallback<void(base::ScopedFD release_fence_fd)>;
+    void SetBufferWithRelease(
+        const Surface& surface,
+        AHardwareBuffer* buffer,
+        base::ScopedFD fence_fd,
+        OnBufferReleasedCb release_callback,
+        scoped_refptr<base::SingleThreadTaskRunner> task_runner);
     void SetGeometry(const Surface& surface,
                      const gfx::Rect& src,
                      const gfx::Rect& dst,

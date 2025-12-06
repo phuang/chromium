@@ -35,8 +35,8 @@ typedef void (*ASurfaceTransaction_OnCommit)(void* context,
 
 // ASurface
 using pASurfaceControl_createFromWindow =
-    ASurfaceControl* (*)(ANativeWindow* parent, const char* name);
-using pASurfaceControl_create = ASurfaceControl* (*)(ASurfaceControl* parent,
+    ASurfaceControl* (*)(ANativeWindow * parent, const char* name);
+using pASurfaceControl_create = ASurfaceControl* (*)(ASurfaceControl * parent,
                                                      const char* name);
 using pASurfaceControl_fromJava = ASurfaceControl* (*)(JNIEnv*, jobject);
 using pASurfaceControl_release = void (*)(ASurfaceControl*);
@@ -67,6 +67,15 @@ using pASurfaceTransaction_setBuffer =
              ASurfaceControl*,
              AHardwareBuffer*,
              int32_t fence_fd);
+using pASurfaceTransaction_OnBufferRelease = void (*)(void* context,
+                                                      int32_t release_fence_fd);
+using pASurfaceTransaction_setBufferWithRelease =
+    void (*)(ASurfaceTransaction* transaction,
+             ASurfaceControl* surface,
+             AHardwareBuffer* buffer,
+             int32_t fence_fd,
+             void* context,
+             pASurfaceTransaction_OnBufferRelease release_callback);
 using pASurfaceTransaction_setGeometry =
     void (*)(ASurfaceTransaction* transaction,
              ASurfaceControl* surface,
@@ -192,13 +201,15 @@ struct SurfaceControlMethods {
     ASurfaceTransaction_applyFn = [](ASurfaceTransaction* transaction) {
       auto* stub = reinterpret_cast<TransactionStub*>(transaction);
 
-      if (stub->on_commit)
+      if (stub->on_commit) {
         stub->on_commit(stub->on_commit_ctx, nullptr);
+      }
       stub->on_commit = nullptr;
       stub->on_commit_ctx = nullptr;
 
-      if (stub->on_complete)
+      if (stub->on_complete) {
         stub->on_complete(stub->on_complete_ctx, nullptr);
+      }
       stub->on_complete = nullptr;
       stub->on_complete_ctx = nullptr;
 
@@ -252,6 +263,7 @@ struct SurfaceControlMethods {
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setVisibility);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setZOrder);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBuffer);
+    LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferWithRelease);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setGeometry);
     LOAD_FUNCTION_MAYBE(main_dl_handle, ASurfaceTransaction_setPosition,
                         base::android::android_info::SDK_VERSION_S);
@@ -305,6 +317,8 @@ struct SurfaceControlMethods {
       nullptr;
   pASurfaceTransaction_setZOrder ASurfaceTransaction_setZOrderFn = nullptr;
   pASurfaceTransaction_setBuffer ASurfaceTransaction_setBufferFn = nullptr;
+  pASurfaceTransaction_setBufferWithRelease
+      ASurfaceTransaction_setBufferWithReleaseFn = nullptr;
   pASurfaceTransaction_setGeometry ASurfaceTransaction_setGeometryFn = nullptr;
   pASurfaceTransaction_setPosition ASurfaceTransaction_setPositionFn = nullptr;
   pASurfaceTransaction_setScale ASurfaceTransaction_setScaleFn = nullptr;
@@ -479,8 +493,9 @@ SurfaceControl::TransactionStats ToTransactionStats(
   SurfaceControl::TransactionStats transaction_stats;
 
   // In unit tests we don't have stats.
-  if (!stats)
+  if (!stats) {
     return transaction_stats;
+  }
 
   transaction_stats.present_fence = base::ScopedFD(
       SurfaceControlMethods::Get().ASurfaceTransactionStats_getPresentFenceFdFn(
@@ -490,8 +505,9 @@ SurfaceControl::TransactionStats ToTransactionStats(
       base::Nanoseconds(
           SurfaceControlMethods::Get().ASurfaceTransactionStats_getLatchTimeFn(
               stats));
-  if (transaction_stats.latch_time == base::TimeTicks())
+  if (transaction_stats.latch_time == base::TimeTicks()) {
     transaction_stats.latch_time = base::TimeTicks::Now();
+  }
 
   ASurfaceControl** surface_controls = nullptr;
   size_t size = 0u;
@@ -641,8 +657,9 @@ bool SurfaceControl::ColorSpaceToADataSpace(
 }
 
 uint64_t SurfaceControl::RequiredUsage() {
-  if (!IsSupported())
+  if (!IsSupported()) {
     return 0u;
+  }
   return g_agb_required_usage_bits;
 }
 
@@ -702,8 +719,9 @@ SurfaceControl::Surface::Surface() = default;
 SurfaceControl::Surface::Surface(const Surface& parent, const char* name) {
   owned_surface_ = SurfaceControlMethods::Get().ASurfaceControl_createFn(
       parent.surface(), name);
-  if (!owned_surface_)
+  if (!owned_surface_) {
     LOG(ERROR) << "Failed to create ASurfaceControl : " << name;
+  }
   surface_ = owned_surface_;
 }
 
@@ -711,8 +729,9 @@ SurfaceControl::Surface::Surface(ANativeWindow* parent, const char* name) {
   owned_surface_ =
       SurfaceControlMethods::Get().ASurfaceControl_createFromWindowFn(parent,
                                                                       name);
-  if (!owned_surface_)
+  if (!owned_surface_) {
     LOG(ERROR) << "Failed to create ASurfaceControl : " << name;
+  }
   surface_ = owned_surface_;
 }
 
@@ -730,8 +749,9 @@ SurfaceControl::Surface::Surface(
 }
 
 SurfaceControl::Surface::~Surface() {
-  if (owned_surface_)
+  if (owned_surface_) {
     SurfaceControlMethods::Get().ASurfaceControl_releaseFn(owned_surface_);
+  }
 }
 
 SurfaceControl::SurfaceStats::SurfaceStats() = default;
@@ -760,10 +780,12 @@ SurfaceControl::Transaction::~Transaction() {
 }
 
 void SurfaceControl::Transaction::DestroyIfNeeded() {
-  if (!transaction_)
+  if (!transaction_) {
     return;
-  if (need_to_apply_)
+  }
+  if (need_to_apply_) {
     SurfaceControlMethods::Get().ASurfaceTransaction_applyFn(transaction_);
+  }
   SurfaceControlMethods::Get().ASurfaceTransaction_deleteFn(transaction_);
   transaction_ = nullptr;
 }
@@ -781,8 +803,9 @@ SurfaceControl::Transaction::Transaction(Transaction&& other)
 
 SurfaceControl::Transaction& SurfaceControl::Transaction::operator=(
     Transaction&& other) {
-  if (this == &other)
+  if (this == &other) {
     return *this;
+  }
 
   DestroyIfNeeded();
 
@@ -822,6 +845,26 @@ void SurfaceControl::Transaction::SetBuffer(const Surface& surface,
       base::android::android_info::SDK_VERSION_T) {
     need_to_apply_ = true;
   }
+}
+
+void SurfaceControl::Transaction::SetBufferWithRelease(
+    const Surface& surface,
+    AHardwareBuffer* buffer,
+    base::ScopedFD fence_fd,
+    OnBufferReleasedCb release_callback,
+    scoped_refptr<base::SingleThreadTaskRunner> task_runner) {
+  struct ReleaseCtx {
+    OnBufferReleasedCb callback;
+  };
+  auto* release_ctx = new ReleaseCtx{
+      base::BindPostTask(std::move(task_runner), std::move(release_callback))};
+  SurfaceControlMethods::Get().ASurfaceTransaction_setBufferWithReleaseFn(
+      transaction_, surface.surface(), buffer, fence_fd.release(), release_ctx,
+      [](void* context, int32_t release_fence_fd) {
+        auto* release_ctx = static_cast<ReleaseCtx*>(context);
+        std::move(release_ctx->callback).Run(base::ScopedFD(release_fence_fd));
+        delete release_ctx;
+      });
 }
 
 void SurfaceControl::Transaction::SetGeometry(const Surface& surface,
