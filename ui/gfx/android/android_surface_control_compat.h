@@ -8,6 +8,7 @@
 #include <android/hardware_buffer.h>
 #include <android/native_window.h>
 
+#include <array>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -167,11 +168,15 @@ class COMPONENT_EXPORT(GFX) SurfaceControl {
         base::ScopedFD fence_fd,
         OnBufferReleasedCb release_callback,
         scoped_refptr<base::SingleThreadTaskRunner> task_runner);
+    void SetBufferTransform(const Surface& surface,
+                            gfx::OverlayTransform transform);
+    void SetBufferAlpha(const Surface& surface, float alpha);
     void SetGeometry(const Surface& surface,
                      const gfx::Rect& src,
                      const gfx::Rect& dst,
                      gfx::OverlayTransform transform);
     void SetOpaque(const Surface& surface, bool opaque);
+    void SetColor(const Surface& surface, const std::array<float, 4>& color);
     void SetDamageRect(const Surface& surface, const gfx::Rect& rect);
     void SetColorSpace(const Surface& surface,
                        const gfx::ColorSpace& color_space,
@@ -180,7 +185,10 @@ class COMPONENT_EXPORT(GFX) SurfaceControl {
                       SurfaceControlFrameRate frame_rate);
     void SetParent(const Surface& surface, Surface* new_parent);
     void SetPosition(const Surface& surface, const gfx::Point& position);
-    void SetScale(const Surface& surface, float sx, float sy);
+    void SetScale(const Surface& surface, const gfx::Vector2dF& scale);
+    void SetScale(const Surface& surface, float sx, float sy) {
+      SetScale(surface, gfx::Vector2dF(sx, sy));
+    }
     void SetCrop(const Surface& surface, const gfx::Rect& rect);
     void SetFrameTimelineId(int64_t vsync_id);
     void SetEnableBackPressure(const Surface& surface, bool enable);

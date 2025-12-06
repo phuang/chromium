@@ -94,10 +94,25 @@ using pASurfaceTransaction_setScale = void (*)(ASurfaceTransaction* transaction,
 using pASurfaceTransaction_setCrop = void (*)(ASurfaceTransaction* transaction,
                                               ASurfaceControl* surface,
                                               const ARect& src);
+using pASurfaceTransaction_setBufferTransform =
+    void (*)(ASurfaceTransaction* transaction,
+             ASurfaceControl* surface,
+             int8_t transform);
+using pASurfaceTransaction_setBufferAlpha =
+    void (*)(ASurfaceTransaction* transaction,
+             ASurfaceControl* surface,
+             float alpha);
 using pASurfaceTransaction_setBufferTransparency =
     void (*)(ASurfaceTransaction* transaction,
              ASurfaceControl* surface,
              int8_t transparency);
+using pASurfaceTransaction_setColor = void (*)(ASurfaceTransaction* transaction,
+                                               ASurfaceControl* surface,
+                                               float r,
+                                               float g,
+                                               float b,
+                                               float a,
+                                               int32_t data_space);
 using pASurfaceTransaction_setDamageRegion =
     void (*)(ASurfaceTransaction* transaction,
              ASurfaceControl* surface,
@@ -271,7 +286,10 @@ struct SurfaceControlMethods {
                         base::android::android_info::SDK_VERSION_S);
     LOAD_FUNCTION_MAYBE(main_dl_handle, ASurfaceTransaction_setCrop,
                         base::android::android_info::SDK_VERSION_S);
+    LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferTransform);
+    LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferAlpha);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferTransparency);
+    LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setColor);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setDamageRegion);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferDataSpace);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setHdrMetadata_cta861_3);
@@ -323,8 +341,13 @@ struct SurfaceControlMethods {
   pASurfaceTransaction_setPosition ASurfaceTransaction_setPositionFn = nullptr;
   pASurfaceTransaction_setScale ASurfaceTransaction_setScaleFn = nullptr;
   pASurfaceTransaction_setCrop ASurfaceTransaction_setCropFn = nullptr;
+  pASurfaceTransaction_setBufferTransform
+      ASurfaceTransaction_setBufferTransformFn = nullptr;
+  pASurfaceTransaction_setBufferAlpha ASurfaceTransaction_setBufferAlphaFn =
+      nullptr;
   pASurfaceTransaction_setBufferTransparency
       ASurfaceTransaction_setBufferTransparencyFn = nullptr;
+  pASurfaceTransaction_setColor ASurfaceTransaction_setColorFn = nullptr;
   pASurfaceTransaction_setDamageRegion ASurfaceTransaction_setDamageRegionFn =
       nullptr;
   pASurfaceTransaction_setBufferDataSpace
@@ -867,6 +890,20 @@ void SurfaceControl::Transaction::SetBufferWithRelease(
       });
 }
 
+void SurfaceControl::Transaction::SetBufferTransform(
+    const Surface& surface,
+    gfx::OverlayTransform transform) {
+  SurfaceControlMethods::Get().ASurfaceTransaction_setBufferTransformFn(
+      transaction_, surface.surface(),
+      OverlayTransformToWindowTransform(transform));
+}
+
+void SurfaceControl::Transaction::SetBufferAlpha(const Surface& surface,
+                                                 float alpha) {
+  SurfaceControlMethods::Get().ASurfaceTransaction_setBufferAlphaFn(
+      transaction_, surface.surface(), alpha);
+}
+
 void SurfaceControl::Transaction::SetGeometry(const Surface& surface,
                                               const gfx::Rect& src,
                                               const gfx::Rect& dst,
@@ -884,11 +921,10 @@ void SurfaceControl::Transaction::SetPosition(const Surface& surface,
 }
 
 void SurfaceControl::Transaction::SetScale(const Surface& surface,
-                                           const float sx,
-                                           float sy) {
+                                           const gfx::Vector2dF& scale) {
   CHECK(SurfaceControlMethods::Get().ASurfaceTransaction_setScaleFn);
   SurfaceControlMethods::Get().ASurfaceTransaction_setScaleFn(
-      transaction_, surface.surface(), sx, sy);
+      transaction_, surface.surface(), scale.x(), scale.y());
 }
 
 void SurfaceControl::Transaction::SetCrop(const Surface& surface,
@@ -910,6 +946,13 @@ void SurfaceControl::Transaction::SetOpaque(const Surface& surface,
                                : ASURFACE_TRANSACTION_TRANSPARENCY_TRANSLUCENT;
   SurfaceControlMethods::Get().ASurfaceTransaction_setBufferTransparencyFn(
       transaction_, surface.surface(), transparency);
+}
+
+void SurfaceControl::Transaction::SetColor(const Surface& surface,
+                                           const std::array<float, 4>& color) {
+  SurfaceControlMethods::Get().ASurfaceTransaction_setColorFn(
+      transaction_, surface.surface(), color[0], color[1], color[2], color[3],
+      ADATASPACE_SRGB);
 }
 
 void SurfaceControl::Transaction::SetDamageRect(const Surface& surface,
