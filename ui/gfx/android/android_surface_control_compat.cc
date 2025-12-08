@@ -278,7 +278,9 @@ struct SurfaceControlMethods {
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setVisibility);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setZOrder);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBuffer);
-    LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferWithRelease);
+    LOAD_FUNCTION_MAYBE(main_dl_handle,
+                        ASurfaceTransaction_setBufferWithRelease,
+                        base::android::android_info::SDK_VERSION_Q);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setGeometry);
     LOAD_FUNCTION_MAYBE(main_dl_handle, ASurfaceTransaction_setPosition,
                         base::android::android_info::SDK_VERSION_S);
@@ -289,7 +291,8 @@ struct SurfaceControlMethods {
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferTransform);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferAlpha);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferTransparency);
-    LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setColor);
+    LOAD_FUNCTION_MAYBE(main_dl_handle, ASurfaceTransaction_setColor,
+                        base::android::android_info::SDK_VERSION_Q);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setDamageRegion);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setBufferDataSpace);
     LOAD_FUNCTION(main_dl_handle, ASurfaceTransaction_setHdrMetadata_cta861_3);
@@ -876,15 +879,16 @@ void SurfaceControl::Transaction::SetBufferWithRelease(
     base::ScopedFD fence_fd,
     OnBufferReleasedCb release_callback,
     scoped_refptr<base::SingleThreadTaskRunner> task_runner) {
+  release_callback =
+      base::BindPostTask(std::move(task_runner), std::move(release_callback));
   struct ReleaseCtx {
     OnBufferReleasedCb callback;
   };
-  auto* release_ctx = new ReleaseCtx{
-      base::BindPostTask(std::move(task_runner), std::move(release_callback))};
+  auto release_ctx = std::make_unique<ReleaseCtx>(std::move(release_callback));
   SurfaceControlMethods::Get().ASurfaceTransaction_setBufferWithReleaseFn(
-      transaction_, surface.surface(), buffer, fence_fd.release(), release_ctx,
-      [](void* context, int32_t release_fence_fd) {
-        auto* release_ctx = static_cast<ReleaseCtx*>(context);
+      transaction_, surface.surface(), buffer, fence_fd.release(),
+      release_ctx.release(), [](void* context, int32_t release_fence_fd) {
+        auto* release_ctx = reinterpret_cast<ReleaseCtx*>(context);
         std::move(release_ctx->callback).Run(base::ScopedFD(release_fence_fd));
         delete release_ctx;
       });

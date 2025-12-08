@@ -100,6 +100,10 @@
 #include "ui/gl/progress_reporter.h"
 #include "url/gurl.h"
 
+#if BUILDFLAG(IS_ANDROID)
+#include "components/viz/service/display_embedder/output_presenter_android.h"
+#endif
+
 #if BUILDFLAG(IS_WIN)
 #include "components/viz/service/display/dc_layer_overlay.h"
 #include "components/viz/service/display_embedder/skia_output_device_dcomp.h"
@@ -1975,6 +1979,19 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForGL() {
         shared_gpu_deps_->memory_tracker(),
         GetDidSwapBuffersCompleteCallback());
   } else {
+#if BUILDFLAG(IS_ANDROID)
+    if (auto output_presenter = OutputPresenterAndroid::Create(dependency_)) {
+      if (MakeCurrent(/*need_framebuffer=*/false)) {
+        output_device_ = std::make_unique<SkiaOutputDeviceBufferQueue>(
+            std::move(output_presenter), dependency_,
+            shared_image_representation_factory_.get(),
+            shared_gpu_deps_->memory_tracker(),
+            GetDidSwapBuffersCompleteCallback(), GetReleaseOverlaysCallback());
+        return true;
+      }
+    }
+#endif
+
     scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
     presenter_ = presenter.get();
     if (!presenter_) {
@@ -2081,11 +2098,16 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForVulkan() {
   output_presenter =
       OutputPresenterFuchsia::Create(window_surface_.get(), dependency_);
 #else
-  scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
-  presenter_ = presenter.get();
-  if (presenter_) {
-    output_presenter =
-        std::make_unique<OutputPresenterGL>(std::move(presenter), dependency_);
+#if BUILDFLAG(IS_ANDROID)
+  output_presenter = OutputPresenterAndroid::Create(dependency_);
+#endif
+  if (!output_presenter) {
+    scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
+    presenter_ = presenter.get();
+    if (presenter_) {
+      output_presenter = std::make_unique<OutputPresenterGL>(
+          std::move(presenter), dependency_);
+    }
   }
 #endif
   if (output_presenter) {
@@ -2188,6 +2210,18 @@ bool SkiaOutputSurfaceImplOnGpu::InitializeForDawn() {
   return true;
 
 #elif BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID) || BUILDFLAG(IS_CHROMEOS)
+
+#if BUILDFLAG(IS_ANDROID)
+  if (auto output_presenter = OutputPresenterAndroid::Create(dependency_)) {
+    output_device_ = std::make_unique<SkiaOutputDeviceBufferQueue>(
+        std::move(output_presenter), dependency_,
+        shared_image_representation_factory_.get(),
+        shared_gpu_deps_->memory_tracker(), GetDidSwapBuffersCompleteCallback(),
+        GetReleaseOverlaysCallback());
+    return true;
+  }
+#endif
+
   scoped_refptr<gl::Presenter> presenter = dependency_->CreatePresenter();
   presenter_ = presenter.get();
 

@@ -337,7 +337,7 @@ void DirectRenderer::DrawFrame(
     reshape_params_ = reshape_params;
     reshape_display_transform_ = display_transform;
     Reshape(reshape_params);
-#if BUILDFLAG(IS_APPLE)
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID)
     // For Mac, all render passes will be promoted to CALayer, the redraw full
     // frame is for the main surface only.
     // TODO(penghuang): verify this logic with SkiaRenderer.

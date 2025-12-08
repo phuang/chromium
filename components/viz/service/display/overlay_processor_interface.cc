@@ -25,6 +25,7 @@
 #elif BUILDFLAG(IS_ANDROID)
 #include "components/viz/service/display/overlay_processor_android.h"
 #include "components/viz/service/display/overlay_processor_surface_control.h"
+#include "components/viz/service/display/overlay_processor_surface_control_full.h"
 #elif BUILDFLAG(IS_OZONE)
 #include "components/viz/service/display/overlay_processor_delegated.h"
 #include "components/viz/service/display/overlay_processor_ozone.h"
@@ -109,8 +110,9 @@ OverlayProcessorInterface::CreateOverlayProcessor(
   // If we are offscreen, we don't have overlay support.
   // TODO(vasilyt): WebView would have a kNullSurfaceHandle. Make sure when
   // overlay for WebView is enabled, this check still works.
-  if (surface_handle == gpu::kNullSurfaceHandle)
+  if (surface_handle == gpu::kNullSurfaceHandle) {
     return std::make_unique<OverlayProcessorStub>();
+  }
 
 #if BUILDFLAG(IS_APPLE)
   DCHECK(capabilities.supports_surfaceless);
@@ -138,8 +140,9 @@ OverlayProcessorInterface::CreateOverlayProcessor(
 #if !BUILDFLAG(IS_CASTOS)
   // In tests and Ozone/X11, we do not expect surfaceless surface support.
   // For CastOS, we always need OverlayProcessorOzone.
-  if (!capabilities.supports_surfaceless)
+  if (!capabilities.supports_surfaceless) {
     return std::make_unique<OverlayProcessorStub>();
+  }
 #endif  // #if !BUILDFLAG(IS_CASTOS)
 
   std::unique_ptr<OverlayProcessorOzone::PixmapProvider> pixmap_provider;
@@ -164,7 +167,11 @@ OverlayProcessorInterface::CreateOverlayProcessor(
 
   if (capabilities.supports_surfaceless) {
     // This is for Android SurfaceControl case.
-    return std::make_unique<OverlayProcessorSurfaceControl>();
+    if (features::IsFullDelegatedCompositingEnabled()) {
+      return std::make_unique<OverlayProcessorSurfaceControlFull>();
+    } else {
+      return std::make_unique<OverlayProcessorSurfaceControl>();
+    }
   } else {
     // When SurfaceControl is enabled, any resource backed by
     // an AHardwareBuffer can be marked as an overlay candidate but it requires
@@ -172,8 +179,9 @@ OverlayProcessorInterface::CreateOverlayProcessor(
     // native window backed GLSurface, the overlay processing code will
     // incorrectly assume these resources can be overlaid. So we disable all
     // overlay processing for this OutputSurface.
-    if (capabilities.android_surface_control_feature_enabled)
+    if (capabilities.android_surface_control_feature_enabled) {
       return std::make_unique<OverlayProcessorStub>();
+    }
 
     return std::make_unique<OverlayProcessorAndroid>(display_controller);
   }

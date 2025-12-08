@@ -251,10 +251,11 @@ base::Value GetFeatureStatusImpl(GpuFeatureInfoType type) {
     } else if (gpu_access_blocked ||
                gpu_feature_data.status == gpu::kGpuFeatureStatusDisabled) {
       status = "disabled";
-      if (gpu_feature_data.fallback_to_software)
+      if (gpu_feature_data.fallback_to_software) {
         status += "_software";
-      else
+      } else {
         status += "_off";
+      }
     } else if (gpu_feature_data.status == gpu::kGpuFeatureStatusBlocklisted) {
       status = "unavailable_off";
     } else if (gpu_feature_data.status == gpu::kGpuFeatureStatusSoftware) {
@@ -266,13 +267,15 @@ base::Value GetFeatureStatusImpl(GpuFeatureInfoType type) {
       }
       if ((gpu_feature_data.name == "webgl" ||
            gpu_feature_data.name == "webgpu") &&
-          is_gpu_compositing_disabled)
+          is_gpu_compositing_disabled) {
         status += "_readback";
+      }
       if (gpu_feature_data.name == "rasterization") {
         const base::CommandLine& command_line =
             *base::CommandLine::ForCurrentProcess();
-        if (command_line.HasSwitch(switches::kEnableGpuRasterization))
+        if (command_line.HasSwitch(switches::kEnableGpuRasterization)) {
           status += "_force";
+        }
       }
       if (gpu_feature_data.name == "multiple_raster_threads") {
         const base::CommandLine& command_line =
@@ -377,16 +380,14 @@ std::vector<std::string> GetDriverBugWorkaroundsImpl(GpuFeatureInfoType type) {
   //
   // This code must be kept in sync with
   // GpuBenchmarking::GetGpuDriverBugWorkarounds.
-  for (auto ext : base::SplitString(gpu_feature_info.disabled_extensions,
-                                    " ",
-                                    base::TRIM_WHITESPACE,
-                                    base::SPLIT_WANT_NONEMPTY)) {
+  for (auto ext :
+       base::SplitString(gpu_feature_info.disabled_extensions, " ",
+                         base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY)) {
     workarounds.push_back("disabled_extension_" + ext);
   }
-  for (auto ext : base::SplitString(gpu_feature_info.disabled_webgl_extensions,
-                                    " ",
-                                    base::TRIM_WHITESPACE,
-                                    base::SPLIT_WANT_NONEMPTY)) {
+  for (auto ext :
+       base::SplitString(gpu_feature_info.disabled_webgl_extensions, " ",
+                         base::TRIM_WHITESPACE, base::SPLIT_WANT_NONEMPTY)) {
     workarounds.push_back("disabled_webgl_extension_" + ext);
   }
   return workarounds;
@@ -467,10 +468,8 @@ bool IsGpuMemoryBufferCompositorResourcesEnabled() {
 
 #if BUILDFLAG(IS_APPLE)
   return true;
-#elif BUILDFLAG(IS_WIN)
-  return features::IsDelegatedCompositingEnabled() &&
-         features::kDelegatedCompositingModeParam.Get() ==
-             features::DelegatedCompositingMode::kFull;
+#elif BUILDFLAG(IS_WIN) || BUILDFLAG(IS_ANDROID)
+  return features::IsFullDelegatedCompositingEnabled();
 #else
   return false;
 #endif
@@ -503,8 +502,9 @@ int GpuRasterizationMSAASampleCount() {
 }
 
 bool IsMainFrameBeforeActivationEnabled() {
-  if (base::SysInfo::NumberOfProcessors() < 4)
+  if (base::SysInfo::NumberOfProcessors() < 4) {
     return false;
+  }
 
   if (base::CommandLine::ForCurrentProcess()->HasSwitch(
           switches::kDisableMainFrameBeforeActivation)) {

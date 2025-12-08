@@ -20,6 +20,7 @@
 #include "cc/slim/constants.h"
 #include "cc/slim/delayed_scheduler.h"
 #include "cc/slim/frame_sink_impl_client.h"
+#include "components/viz/common/features.h"
 #include "components/viz/common/quads/compositor_frame.h"
 #include "components/viz/common/resources/platform_color.h"
 #include "components/viz/common/resources/resource_id.h"
@@ -60,7 +61,9 @@ FrameSinkImpl::FrameSinkImpl(
       pending_client_receiver_(std::move(client_receiver)),
       client_receiver_(std::in_place_type<Receiver>, this),
       context_provider_(std::move(context_provider)),
-      io_thread_id_(io_thread_id) {
+      io_thread_id_(io_thread_id),
+      is_full_delegated_compositing_enabled_(
+          features::IsFullDelegatedCompositingEnabled()) {
   scheduler_->Initialize(this);
 }
 
@@ -191,7 +194,10 @@ void FrameSinkImpl::UploadUIResource(cc::UIResourceId resource_id,
   auto* sii = context_provider_->SharedImageInterface();
   constexpr gfx::ColorSpace color_space = gfx::ColorSpace::CreateSRGB();
   gpu::SharedImageUsageSet shared_image_usage =
-      gpu::SHARED_IMAGE_USAGE_DISPLAY_READ;
+      is_full_delegated_compositing_enabled_
+          ? gpu::SHARED_IMAGE_USAGE_DISPLAY_READ |
+                gpu::SHARED_IMAGE_USAGE_SCANOUT
+          : gpu::SHARED_IMAGE_USAGE_DISPLAY_READ;
   uploaded_resource.shared_image =
       sii->CreateSharedImage({format, resource_bitmap.GetSize(), color_space,
                               shared_image_usage, "SlimCompositorUIResource"},

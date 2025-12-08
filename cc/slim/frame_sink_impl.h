@@ -164,6 +164,7 @@ class COMPONENT_EXPORT(CC_SLIM) FrameSinkImpl
 
   uint32_t num_unacked_frames_ = 0u;
   bool needs_begin_frame_ = false;
+  const bool is_full_delegated_compositing_enabled_;
 };
 
 }  // namespace cc::slim

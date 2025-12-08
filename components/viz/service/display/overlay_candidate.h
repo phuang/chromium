@@ -240,7 +240,7 @@ class VIZ_SERVICE_EXPORT OverlayCandidate {
   // Specifies the rounded corners of overlay candidate, in target space.
   gfx::RRectF rounded_corners;
 
-#if BUILDFLAG(IS_APPLE)
+#if BUILDFLAG(IS_APPLE) || BUILDFLAG(IS_ANDROID)
   // Layers in a non-zero sorting context exist in the same 3D space and should
   // intersect.
   unsigned sorting_context_id = 0;

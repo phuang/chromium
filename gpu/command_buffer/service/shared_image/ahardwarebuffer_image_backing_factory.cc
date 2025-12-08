@@ -8,6 +8,7 @@
 #include <dawn/webgpu_cpp.h>
 #include <unistd.h>
 
+#include <atomic>
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -276,6 +277,9 @@ class AHardwareBufferImageBacking : public AndroidImageBacking {
   base::android::ScopedHardwareBufferHandle GetAhbHandle() const;
   OverlayImage* BeginOverlayAccess(gfx::GpuFenceHandle&);
   void EndOverlayAccess();
+  void OverlayAccessCountIncrement();
+  void OverlayAccessCountDecrement();
+  uint32_t GetOverlayAccessCount() const;
 
  protected:
   std::unique_ptr<GLTextureImageRepresentation> ProduceGLTexture(
@@ -319,6 +323,7 @@ class AHardwareBufferImageBacking : public AndroidImageBacking {
   scoped_refptr<OverlayImage> overlay_image_ GUARDED_BY(lock_);
   const bool use_passthrough_;
   const GLFormatCaps gl_format_caps_;
+  std::atomic<uint32_t> overlay_access_count_{0};
 };
 
 // Vk backed Skia representation of AHardwareBufferImageBacking.
@@ -359,12 +364,17 @@ class OverlayAHBImageRepresentation : public OverlayImageRepresentation {
     return static_cast<AHardwareBufferImageBacking*>(backing());
   }
 
+  AHardwareBufferImageBacking* ahb_backing() const {
+    return static_cast<AHardwareBufferImageBacking*>(backing());
+  }
+
   bool BeginReadAccess(gfx::GpuFenceHandle& acquire_fence) override {
     gfx::GpuFenceHandle fence_handle;
     gl_image_ = ahb_backing()->BeginOverlayAccess(fence_handle);
 
-    if (!fence_handle.is_null())
+    if (!fence_handle.is_null()) {
       acquire_fence = std::move(fence_handle);
+    }
 
     return !!gl_image_;
   }
@@ -380,6 +390,18 @@ class OverlayAHBImageRepresentation : public OverlayImageRepresentation {
   std::unique_ptr<base::android::ScopedHardwareBufferFenceSync>
   GetAHardwareBufferFenceSync() override {
     return gl_image_->GetAHardwareBuffer();
+  }
+
+  void InUseByWindowServerInc() override {
+    ahb_backing()->OverlayAccessCountIncrement();
+  }
+
+  void InUseByWindowServerDec() override {
+    ahb_backing()->OverlayAccessCountDecrement();
+  }
+
+  bool IsInUseByWindowServer() const override {
+    return ahb_backing()->GetOverlayAccessCount() > 0;
   }
 
   raw_ptr<OverlayImage> gl_image_ = nullptr;
@@ -583,8 +605,9 @@ AHardwareBufferImageBacking::ProduceSkiaGanesh(
     auto vulkan_image = CreateVkImageFromAhbHandle(
         GetAhbHandle(), context_state.get(), size(), format(), queue_family);
 
-    if (!vulkan_image)
+    if (!vulkan_image) {
       return nullptr;
+    }
 
     return std::make_unique<SkiaVkAHBImageRepresentation>(
         manager, this, std::move(context_state), std::move(vulkan_image),
@@ -720,6 +743,18 @@ void AHardwareBufferImageBacking::EndOverlayAccess() {
   }
 }
 
+void AHardwareBufferImageBacking::OverlayAccessCountIncrement() {
+  ++overlay_access_count_;
+}
+void AHardwareBufferImageBacking::OverlayAccessCountDecrement() {
+  auto count = overlay_access_count_--;
+  DCHECK_GT(count, 0u);
+}
+
+uint32_t AHardwareBufferImageBacking::GetOverlayAccessCount() const {
+  return overlay_access_count_;
+}
+
 // static
 AHardwareBufferImageBackingFactory::FormatInfo
 AHardwareBufferImageBackingFactory::FormatInfoForSupportedFormat(
@@ -783,7 +818,6 @@ AHardwareBufferImageBackingFactory::AHardwareBufferImageBackingFactory(
       vulkan_context_provider_(vulkan_context_provider),
       use_passthrough_(gpu_preferences.use_passthrough_cmd_decoder),
       gl_format_caps_(GLFormatCaps(feature_info)) {
-
   // Build the feature info for all the supported formats.
   for (auto format : kSupportedFormats) {
     format_infos_[format] = FormatInfoForSupportedFormat(
@@ -875,7 +909,7 @@ AHardwareBufferImageBackingFactory::MakeBacking(
     hwb_desc.usage = AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE |
                      AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT;
     if (usage.Has(SHARED_IMAGE_USAGE_SCANOUT)) {
-      hwb_desc.usage |= AHARDWAREBUFFER_USAGE_COMPOSER_OVERLAY;
+      hwb_desc.usage |= gfx::SurfaceControl::RequiredUsage();
     }
 
     if (!usage.Has(SHARED_IMAGE_USAGE_SCANOUT) ||
@@ -916,8 +950,9 @@ AHardwareBufferImageBackingFactory::MakeBacking(
   }
 
   // Add WRITE usage as we'll it need to upload data
-  if (!pixel_data.empty())
+  if (!pixel_data.empty()) {
     hwb_desc.usage |= AHARDWAREBUFFER_USAGE_CPU_WRITE_RARELY;
+  }
 
   // Number of images in an image array.
   hwb_desc.layers = 1;
@@ -982,8 +1017,9 @@ AHardwareBufferImageBackingFactory::MakeBacking(
       gl_format_caps_);
 
   // If we uploaded initial data, set the backing as cleared.
-  if (!pixel_data.empty())
+  if (!pixel_data.empty()) {
     backing->SetCleared();
+  }
 
   return backing;
 }

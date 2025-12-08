@@ -159,6 +159,7 @@ VIZ_COMMON_EXPORT int DrawQuadSplitLimit();
 VIZ_COMMON_EXPORT bool IsRenderPassDrawQuadCullingOptimizationEnabled();
 VIZ_COMMON_EXPORT bool IsBackForwardTransitionsSameDocSharedImageEnabled();
 VIZ_COMMON_EXPORT bool IsDelegatedCompositingEnabled();
+VIZ_COMMON_EXPORT bool IsFullDelegatedCompositingEnabled();
 VIZ_COMMON_EXPORT bool IsVizDirectCompositorThreadIpcNonRootEnabled();
 VIZ_COMMON_EXPORT bool IsVizDirectCompositorThreadIpcFrameSinkManagerEnabled();
 #if BUILDFLAG(IS_WIN)

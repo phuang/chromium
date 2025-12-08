@@ -980,6 +980,15 @@ class GPU_GLES2_EXPORT OverlayImageRepresentation
     GetAHardwareBufferFenceSync() {
       return representation()->GetAHardwareBufferFenceSync();
     }
+    bool IsInUseByWindowServer() const {
+      return representation()->IsInUseByWindowServer();
+    }
+    void InUseByWindowServerInc() {
+      representation()->InUseByWindowServerInc();
+    }
+    void InUseByWindowServerDec() {
+      representation()->InUseByWindowServerDec();
+    }
 #elif BUILDFLAG(IS_OZONE)
     scoped_refptr<gfx::NativePixmap> GetNativePixmap() {
       return representation()->GetNativePixmap();
@@ -1036,6 +1045,9 @@ class GPU_GLES2_EXPORT OverlayImageRepresentation
   virtual AHardwareBuffer* GetAHardwareBuffer();
   virtual std::unique_ptr<base::android::ScopedHardwareBufferFenceSync>
   GetAHardwareBufferFenceSync();
+  virtual bool IsInUseByWindowServer() const;
+  virtual void InUseByWindowServerInc();
+  virtual void InUseByWindowServerDec();
 #elif BUILDFLAG(IS_OZONE)
   scoped_refptr<gfx::NativePixmap> GetNativePixmap();
 #elif BUILDFLAG(IS_WIN)

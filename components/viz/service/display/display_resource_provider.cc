@@ -52,8 +52,9 @@ DisplayResourceProvider::~DisplayResourceProvider() {
 }
 
 void DisplayResourceProvider::Destroy() {
-  while (!children_.empty())
+  while (!children_.empty()) {
     DestroyChildInternal(children_.begin(), FOR_SHUTDOWN);
+  }
 }
 
 bool DisplayResourceProvider::OnMemoryDump(
@@ -103,9 +104,9 @@ bool DisplayResourceProvider::OnMemoryDump(
     // GPU service will use a lower one.
     constexpr int kImportance =
         static_cast<int>(gpu::TracingImportance::kServiceOwner);
-      auto guid = GetSharedImageGUIDForTracing(resource.transferable.mailbox());
-      pmd->CreateSharedGlobalAllocatorDump(guid);
-      pmd->AddOwnershipEdge(dump->guid(), guid, kImportance);
+    auto guid = GetSharedImageGUIDForTracing(resource.transferable.mailbox());
+    pmd->CreateSharedGlobalAllocatorDump(guid);
+    pmd->AddOwnershipEdge(dump->guid(), guid, kImportance);
   }
 
   return true;
@@ -283,16 +284,18 @@ void DisplayResourceProvider::DeclareUsedResourcesFromChild(
   for (auto& entry : child_info.child_to_parent_map) {
     ResourceId local_id = entry.second;
     bool resource_is_in_use = resources_from_child.count(entry.first) > 0;
-    if (!resource_is_in_use)
+    if (!resource_is_in_use) {
       unused.push_back(local_id);
+    }
   }
   DeleteAndReturnUnusedResourcesToChild(child_it, NORMAL, unused);
 }
 
 gpu::Mailbox DisplayResourceProvider::GetMailbox(ResourceId resource_id) const {
   const ChildResource* resource = TryGetResource(resource_id);
-  if (!resource)
+  if (!resource) {
     return gpu::Mailbox();
+  }
   return resource->transferable.mailbox();
 }
 
@@ -328,11 +331,13 @@ DisplayResourceProvider::ChildResource* DisplayResourceProvider::GetResource(
 const DisplayResourceProvider::ChildResource*
 DisplayResourceProvider::TryGetResource(ResourceId id) const {
   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  if (!id)
+  if (!id) {
     return nullptr;
+  }
   auto it = resources_.find(id);
-  if (it == resources_.end())
+  if (it == resources_.end()) {
     return nullptr;
+  }
   return &it->second;
 }
 
@@ -374,8 +379,9 @@ DisplayResourceProvider::CanDeleteNow(const Child& child_info,
                                       DeleteStyle style) const {
   if (resource.InUse()) {
     // We can't postpone the deletion, so we'll have to lose it.
-    if (style == FOR_SHUTDOWN)
+    if (style == FOR_SHUTDOWN) {
       return CanDeleteNowResult::kYesButLoseResource;
+    }
 
     // Defer this resource deletion.
     return CanDeleteNowResult::kNo;
@@ -383,8 +389,9 @@ DisplayResourceProvider::CanDeleteNow(const Child& child_info,
     // TODO(dcastagna): see if it's possible to use this logic for
     // the branch above too, where the resource is locked or still exported.
     // We can't postpone the deletion, so we'll have to lose it.
-    if (style == FOR_SHUTDOWN || child_info.marked_for_deletion)
+    if (style == FOR_SHUTDOWN || child_info.marked_for_deletion) {
       return CanDeleteNowResult::kYesButLoseResource;
+    }
 
     // Defer this resource deletion.
     return CanDeleteNowResult::kNo;
@@ -401,8 +408,9 @@ void DisplayResourceProvider::DeleteAndReturnUnusedResourcesToChild(
   Child& child_info = child_it->second;
 
   // No work is done in this case.
-  if (unused.empty() && !child_info.marked_for_deletion)
+  if (unused.empty() && !child_info.marked_for_deletion) {
     return;
+  }
 
   // Store unused resources while batching is enabled.
   if (batch_return_resources_lock_count_ > 0) {
@@ -416,8 +424,9 @@ void DisplayResourceProvider::DeleteAndReturnUnusedResourcesToChild(
   std::vector<ReturnedResource> to_return =
       DeleteAndReturnUnusedResourcesToChildImpl(child_info, style, unused);
 
-  if (!to_return.empty())
+  if (!to_return.empty()) {
     child_info.return_callback.Run(std::move(to_return));
+  }
 
   if (child_info.marked_for_deletion &&
       child_info.child_to_parent_map.empty()) {
@@ -533,8 +542,9 @@ DisplayResourceProvider::ScopedReadLockSharedImage::SynchronizationType()
 }
 
 void DisplayResourceProvider::ScopedReadLockSharedImage::Reset() {
-  if (!resource_provider_)
+  if (!resource_provider_) {
     return;
+  }
   DCHECK(resource_->lock_for_overlay_count);
   resource_->lock_for_overlay_count--;
   resource_provider_->TryReleaseResource(resource_id_, resource_);
@@ -549,8 +559,9 @@ DisplayResourceProvider::ScopedBatchReturnResources::ScopedBatchReturnResources(
       was_access_to_gpu_thread_allowed_(
           resource_provider_->can_access_gpu_thread_) {
   resource_provider_->SetBatchReturnResources(true);
-  if (allow_access_to_gpu_thread)
+  if (allow_access_to_gpu_thread) {
     resource_provider_->SetAllowAccessToGPUThread(true);
+  }
 }
 
 DisplayResourceProvider::ScopedBatchReturnResources::
@@ -570,8 +581,9 @@ DisplayResourceProvider::ChildResource::ChildResource(
     int child_id,
     const TransferableResource& transferable)
     : child_id(child_id), transferable(transferable) {
-  if (is_gpu_resource_type())
+  if (is_gpu_resource_type()) {
     UpdateSyncToken(transferable.sync_token());
+  }
 }
 
 DisplayResourceProvider::ChildResource::ChildResource(ChildResource&& other) =

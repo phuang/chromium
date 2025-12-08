@@ -24,6 +24,7 @@
 #include "ui/gl/gl_switches.h"
 
 #if BUILDFLAG(IS_ANDROID)
+#include "base/android/android_info.h"
 #include "base/android/device_info.h"
 #endif
 
@@ -415,6 +416,23 @@ bool IsBackForwardTransitionsSameDocSharedImageEnabled() {
 
 bool IsDelegatedCompositingEnabled() {
   return base::FeatureList::IsEnabled(kDelegatedCompositing);
+}
+
+bool IsFullDelegatedCompositingEnabled() {
+  static bool enabled = []() {
+#if BUILDFLAG(IS_ANDROID)
+    if (base::android::android_info::sdk_int() <
+        base::android::android_info::SDK_VERSION_S) {
+      return false;
+    }
+#endif
+    if (!base::FeatureList::IsEnabled(kDelegatedCompositing)) {
+      return false;
+    }
+    return features::kDelegatedCompositingModeParam.Get() ==
+           features::DelegatedCompositingMode::kFull;
+  }();
+  return enabled;
 }
 
 bool IsVizDirectCompositorThreadIpcNonRootEnabled() {
